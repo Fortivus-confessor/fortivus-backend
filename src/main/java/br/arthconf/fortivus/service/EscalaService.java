@@ -69,9 +69,12 @@ public class EscalaService {
                 .collect(Collectors.toList());
             removidos.forEach(u -> u.setEstadoOperacional(EstadoOperacionalUsuario.DISPONIVEL));
             usuarioRepository.saveAll(removidos);
+            
+            escala.getIntegrantes().clear();
+            escala.getIntegrantes().addAll(aptos);
+        } else {
+            escala.setIntegrantes(new java.util.ArrayList<>(aptos));
         }
-
-        escala.setIntegrantes(aptos);
         escala.setAtiva(true);
 
         // Atualiza estado dos integrantes para EM_MISSAO
