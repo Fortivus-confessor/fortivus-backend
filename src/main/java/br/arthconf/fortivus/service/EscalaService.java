@@ -54,7 +54,7 @@ public class EscalaService {
 
         // Regra de negócio: Apenas usuários DISPONÍVEIS ou que JÁ SÃO integrantes DESTA escala podem entrar
         List<Usuario> aptos = integrantes.stream()
-                .filter(u -> u.getEstadoOperacional() == br.arthconf.fortivus.domain.enums.EstadoOperacionalUsuario.DISPONIVEL || atuaisIds.contains(u.getId()))
+                .filter(u -> u.getEstadoOperacional() == EstadoOperacionalUsuario.DISPONIVEL || atuaisIds.contains(u.getId()))
                 .collect(Collectors.toList());
         
         if (aptos.size() != integrantesIds.size()) {
@@ -67,7 +67,7 @@ public class EscalaService {
             List<Usuario> removidos = escala.getIntegrantes().stream()
                 .filter(u -> !novosIds.contains(u.getId()))
                 .collect(Collectors.toList());
-            removidos.forEach(u -> u.setEstadoOperacional(br.arthconf.fortivus.domain.enums.EstadoOperacionalUsuario.DISPONIVEL));
+            removidos.forEach(u -> u.setEstadoOperacional(EstadoOperacionalUsuario.DISPONIVEL));
             usuarioRepository.saveAll(removidos);
         }
 
@@ -75,7 +75,7 @@ public class EscalaService {
         escala.setAtiva(true);
 
         // Atualiza estado dos integrantes para EM_MISSAO
-        aptos.forEach(u -> u.setEstadoOperacional(br.arthconf.fortivus.domain.enums.EstadoOperacionalUsuario.EM_MISSAO));
+        aptos.forEach(u -> u.setEstadoOperacional(EstadoOperacionalUsuario.EM_MISSAO));
         usuarioRepository.saveAll(aptos);
 
         return escalaRepository.save(escala);
