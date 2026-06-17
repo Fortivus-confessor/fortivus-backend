@@ -5,11 +5,8 @@ import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.ToString;
 import org.locationtech.jts.geom.Geometry;
-
 import org.springframework.data.domain.Persistable;
-
 import java.time.LocalDateTime;
-import java.util.List;
 import java.util.Set;
 
 @Entity

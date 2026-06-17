@@ -1,7 +1,6 @@
 package br.arthconf.fortivus.controller;
 
 import br.arthconf.fortivus.domain.Usuario;
-import br.arthconf.fortivus.domain.PerfilAcesso;
 import br.arthconf.fortivus.dto.UsuarioDTO;
 import br.arthconf.fortivus.service.UsuarioService;
 import br.arthconf.fortivus.service.CentroComandoService;

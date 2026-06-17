@@ -8,6 +8,7 @@ public enum CategoriaOperacao {
     MAQUINARIO,
     AQUATICO;
 
+    @com.fasterxml.jackson.annotation.JsonCreator
     public static CategoriaOperacao fromString(String text) {
         if (text == null || text.trim().isEmpty()) {
             return null;

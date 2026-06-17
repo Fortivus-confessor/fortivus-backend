@@ -3,7 +3,6 @@ package br.arthconf.fortivus.domain;
 import jakarta.persistence.*;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
-import org.hibernate.annotations.GenericGenerator;
 import java.time.LocalDateTime;
 
 @Data

@@ -5,7 +5,6 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.Table;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
-import org.locationtech.jts.geom.Point;
 
 @Entity
 @Table(name = "centro_comando")
