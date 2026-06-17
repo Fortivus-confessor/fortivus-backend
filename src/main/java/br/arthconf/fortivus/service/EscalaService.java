@@ -35,7 +35,11 @@ public class EscalaService {
     @Transactional(readOnly = true)
     public List<Escala> listarTodas() {
         var lista = escalaRepository.findAll();
-        return lista != null ? new ArrayList<>(lista) : new ArrayList<>();
+        if (lista != null) {
+            lista.forEach(e -> e.getIntegrantes().size());
+            return new ArrayList<>(lista);
+        }
+        return new ArrayList<>();
     }
 
     @Transactional
@@ -93,5 +97,22 @@ public class EscalaService {
     public Escala buscarPorId(UUID id) {
         return escalaRepository.findByIdFetched(id)
                 .orElseThrow(() -> new RuntimeException("Escala não encontrada"));
+    }
+
+    @Transactional
+    @org.springframework.scheduling.annotation.Scheduled(fixedRate = 60000)
+    public void verificarEscalasExpiradas() {
+        LocalDateTime agora = LocalDateTime.now();
+        List<Escala> ativas = escalaRepository.findAtivas();
+        if (ativas != null) {
+            for (Escala escala : ativas) {
+                if (escala.getDataFim() != null && escala.getDataFim().isBefore(agora)) {
+                    escala.setAtiva(false);
+                    escala.getIntegrantes().forEach(u -> u.setEstadoOperacional(EstadoOperacionalUsuario.DISPONIVEL));
+                    usuarioRepository.saveAll(escala.getIntegrantes());
+                    escalaRepository.save(escala);
+                }
+            }
+        }
     }
 }

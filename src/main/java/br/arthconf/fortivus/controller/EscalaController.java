@@ -32,7 +32,7 @@ public class EscalaController {
     @GetMapping
     @PreAuthorize("hasAnyRole('ADMIN', 'CENTRO_COMANDO_CENTRAL', 'CENTRO_COMANDO')")
     public ResponseEntity<List<EscalaDTO>> listar() {
-        List<EscalaDTO> escalas = escalaService.listarAtivas().stream()
+        List<EscalaDTO> escalas = escalaService.listarTodas().stream()
                 .map(this::toDTO)
                 .collect(Collectors.toList());
         return ResponseEntity.ok(escalas);
