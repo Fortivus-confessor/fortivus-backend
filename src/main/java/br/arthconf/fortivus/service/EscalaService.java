@@ -51,7 +51,9 @@ public class EscalaService {
         
         List<Usuario> aptos = integrantes.stream()
                 .filter(u -> {
-                    if (u.getEstadoOperacional() == EstadoOperacionalUsuario.FERIAS || u.getEstadoOperacional() == EstadoOperacionalUsuario.AFASTADO) return false;
+                    if (u.getEstadoOperacional() == EstadoOperacionalUsuario.FERIAS || 
+                        u.getEstadoOperacional() == EstadoOperacionalUsuario.AFASTADO_SAUDE ||
+                        u.getEstadoOperacional() == EstadoOperacionalUsuario.LICENCA) return false;
                     
                     if (escala.getDataInicio() == null || escala.getDataFim() == null) return true;
                     long start = escala.getDataInicio().atZone(java.time.ZoneId.systemDefault()).toInstant().toEpochMilli();
