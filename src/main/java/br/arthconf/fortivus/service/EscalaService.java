@@ -44,23 +44,38 @@ public class EscalaService {
 
     @Transactional
     public Escala ativarEscala(Escala escala, List<UUID> integrantesIds) {
-        // Busca e valida integrantes selecionados
+        // Busca integrantes selecionados
         List<Usuario> integrantes = usuarioRepository.findAllById(integrantesIds);
         
-        // Regra de negócio: Apenas usuários DISPONÍVEIS podem entrar na escala
+        // IDs dos integrantes atuais da escala
+        java.util.Set<UUID> atuaisIds = escala.getIntegrantes() != null ? 
+            escala.getIntegrantes().stream().map(br.arthconf.fortivus.domain.Usuario::getId).collect(Collectors.toSet()) : 
+            new java.util.HashSet<>();
+
+        // Regra de negócio: Apenas usuários DISPONÍVEIS ou que JÁ SÃO integrantes DESTA escala podem entrar
         List<Usuario> aptos = integrantes.stream()
-                .filter(u -> u.getEstadoOperacional() == EstadoOperacionalUsuario.DISPONIVEL)
+                .filter(u -> u.getEstadoOperacional() == br.arthconf.fortivus.domain.enums.EstadoOperacionalUsuario.DISPONIVEL || atuaisIds.contains(u.getId()))
                 .collect(Collectors.toList());
         
         if (aptos.size() != integrantesIds.size()) {
             throw new RuntimeException("Um ou mais integrantes selecionados não estão disponíveis (Férias/Afastados).");
         }
 
+        // Se houver integrantes removidos, voltar para DISPONIVEL
+        if (escala.getIntegrantes() != null) {
+            java.util.Set<UUID> novosIds = aptos.stream().map(br.arthconf.fortivus.domain.Usuario::getId).collect(Collectors.toSet());
+            List<Usuario> removidos = escala.getIntegrantes().stream()
+                .filter(u -> !novosIds.contains(u.getId()))
+                .collect(Collectors.toList());
+            removidos.forEach(u -> u.setEstadoOperacional(br.arthconf.fortivus.domain.enums.EstadoOperacionalUsuario.DISPONIVEL));
+            usuarioRepository.saveAll(removidos);
+        }
+
         escala.setIntegrantes(aptos);
         escala.setAtiva(true);
 
         // Atualiza estado dos integrantes para EM_MISSAO
-        aptos.forEach(u -> u.setEstadoOperacional(EstadoOperacionalUsuario.EM_MISSAO));
+        aptos.forEach(u -> u.setEstadoOperacional(br.arthconf.fortivus.domain.enums.EstadoOperacionalUsuario.EM_MISSAO));
         usuarioRepository.saveAll(aptos);
 
         return escalaRepository.save(escala);
