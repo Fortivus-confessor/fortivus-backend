@@ -59,6 +59,7 @@ public class EscalaController {
         }
         escala.setComandante(usuarioService.buscarPorId(dto.comandanteId()));
         escala.setDataInicio(dto.dataInicio() != null ? dto.dataInicio() : java.time.LocalDateTime.now());
+        escala.setDataFim(dto.dataFim());
         
         escalaService.ativarEscala(escala, dto.integranteIds());
         
