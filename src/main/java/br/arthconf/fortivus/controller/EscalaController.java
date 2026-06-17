@@ -81,7 +81,7 @@ public class EscalaController {
     @DeleteMapping("/{id}")
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<Void> deletar(@PathVariable UUID id) {
-        escalaService.encerrarEscala(id);
+        escalaService.deletarEscala(id);
         return ResponseEntity.noContent().build();
     }
 

@@ -68,13 +68,25 @@ public class EscalaService {
                 .orElseThrow(() -> new RuntimeException("Escala não encontrada"));
         
         escala.setAtiva(false);
-        escala.setDataFim(LocalDateTime.now());
 
         // Libera os integrantes
         escala.getIntegrantes().forEach(u -> u.setEstadoOperacional(EstadoOperacionalUsuario.DISPONIVEL));
         usuarioRepository.saveAll(escala.getIntegrantes());
 
         escalaRepository.save(escala);
+    }
+
+    @Transactional
+    public void deletarEscala(UUID id) {
+        Escala escala = escalaRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Escala não encontrada"));
+        
+        if (escala.isAtiva()) {
+            escala.getIntegrantes().forEach(u -> u.setEstadoOperacional(EstadoOperacionalUsuario.DISPONIVEL));
+            usuarioRepository.saveAll(escala.getIntegrantes());
+        }
+
+        escalaRepository.delete(escala);
     }
 
     @Transactional(readOnly = true)
