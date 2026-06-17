@@ -1,10 +1,10 @@
 package br.arthconf.fortivus.controller;
 
+import br.arthconf.fortivus.domain.Despacho;
 import br.arthconf.fortivus.domain.OrdemServico;
+import br.arthconf.fortivus.dto.CadastrarOsDespachoDTO;
 import br.arthconf.fortivus.dto.OrdemServicoDTO;
 import br.arthconf.fortivus.service.OrdemServicoService;
-import br.arthconf.fortivus.service.EscalaService;
-import br.arthconf.fortivus.service.UsuarioService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -20,76 +20,59 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class OrdemServicoController {
 
-    private final OrdemServicoService osService;
-    private final EscalaService escalaService;
-    private final UsuarioService usuarioService;
+    private final OrdemServicoService ordemServicoService;
 
     @GetMapping
     @PreAuthorize("hasAnyRole('ADMIN', 'CENTRO_COMANDO_CENTRAL', 'CENTRO_COMANDO', 'COMBATENTE')")
     public ResponseEntity<List<OrdemServicoDTO>> listar() {
-        List<OrdemServicoDTO> ordens = osService.listarTodas().stream()
+        List<OrdemServicoDTO> list = ordemServicoService.listarTodas().stream()
                 .map(this::toDTO)
                 .collect(Collectors.toList());
-        return ResponseEntity.ok(ordens);
-    }
-
-    @GetMapping("/{id}")
-    @PreAuthorize("hasAnyRole('ADMIN', 'CENTRO_COMANDO_CENTRAL', 'CENTRO_COMANDO', 'COMBATENTE')")
-    public ResponseEntity<OrdemServicoDTO> buscarPorId(@PathVariable Long id) {
-        OrdemServico os = osService.buscarPorId(id);
-        return ResponseEntity.ok(toDTO(os));
+        return ResponseEntity.ok(list);
     }
 
     @PostMapping
     @PreAuthorize("hasAnyRole('ADMIN', 'CENTRO_COMANDO_CENTRAL', 'CENTRO_COMANDO')")
-    public ResponseEntity<OrdemServicoDTO> salvar(@RequestBody OrdemServicoDTO dto) {
-        OrdemServico os = toEntity(dto);
-        OrdemServico salva = osService.criarOS(os);
-        
+    public ResponseEntity<OrdemServicoDTO> criar(@RequestBody CadastrarOsDespachoDTO dto) {
+        OrdemServico os = ordemServicoService.cadastrarOsEDespacho(dto);
         URI uri = ServletUriComponentsBuilder.fromCurrentRequest()
                 .path("/{id}")
-                .buildAndExpand(salva.getId())
+                .buildAndExpand(os.getId())
                 .toUri();
-                
-        return ResponseEntity.created(uri).body(toDTO(salva));
+        return ResponseEntity.created(uri).body(toDTO(os));
     }
 
-    @DeleteMapping("/{id}")
-    @PreAuthorize("hasAnyRole('ADMIN', 'CENTRO_COMANDO_CENTRAL')")
-    public ResponseEntity<Void> deletar(@PathVariable Long id) {
-        osService.deletar(id);
-        return ResponseEntity.noContent().build();
+    @PutMapping("/{id}")
+    @PreAuthorize("hasAnyRole('ADMIN', 'CENTRO_COMANDO_CENTRAL', 'CENTRO_COMANDO')")
+    public ResponseEntity<OrdemServicoDTO> editar(@PathVariable Long id, @RequestBody CadastrarOsDespachoDTO dto) {
+        OrdemServico os = ordemServicoService.editarOrdemServico(id, dto);
+        return ResponseEntity.ok(toDTO(os));
     }
 
     private OrdemServicoDTO toDTO(OrdemServico os) {
-        return new OrdemServicoDTO(
-                os.getId(),
-                os.getLocalizacaoTexto(),
-                os.getDescricaoTarefa(),
-                os.getEscala() != null ? os.getEscala().getId() : null,
-                os.getRelator() != null ? os.getRelator().getId() : null,
-                os.getDataCriacao(),
-                os.getStatus()
-        );
-    }
-
-    private OrdemServico toEntity(OrdemServicoDTO dto) {
-        OrdemServico os = new OrdemServico();
-        if (dto.id() != null) {
-            os.setId(dto.id());
-        }
-        os.setLocalizacaoTexto(dto.localizacaoTexto());
-        os.setDescricaoTarefa(dto.descricaoTarefa());
-        os.setStatus(dto.status());
+        Despacho primeiroDespacho = os.getDespachos().isEmpty() ? null : os.getDespachos().get(0);
+        String focoId = os.getFocoIncendio() != null ? os.getFocoIncendio().getId().toString() : null;
         
-        // Aqui assumimos que existam metodos buscarPorId em escalaService e usuarioService
-        // Se os metodos tiverem nomes diferentes, sera necessario ajuste futuro.
-        if (dto.escalaId() != null) {
-            os.setEscala(escalaService.buscarPorId(dto.escalaId()));
+        Double lat = null;
+        Double lng = null;
+        if (primeiroDespacho != null && primeiroDespacho.getLocalizacaoGeom() instanceof org.locationtech.jts.geom.Point p) {
+            lat = p.getY();
+            lng = p.getX();
         }
-        if (dto.relatorId() != null) {
-            os.setRelator(usuarioService.buscarPorId(dto.relatorId()));
-        }
-        return os;
+        
+        return new OrdemServicoDTO(
+            os.getId(),
+            os.getLocalizacaoTexto(),
+            os.getDescricaoTarefa(),
+            os.getEscala() != null ? os.getEscala().getId() : null,
+            os.getRelator() != null ? os.getRelator().getId() : null,
+            os.getDataCriacao(),
+            os.getStatus(),
+            focoId,
+            lat,
+            lng,
+            primeiroDespacho != null && primeiroDespacho.getCategoria() != null ? primeiroDespacho.getCategoria().name() : null,
+            os.getEscala() != null && os.getEscala().getEquipe() != null ? os.getEscala().getEquipe().getCentroComando().getId() : null
+        );
     }
 }

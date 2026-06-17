@@ -12,5 +12,10 @@ public record OrdemServicoDTO(
     UUID escalaId,
     UUID relatorId,
     LocalDateTime dataCriacao,
-    SituacaoOrdemServico status
+    SituacaoOrdemServico status,
+    String focoIncendioId,
+    Double latitude,
+    Double longitude,
+    String tipoDespacho,
+    UUID comandoId
 ) {}

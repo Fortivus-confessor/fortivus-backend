@@ -17,4 +17,7 @@ public interface OrdemServicoRepository extends JpaRepository<OrdemServico, Long
 
     @Query("SELECT o FROM OrdemServico o JOIN FETCH o.escala e JOIN FETCH e.equipe q LEFT JOIN FETCH e.veiculo v JOIN FETCH o.relator u LEFT JOIN FETCH o.despachos d LEFT JOIN FETCH d.escala de LEFT JOIN FETCH de.equipe dq LEFT JOIN FETCH de.comandante dc WHERE o.id = :id")
     Optional<OrdemServico> findByIdFetched(@Param("id") Long id);
+
+    @Query("SELECT MAX(o.id) FROM OrdemServico o WHERE o.id >= ?1 AND o.id < ?2")
+    Optional<Long> findMaxIdByAno(Long minId, Long maxId);
 }
