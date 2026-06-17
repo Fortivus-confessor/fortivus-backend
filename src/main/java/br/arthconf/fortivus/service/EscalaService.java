@@ -47,18 +47,37 @@ public class EscalaService {
         // Busca integrantes selecionados
         List<Usuario> integrantes = usuarioRepository.findAllById(integrantesIds);
         
-        // IDs dos integrantes atuais da escala
-        java.util.Set<UUID> atuaisIds = escala.getIntegrantes() != null ? 
-            escala.getIntegrantes().stream().map(br.arthconf.fortivus.domain.Usuario::getId).collect(Collectors.toSet()) : 
-            new java.util.HashSet<>();
-
-        // Regra de negócio: Apenas usuários DISPONÍVEIS ou que JÁ SÃO integrantes DESTA escala podem entrar
+        List<Escala> ativas = escalaRepository.findAtivas();
+        
         List<Usuario> aptos = integrantes.stream()
-                .filter(u -> u.getEstadoOperacional() == EstadoOperacionalUsuario.DISPONIVEL || atuaisIds.contains(u.getId()))
+                .filter(u -> {
+                    if (u.getEstadoOperacional() == EstadoOperacionalUsuario.FERIAS || u.getEstadoOperacional() == EstadoOperacionalUsuario.AFASTADO) return false;
+                    
+                    if (escala.getDataInicio() == null || escala.getDataFim() == null) return true;
+                    long start = escala.getDataInicio().atZone(java.time.ZoneId.systemDefault()).toInstant().toEpochMilli();
+                    long end = escala.getDataFim().atZone(java.time.ZoneId.systemDefault()).toInstant().toEpochMilli();
+                    
+                    for (Escala e : ativas) {
+                        if (e.getId() != null && e.getId().equals(escala.getId())) continue;
+                        
+                        boolean inScale = (e.getComandante() != null && e.getComandante().getId().equals(u.getId())) || 
+                                          (e.getIntegrantes() != null && e.getIntegrantes().stream().anyMatch(i -> i.getId().equals(u.getId())));
+                        
+                        if (inScale && e.getDataInicio() != null && e.getDataFim() != null) {
+                            long eStart = e.getDataInicio().atZone(java.time.ZoneId.systemDefault()).toInstant().toEpochMilli();
+                            long eEnd = e.getDataFim().atZone(java.time.ZoneId.systemDefault()).toInstant().toEpochMilli();
+                            
+                            if (start <= eEnd && end >= eStart) {
+                                return false; // Overlap detected
+                            }
+                        }
+                    }
+                    return true;
+                })
                 .collect(Collectors.toList());
         
         if (aptos.size() != integrantesIds.size()) {
-            throw new RuntimeException("Um ou mais integrantes selecionados não estão disponíveis (Férias/Afastados).");
+            throw new RuntimeException("Um ou mais integrantes selecionados estão em Férias/Afastados ou já estão escalados neste período.");
         }
 
         // Se houver integrantes removidos, voltar para DISPONIVEL
