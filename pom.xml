@@ -94,6 +94,12 @@
             <artifactId>spring-boot-starter-data-redis</artifactId>
         </dependency>
 
+        <!-- Messaging (RabbitMQ) -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-amqp</artifactId>
+        </dependency>
+
         <!-- Frontend (Removed Thymeleaf to enforce API-First / SPA decoupled architecture) -->
 
         <!-- Utils -->
