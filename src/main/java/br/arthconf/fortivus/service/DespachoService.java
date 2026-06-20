@@ -40,7 +40,14 @@ public class DespachoService {
     public Despacho salvar(Despacho despacho) {
         if (despacho.getId() == null) {
             despacho.setId(System.currentTimeMillis());
+            despacho.setDataInicio(LocalDateTime.now());
         }
+        
+        // Regra de negócio: Adicionar um novo despacho reativa a OS para EM_EXECUCAO
+        if (despacho.getOrdemServico() != null && despacho.getOrdemServico().getStatus() == br.arthconf.fortivus.domain.SituacaoOrdemServico.CONCLUIDA) {
+            despacho.getOrdemServico().setStatus(br.arthconf.fortivus.domain.SituacaoOrdemServico.EM_EXECUCAO);
+        }
+        
         return despachoRepository.save(despacho);
     }
 

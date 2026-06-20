@@ -32,7 +32,7 @@ public class OrdemServicoService {
         OrdemServico os = new OrdemServico();
         os.setId(novoId);
         os.setDescricaoTarefa(dto.descricaoTarefa());
-        os.setStatus(dto.status() != null ? dto.status() : SituacaoOrdemServico.ABERTA);
+        os.setStatus(SituacaoOrdemServico.EM_EXECUCAO); // Regra de negócio: Sempre nasce em execução
         
         if (dto.eventoFogoId() != null) {
             os.setEventoFogoId(dto.eventoFogoId());
