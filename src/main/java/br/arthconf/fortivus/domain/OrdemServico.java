@@ -38,6 +38,9 @@ public class OrdemServico {
     @Column(name = "data_criacao", nullable = false)
     private LocalDateTime dataCriacao = LocalDateTime.now();
 
+    @Column(name = "data_fim")
+    private LocalDateTime dataFim;
+
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     private SituacaoOrdemServico status = SituacaoOrdemServico.ABERTA;

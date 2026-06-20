@@ -75,7 +75,8 @@ public class OrdemServicoController {
             lat,
             lng,
             primeiroDespacho != null && primeiroDespacho.getCategoria() != null ? primeiroDespacho.getCategoria().name() : null,
-            os.getEscala() != null && os.getEscala().getEquipe() != null ? os.getEscala().getEquipe().getCentroComando().getId() : null
+            os.getEscala() != null && os.getEscala().getEquipe() != null ? os.getEscala().getEquipe().getCentroComando().getId() : null,
+            os.getDataFim()
         );
     }
 }

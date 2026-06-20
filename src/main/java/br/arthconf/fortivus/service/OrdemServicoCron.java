@@ -58,6 +58,7 @@ public class OrdemServicoCron {
             // Regra: Todos despachos concluídos E passaram 2 dias desde o último despacho
             if (todosConcluidos && ultimoDespachoData.isBefore(limite)) {
                 os.setStatus(SituacaoOrdemServico.CONCLUIDA);
+                os.setDataFim(LocalDateTime.now());
                 ordemServicoRepository.save(os);
                 concluidas++;
             }

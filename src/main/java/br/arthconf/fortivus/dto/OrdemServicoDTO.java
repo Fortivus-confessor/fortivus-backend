@@ -17,5 +17,6 @@ public record OrdemServicoDTO(
     Double latitude,
     Double longitude,
     String tipoDespacho,
-    UUID comandoId
+    UUID comandoId,
+    LocalDateTime dataFim
 ) {}
