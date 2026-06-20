@@ -99,6 +99,18 @@ public class OrdemServicoService {
         return maxExistente == minId ? minId + 1 : maxExistente + 1;
     }
 
+    @Transactional
+    public void excluirOrdemServico(Long id) {
+        OrdemServico os = ordemServicoRepository.findById(id)
+            .orElseThrow(() -> new RuntimeException("Ordem de serviço não encontrada"));
+            
+        if (!os.getDespachos().isEmpty()) {
+            throw new RuntimeException("Não é possível excluir a OS pois ela possui despachos atrelados.");
+        }
+        
+        ordemServicoRepository.delete(os);
+    }
+
     private Long gerarProximoIdDespacho() {
         long anoAtual = LocalDateTime.now().getYear();
         long minId = anoAtual * 1000000L;

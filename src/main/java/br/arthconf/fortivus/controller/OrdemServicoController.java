@@ -52,6 +52,13 @@ public class OrdemServicoController {
         return ResponseEntity.ok(toDTO(os));
     }
 
+    @DeleteMapping("/{id}")
+    @PreAuthorize("hasAnyRole('ADMIN', 'CENTRO_COMANDO_CENTRAL')")
+    public ResponseEntity<Void> excluir(@PathVariable Long id) {
+        ordemServicoService.excluirOrdemServico(id);
+        return ResponseEntity.noContent().build();
+    }
+
     private OrdemServicoDTO toDTO(OrdemServico os) {
         Despacho primeiroDespacho = os.getDespachos().isEmpty() ? null : os.getDespachos().get(0);
         String eventoFogoId = os.getEventoFogoId() != null ? os.getEventoFogoId().toString() : null;
