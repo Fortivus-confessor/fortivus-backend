@@ -42,9 +42,8 @@ public class OrdemServico {
     @Column(nullable = false)
     private SituacaoOrdemServico status = SituacaoOrdemServico.ABERTA;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "foco_incendio_id")
-    private FocoIncendio focoIncendio;
+    @Column(name = "evento_fogo_id", unique = true)
+    private java.util.UUID eventoFogoId;
 
     @OneToMany(mappedBy = "ordemServico", cascade = CascadeType.ALL, orphanRemoval = true)
     private java.util.List<Despacho> despachos = new java.util.ArrayList<>();

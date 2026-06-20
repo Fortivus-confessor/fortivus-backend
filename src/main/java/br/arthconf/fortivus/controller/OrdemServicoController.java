@@ -51,7 +51,7 @@ public class OrdemServicoController {
 
     private OrdemServicoDTO toDTO(OrdemServico os) {
         Despacho primeiroDespacho = os.getDespachos().isEmpty() ? null : os.getDespachos().get(0);
-        String focoId = os.getFocoIncendio() != null ? os.getFocoIncendio().getId().toString() : null;
+        String eventoFogoId = os.getEventoFogoId() != null ? os.getEventoFogoId().toString() : null;
         
         Double lat = null;
         Double lng = null;
@@ -68,7 +68,7 @@ public class OrdemServicoController {
             os.getRelator() != null ? os.getRelator().getId() : null,
             os.getDataCriacao(),
             os.getStatus(),
-            focoId,
+            eventoFogoId,
             lat,
             lng,
             primeiroDespacho != null && primeiroDespacho.getCategoria() != null ? primeiroDespacho.getCategoria().name() : null,

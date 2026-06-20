@@ -7,7 +7,7 @@ import java.util.UUID;
 
 public record CadastrarOsDespachoDTO(
     String descricaoTarefa,
-    UUID focoIncendioId,
+    UUID eventoFogoId,
     SituacaoOrdemServico status,
     String prioridade,
     UUID escalaId,
