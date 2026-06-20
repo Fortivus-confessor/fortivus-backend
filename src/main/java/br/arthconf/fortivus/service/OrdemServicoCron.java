@@ -21,7 +21,7 @@ public class OrdemServicoCron {
 
     private final OrdemServicoRepository ordemServicoRepository;
 
-    @Scheduled(cron = "0 0 * * * *") // Roda de hora em hora
+    @Scheduled(cron = "0 0 2 * * *") // Roda às 2 da manhã todos os dias
     @Transactional
     public void verificarEConcluirOrdensServico() {
         log.info("Executando verificação de conclusão de Ordens de Serviço (Cron)...");
