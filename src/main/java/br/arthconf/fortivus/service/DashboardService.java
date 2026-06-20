@@ -16,7 +16,7 @@ public class DashboardService {
 
     public Map<String, Object> getKpis() {
         Map<String, Object> kpis = new HashMap<>();
-        // In a real scenario, "eventosAtivos" could come from a FocoIncendioRepository
+        // In a real scenario, "eventosAtivos" could come from a HTTP call to fire-event-service
         kpis.put("eventosAtivos", 5); // Placeholder
         kpis.put("equipesCampo", equipeRepository.count());
         kpis.put("osAbertas", ordemServicoRepository.count());

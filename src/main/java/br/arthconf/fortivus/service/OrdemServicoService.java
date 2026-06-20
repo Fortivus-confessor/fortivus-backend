@@ -3,7 +3,6 @@ package br.arthconf.fortivus.service;
 import br.arthconf.fortivus.domain.*;
 import br.arthconf.fortivus.dto.CadastrarOsDespachoDTO;
 import br.arthconf.fortivus.repository.DespachoRepository;
-import br.arthconf.fortivus.repository.FocoIncendioRepository;
 import br.arthconf.fortivus.repository.OrdemServicoRepository;
 import lombok.RequiredArgsConstructor;
 import org.locationtech.jts.geom.Coordinate;
@@ -20,7 +19,6 @@ public class OrdemServicoService {
 
     private final OrdemServicoRepository ordemServicoRepository;
     private final DespachoRepository despachoRepository;
-    private final FocoIncendioRepository focoIncendioRepository;
     private final EscalaService escalaService;
     private final UsuarioService usuarioService;
     private final GeometryFactory geometryFactory = new GeometryFactory();

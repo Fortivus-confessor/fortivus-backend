@@ -22,16 +22,6 @@ public class RabbitMQConfig {
     }
 
     @Bean
-    public Queue severeEventQueue() {
-        return new Queue(SEVERE_EVENT_QUEUE, true);
-    }
-
-    @Bean
-    public Binding bindingSevereEvent(Queue severeEventQueue, TopicExchange fireEventsExchange) {
-        return BindingBuilder.bind(severeEventQueue).to(fireEventsExchange).with(ROUTING_KEY_SEVERE);
-    }
-
-    @Bean
     public MessageConverter jsonMessageConverter() {
         return new Jackson2JsonMessageConverter();
     }

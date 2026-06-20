@@ -1,0 +1,2 @@
+DROP TABLE IF EXISTS tb_focos_incendio CASCADE;
+DROP TABLE IF EXISTS fire_event CASCADE;
