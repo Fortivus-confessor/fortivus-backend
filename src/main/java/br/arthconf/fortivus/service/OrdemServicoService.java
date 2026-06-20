@@ -34,8 +34,8 @@ public class OrdemServicoService {
         os.setDescricaoTarefa(dto.descricaoTarefa());
         os.setStatus(dto.status() != null ? dto.status() : SituacaoOrdemServico.ABERTA);
         
-        if (dto.focoIncendioId() != null) {
-            os.setFocoIncendio(focoIncendioRepository.findById(dto.focoIncendioId()).orElse(null));
+        if (dto.eventoFogoId() != null) {
+            os.setEventoFogoId(dto.eventoFogoId());
         }
 
         Escala escala = escalaService.buscarPorId(dto.escalaId());
@@ -73,10 +73,10 @@ public class OrdemServicoService {
             .orElseThrow(() -> new RuntimeException("Ordem de serviço não encontrada"));
             
         os.setDescricaoTarefa(dto.descricaoTarefa());
-        if (dto.focoIncendioId() != null) {
-            os.setFocoIncendio(focoIncendioRepository.findById(dto.focoIncendioId()).orElse(null));
+        if (dto.eventoFogoId() != null) {
+            os.setEventoFogoId(dto.eventoFogoId());
         } else {
-            os.setFocoIncendio(null);
+            os.setEventoFogoId(null);
         }
         
         return ordemServicoRepository.save(os);

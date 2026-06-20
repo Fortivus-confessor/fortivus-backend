@@ -13,7 +13,7 @@ public record OrdemServicoDTO(
     UUID relatorId,
     LocalDateTime dataCriacao,
     SituacaoOrdemServico status,
-    String focoIncendioId,
+    String eventoFogoId,
     Double latitude,
     Double longitude,
     String tipoDespacho,
