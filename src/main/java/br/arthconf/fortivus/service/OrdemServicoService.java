@@ -90,8 +90,8 @@ public class OrdemServicoService {
 
     private Long gerarProximoId() {
         long anoAtual = LocalDateTime.now().getYear();
-        long minId = anoAtual * 1000000L; // ex: 2026000000
-        long maxId = (anoAtual + 1) * 1000000L;
+        long minId = anoAtual * 100000000L; // ex: 202600000000
+        long maxId = (anoAtual + 1) * 100000000L;
         
         Long maxExistente = ordemServicoRepository.findMaxIdByAno(minId, maxId).orElse(minId);
         return maxExistente == minId ? minId + 1 : maxExistente + 1;
@@ -111,10 +111,15 @@ public class OrdemServicoService {
 
     private Long gerarProximoIdDespacho() {
         long anoAtual = LocalDateTime.now().getYear();
-        long minId = anoAtual * 1000000L;
-        long maxId = (anoAtual + 1) * 1000000L;
+        long minId = anoAtual * 100000000L;
+        long maxId = (anoAtual + 1) * 100000000L;
         
         Long maxExistente = despachoRepository.findMaxIdByAno(minId, maxId).orElse(minId);
         return maxExistente == minId ? minId + 1 : maxExistente + 1;
+    }
+
+    @org.springframework.transaction.annotation.Transactional(readOnly = true)
+    public org.springframework.data.domain.Page<OrdemServico> listarPaginado(org.springframework.data.domain.Pageable pageable) {
+        return ordemServicoRepository.findAll(pageable);
     }
 }

@@ -39,7 +39,11 @@ public class DespachoService {
     @Transactional
     public Despacho salvar(Despacho despacho) {
         if (despacho.getId() == null) {
-            despacho.setId(System.currentTimeMillis());
+            long anoAtual = LocalDateTime.now().getYear();
+            long minId = anoAtual * 100000000L;
+            long maxId = (anoAtual + 1) * 100000000L;
+            Long maxExistente = despachoRepository.findMaxIdByAno(minId, maxId).orElse(minId);
+            despacho.setId(maxExistente == minId ? minId + 1 : maxExistente + 1);
             despacho.setDataInicio(LocalDateTime.now());
         }
         
@@ -62,5 +66,10 @@ public class DespachoService {
     @Transactional(readOnly = true)
     public Despacho buscarPorId(Long id) {
         return despachoRepository.findByIdFetched(id).orElse(null);
+    }
+
+    @org.springframework.transaction.annotation.Transactional(readOnly = true)
+    public org.springframework.data.domain.Page<Despacho> listarPaginado(org.springframework.data.domain.Pageable pageable) {
+        return despachoRepository.findAll(pageable);
     }
 }

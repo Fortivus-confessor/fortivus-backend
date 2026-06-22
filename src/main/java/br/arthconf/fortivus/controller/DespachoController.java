@@ -163,4 +163,10 @@ public class DespachoController {
                 lng
         );
     }
+
+    @org.springframework.web.bind.annotation.GetMapping("/paged")
+    public org.springframework.http.ResponseEntity<org.springframework.data.domain.Page<DespachoDTO>> listarPaginado(
+            @org.springframework.data.web.PageableDefault(size = 10) org.springframework.data.domain.Pageable pageable) {
+        return org.springframework.http.ResponseEntity.ok(despachoService.listarPaginado(pageable).map(this::toDTO));
+    }
 }

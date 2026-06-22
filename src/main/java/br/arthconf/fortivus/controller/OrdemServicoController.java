@@ -86,4 +86,10 @@ public class OrdemServicoController {
             os.getDataFim()
         );
     }
+
+    @org.springframework.web.bind.annotation.GetMapping("/paged")
+    public org.springframework.http.ResponseEntity<org.springframework.data.domain.Page<OrdemServicoDTO>> listarPaginado(
+            @org.springframework.data.web.PageableDefault(size = 10) org.springframework.data.domain.Pageable pageable) {
+        return org.springframework.http.ResponseEntity.ok(ordemServicoService.listarPaginado(pageable).map(this::toDTO));
+    }
 }

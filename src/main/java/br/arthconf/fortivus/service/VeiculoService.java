@@ -37,4 +37,9 @@ public class VeiculoService {
     public void deletar(UUID id) {
         veiculoRepository.deleteById(id);
     }
+
+    @org.springframework.transaction.annotation.Transactional(readOnly = true)
+    public org.springframework.data.domain.Page<Veiculo> listarPaginado(org.springframework.data.domain.Pageable pageable) {
+        return veiculoRepository.findAll(pageable);
+    }
 }

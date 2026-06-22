@@ -154,4 +154,9 @@ public class EscalaService {
             }
         }
     }
+
+    @org.springframework.transaction.annotation.Transactional(readOnly = true)
+    public org.springframework.data.domain.Page<Escala> listarPaginado(org.springframework.data.domain.Pageable pageable) {
+        return escalaRepository.findAll(pageable);
+    }
 }

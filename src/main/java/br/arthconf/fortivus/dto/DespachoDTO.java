@@ -17,4 +17,8 @@ public record DespachoDTO(
     LocalDateTime dataFim,
     Double latitude,
     Double longitude
-) {}
+) {
+    public String getCodigoVisual() {
+        return id != null ? "D" + id : null;
+    }
+}

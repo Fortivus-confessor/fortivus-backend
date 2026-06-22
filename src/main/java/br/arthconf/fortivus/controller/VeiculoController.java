@@ -128,4 +128,10 @@ public class VeiculoController {
                 veiculo.getEquipe() != null ? veiculo.getEquipe().getId() : null
         );
     }
+
+    @org.springframework.web.bind.annotation.GetMapping("/paged")
+    public org.springframework.http.ResponseEntity<org.springframework.data.domain.Page<VeiculoDTO>> listarPaginado(
+            @org.springframework.data.web.PageableDefault(size = 10) org.springframework.data.domain.Pageable pageable) {
+        return org.springframework.http.ResponseEntity.ok(veiculoService.listarPaginado(pageable).map(this::toDTO));
+    }
 }

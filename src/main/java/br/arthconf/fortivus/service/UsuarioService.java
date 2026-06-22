@@ -43,4 +43,9 @@ public class UsuarioService {
     public void deletar(UUID id) {
         usuarioRepository.deleteById(id);
     }
+
+    @org.springframework.transaction.annotation.Transactional(readOnly = true)
+    public org.springframework.data.domain.Page<Usuario> listarPaginado(org.springframework.data.domain.Pageable pageable) {
+        return usuarioRepository.findAll(pageable);
+    }
 }

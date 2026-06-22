@@ -84,4 +84,10 @@ public class EquipeController {
                 equipe.getCentroComando() != null ? equipe.getCentroComando().getId() : null
         );
     }
+
+    @org.springframework.web.bind.annotation.GetMapping("/paged")
+    public org.springframework.http.ResponseEntity<org.springframework.data.domain.Page<EquipeDTO>> listarPaginado(
+            @org.springframework.data.web.PageableDefault(size = 10) org.springframework.data.domain.Pageable pageable) {
+        return org.springframework.http.ResponseEntity.ok(equipeService.listarPaginado(pageable).map(this::toDTO));
+    }
 }

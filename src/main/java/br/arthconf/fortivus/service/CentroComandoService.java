@@ -37,4 +37,9 @@ public class CentroComandoService {
     public void deletar(UUID id) {
         centroComandoRepository.deleteById(id);
     }
+
+    @org.springframework.transaction.annotation.Transactional(readOnly = true)
+    public org.springframework.data.domain.Page<CentroComando> listarPaginado(org.springframework.data.domain.Pageable pageable) {
+        return centroComandoRepository.findAll(pageable);
+    }
 }

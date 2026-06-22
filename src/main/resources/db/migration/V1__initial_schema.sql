@@ -1,7 +1,11 @@
--- V1: Schema Mestre FORTIVUS V2 (Consolidado + Bootstrap Data)
--- Gestão de Combate, Logística e Efetivo com Auditoria Completa
+-- V1: Schema Inicial Consolidado FORTIVUS V2
+-- Criação dos schemas
+CREATE SCHEMA IF NOT EXISTS operacional;
+CREATE SCHEMA IF NOT EXISTS fire_events;
 
-CREATE EXTENSION IF NOT EXISTS "postgis";
+-- O Flyway rodará com default_schema = operacional
+-- A extensão PostGIS precisa estar no public ou no schema atual
+CREATE EXTENSION IF NOT EXISTS "postgis" SCHEMA public;
 
 -- 1. Gestão Organizacional (Centros e Equipes)
 CREATE TABLE centro_comando (
@@ -69,14 +73,12 @@ CREATE TABLE escala (
     ativa BOOLEAN DEFAULT TRUE
 );
 
--- Join table para integrantes da escala
 CREATE TABLE escala_usuarios (
     escala_id UUID NOT NULL REFERENCES escala(id),
     usuario_id UUID NOT NULL REFERENCES usuarios(id),
     PRIMARY KEY (escala_id, usuario_id)
 );
 
--- Registro de Checkout de Itens
 CREATE TABLE checkout_equipamento (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     escala_id UUID NOT NULL REFERENCES escala(id),
@@ -89,14 +91,15 @@ CREATE TABLE checkout_equipamento (
 
 CREATE TABLE ordem_servico (
     id BIGINT PRIMARY KEY, -- SmartId
-    categoria VARCHAR(50) NOT NULL,
     localizacao_texto TEXT,
     localizacao_geom GEOMETRY(Geometry, 4326),
     descricao_tarefa TEXT,
     escala_id UUID NOT NULL REFERENCES escala(id),
     relator_id UUID NOT NULL REFERENCES usuarios(id),
     data_criacao TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    status VARCHAR(50) DEFAULT 'ABERTA'
+    data_fim TIMESTAMP,
+    status VARCHAR(50) DEFAULT 'ABERTA',
+    evento_fogo_id BIGINT UNIQUE
 );
 
 CREATE TABLE despacho (
@@ -104,10 +107,88 @@ CREATE TABLE despacho (
     ordem_servico_id BIGINT NOT NULL REFERENCES ordem_servico(id),
     status VARCHAR(50) DEFAULT 'EM_ANDAMENTO',
     data_inicio TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    data_fim TIMESTAMP,
+    localizacao_geom GEOMETRY(Point, 4326),
+    escala_id UUID REFERENCES escala(id),
+    descricao_tarefa TEXT,
+    resumo_final TEXT,
+    categoria VARCHAR(50)
+);
+
+CREATE INDEX idx_despacho_localizacao_geom ON despacho USING GIST (localizacao_geom);
+
+-- 4. Relatórios
+CREATE TABLE relatorio_terrestre (
+    id BIGINT PRIMARY KEY REFERENCES despacho(id),
+    outros_orgaos_descricao VARCHAR(255),
+    area_atuacao_geom GEOMETRY(Point, 4326),
+    houve_uso_agua BOOLEAN DEFAULT FALSE,
+    volume_agua_litros INTEGER,
+    outra_origem_agua_descricao VARCHAR(255),
+    houve_apoio_propriedades BOOLEAN DEFAULT FALSE,
+    houve_recusa_propriedades BOOLEAN DEFAULT FALSE,
+    possivel_origem_incendio VARCHAR(50),
+    efetividade_combate VARCHAR(20),
+    necessidade_reforco BOOLEAN DEFAULT FALSE,
+    historico_descritivo TEXT,
+    km_final DOUBLE PRECISION,
+    resultado_ocorrencia VARCHAR(50),
+    outro_resultado_descricao VARCHAR(255),
+    data_inicio TIMESTAMP NOT NULL,
     data_fim TIMESTAMP
 );
 
--- 4. Auditoria (Envers)
+CREATE INDEX idx_relatorio_terrestre_geom ON relatorio_terrestre USING GIST (area_atuacao_geom);
+
+CREATE TABLE relatorio_terrestre_acoes (
+    relatorio_id BIGINT NOT NULL REFERENCES relatorio_terrestre(id),
+    acoes_realizadas VARCHAR(50)
+);
+
+CREATE TABLE relatorio_terrestre_orgaos (
+    relatorio_id BIGINT NOT NULL REFERENCES relatorio_terrestre(id),
+    orgaos_apoio VARCHAR(50)
+);
+
+CREATE TABLE relatorio_terrestre_origens_agua (
+    relatorio_id BIGINT NOT NULL REFERENCES relatorio_terrestre(id),
+    origens_agua VARCHAR(50)
+);
+
+CREATE TABLE relatorio_terrestre_reforcos (
+    relatorio_id BIGINT NOT NULL REFERENCES relatorio_terrestre(id),
+    tipos_reforco_necessarios VARCHAR(50)
+);
+
+CREATE TABLE relatorio_propriedades (
+    id UUID PRIMARY KEY,
+    relatorio_id BIGINT NOT NULL REFERENCES relatorio_terrestre(id),
+    nome_propriedade VARCHAR(255),
+    responsavel VARCHAR(255),
+    telefone VARCHAR(50),
+    localizacao_geom GEOMETRY(Point, 4326),
+    tipo_registro VARCHAR(20),
+    tipo_apoio VARCHAR(50),
+    quantidade_apoio INTEGER,
+    descricao_apoio_outro VARCHAR(255),
+    motivo_recusa VARCHAR(50),
+    descricao_recusa_outro VARCHAR(255)
+);
+
+CREATE INDEX idx_relatorio_propriedades_geom ON relatorio_propriedades USING GIST (localizacao_geom);
+
+CREATE TABLE relatorio_anexos (
+    id UUID PRIMARY KEY,
+    relatorio_id BIGINT NOT NULL REFERENCES relatorio_terrestre(id),
+    nome_arquivo VARCHAR(255),
+    chave_s3 VARCHAR(255),
+    content_type VARCHAR(100),
+    tamanho BIGINT,
+    data_criacao TIMESTAMP NOT NULL,
+    data_atualizacao TIMESTAMP NOT NULL
+);
+
+-- 5. Auditoria (Envers)
 CREATE SEQUENCE IF NOT EXISTS revinfo_seq START WITH 1 INCREMENT BY 50;
 
 CREATE TABLE revinfo (
@@ -137,12 +218,10 @@ CREATE TABLE usuarios_aud (
     PRIMARY KEY (id, rev)
 );
 
--- 5. Bootstrap Data (Seed Inicial)
--- Inserir Centro de Comando Sede
+-- 6. Bootstrap Data
 INSERT INTO centro_comando (id, nome, endereco, central) 
 VALUES ('00000000-0000-0000-0000-000000000001', 'SEDE CENTRAL FORTIVUS', 'AVENIDA DO COMANDO, 1000 - CUIABÁ', TRUE);
 
--- Inserir Usuários Administradores (Compatível com Authentik Bootstrap)
 INSERT INTO usuarios (id, nome, email, perfil, centro_comando_id, estado_operacional)
 VALUES (gen_random_uuid(), 'Admin Fortivus', 'admin@fortivus.local', 'ROLE_ADMIN', '00000000-0000-0000-0000-000000000001', 'DISPONIVEL');
 

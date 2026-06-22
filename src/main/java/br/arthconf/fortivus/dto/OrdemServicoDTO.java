@@ -19,4 +19,8 @@ public record OrdemServicoDTO(
     String tipoDespacho,
     UUID comandoId,
     LocalDateTime dataFim
-) {}
+) {
+    public String getCodigoVisual() {
+        return id != null ? "OS" + id : null;
+    }
+}

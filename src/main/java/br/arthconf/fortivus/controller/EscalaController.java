@@ -135,4 +135,10 @@ public class EscalaController {
     public record EquipeSimplesDTO(UUID id, String nome) {}
     public record UsuarioSimplesDTO(UUID id, String nome, String estadoDescricao, boolean disponivel) {}
     public record CentroAtivosDTO(List<EquipeSimplesDTO> equipes, List<UsuarioSimplesDTO> usuarios) {}
+
+    @org.springframework.web.bind.annotation.GetMapping("/paged")
+    public org.springframework.http.ResponseEntity<org.springframework.data.domain.Page<EscalaDTO>> listarPaginado(
+            @org.springframework.data.web.PageableDefault(size = 10) org.springframework.data.domain.Pageable pageable) {
+        return org.springframework.http.ResponseEntity.ok(escalaService.listarPaginado(pageable).map(this::toDTO));
+    }
 }
