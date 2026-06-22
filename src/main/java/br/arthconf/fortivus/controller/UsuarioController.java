@@ -59,6 +59,8 @@ public class UsuarioController {
         
         if (usuario.getId() != null) {
             usuarioParaSalvar = usuarioService.buscarPorId(usuario.getId());
+            String emailAntigo = usuarioParaSalvar.getEmail();
+
             usuarioParaSalvar.setNome(usuario.getNome());
             usuarioParaSalvar.setPrimeiroNome(usuario.getPrimeiroNome());
             usuarioParaSalvar.setEmail(usuario.getEmail());
@@ -70,6 +72,14 @@ public class UsuarioController {
             usuarioParaSalvar.setPosto(usuario.getPosto());
             usuarioParaSalvar.setPerfil(usuario.getPerfil());
             usuarioParaSalvar.setEstadoOperacional(usuario.getEstadoOperacional());
+
+            try {
+                String pNome = usuarioParaSalvar.getPrimeiroNome() != null ? usuarioParaSalvar.getPrimeiroNome() : usuarioParaSalvar.getNome().split(" ")[0];
+                String sNome = usuarioParaSalvar.getNome().contains(" ") ? usuarioParaSalvar.getNome().substring(usuarioParaSalvar.getNome().indexOf(" ") + 1) : "";
+                keycloakService.atualizarUsuario(emailAntigo, usuarioParaSalvar.getEmail(), pNome, sNome, usuarioParaSalvar.getPerfil().name());
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
         } else {
             usuarioParaSalvar = usuario;
             

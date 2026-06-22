@@ -75,4 +75,36 @@ public class KeycloakService {
             }
         }
     }
+
+    public void atualizarUsuario(String oldEmail, String newEmail, String primeiroNome, String sobrenome, String roleName) {
+        try (Keycloak keycloak = getKeycloakInstance()) {
+            var users = keycloak.realm(realm).users().searchByUsername(oldEmail, true);
+            if (users == null || users.isEmpty()) {
+                System.out.println("Usuário não encontrado no Keycloak para o e-mail antigo: " + oldEmail);
+                return;
+            }
+            UserRepresentation user = users.get(0);
+            String userId = user.getId();
+
+            user.setUsername(newEmail);
+            user.setEmail(newEmail);
+            user.setFirstName(primeiroNome);
+            user.setLastName(sobrenome);
+            keycloak.realm(realm).users().get(userId).update(user);
+
+            // Atualizar role
+            try {
+                // Remover roles antigas e assinalar a nova
+                var realmRoles = keycloak.realm(realm).users().get(userId).roles().realmLevel().listAll();
+                keycloak.realm(realm).users().get(userId).roles().realmLevel().remove(realmRoles);
+                
+                var newRole = keycloak.realm(realm).roles().get(roleName).toRepresentation();
+                keycloak.realm(realm).users().get(userId).roles().realmLevel().add(Collections.singletonList(newRole));
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
 }
