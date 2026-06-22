@@ -107,4 +107,23 @@ public class KeycloakService {
             e.printStackTrace();
         }
     }
+
+    public void deletarUsuario(String email) {
+        try (Keycloak keycloak = getKeycloakInstance()) {
+            var users = keycloak.realm(realm).users().searchByUsername(email, true);
+            if (users == null || users.isEmpty()) {
+                System.out.println("Usuário não encontrado no Keycloak para deletar: " + email);
+                return;
+            }
+            UserRepresentation user = users.get(0);
+            String userId = user.getId();
+            
+            Response response = keycloak.realm(realm).users().delete(userId);
+            if (response.getStatus() >= 400) {
+                throw new RuntimeException("Erro ao deletar usuário no Keycloak. Status: " + response.getStatus());
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
 }

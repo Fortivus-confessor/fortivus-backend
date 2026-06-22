@@ -133,6 +133,13 @@ public class UsuarioController {
         if (u.getFotoUrl() != null && u.getFotoUrl().startsWith("http")) {
             storageService.delete(u.getFotoUrl());
         }
+        
+        try {
+            keycloakService.deletarUsuario(u.getEmail());
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
         usuarioService.deletar(id);
         return ResponseEntity.noContent().build();
     }
