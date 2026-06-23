@@ -27,7 +27,7 @@ public class KeycloakService {
             @Value("${keycloak.realm:fortivus}") String realm,
             @Value("${keycloak.client-id:admin-cli}") String clientId,
             @Value("${keycloak.username:admin}") String username,
-            @Value("${keycloak.password:admin_password}") String password) {
+            @Value("${keycloak.password:admin}") String password) {
         
         this.realm = realm;
         this.keycloak = KeycloakBuilder.builder()
@@ -70,12 +70,15 @@ public class KeycloakService {
         if (users != null && !users.isEmpty()) {
             UserRepresentation user = users.get(0);
             user.setEmail(novoEmail);
-            user.setUsername(novoEmail);
             user.setFirstName(nome);
-            keycloak.realm(realm).users().get(user.getId()).update(user);
-            
-            atualizarRole(user.getId(), role);
-            log.info("Usuário atualizado no Keycloak: {}", user.getId());
+            try {
+                keycloak.realm(realm).users().get(user.getId()).update(user);
+                atualizarRole(user.getId(), role);
+                log.info("Usuário atualizado no Keycloak: {}", user.getId());
+            } catch (jakarta.ws.rs.WebApplicationException e) {
+                log.error("Erro do Keycloak ao atualizar usuario: {}", e.getResponse().readEntity(String.class), e);
+                throw new RuntimeException("Falha ao atualizar usuário no Keycloak", e);
+            }
         } else {
             log.warn("Usuário {} não encontrado no Keycloak para atualização", emailAntigo);
         }

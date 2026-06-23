@@ -96,13 +96,13 @@ public class UsuarioController {
             usuarioParaSalvar.setFotoUrl(url);
         }
         
-        usuarioService.salvar(usuarioParaSalvar);
-
         if (isNovoUsuario) {
             keycloakService.criarUsuario(usuarioParaSalvar.getEmail(), usuario.getSenha(), usuarioParaSalvar.getNome(), usuarioParaSalvar.getPerfil().name());
         } else {
             keycloakService.atualizarUsuario(emailAntigo, usuarioParaSalvar.getEmail(), usuarioParaSalvar.getNome(), usuarioParaSalvar.getPerfil().name());
         }
+
+        usuarioService.salvar(usuarioParaSalvar);
 
         return ResponseEntity.ok().build();
     }

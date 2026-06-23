@@ -83,6 +83,43 @@ public class DespachoController {
         return ResponseEntity.created(uri).body(toDTO(salvo));
     }
 
+    @PutMapping("/{id}")
+    @PreAuthorize("hasAnyRole('ADMIN', 'CENTRO_COMANDO_CENTRAL', 'CENTRO_COMANDO')")
+    public ResponseEntity<DespachoDTO> atualizar(@PathVariable Long id, @RequestBody DespachoDTO dto) {
+        Despacho despacho = despachoService.buscarPorId(id);
+        if (despacho == null) {
+            return ResponseEntity.notFound().build();
+        }
+
+        var os = osService.buscarPorId(dto.ordemServicoId());
+        despacho.setOrdemServico(os);
+        var escala = escalaService.buscarPorId(dto.escalaId());
+        despacho.setEscala(escala);
+        despacho.setCategoria(escala.getEquipe().getCategoria());
+        despacho.setDescricaoTarefa(dto.descricaoTarefa());
+
+        if (dto.responsavelId() != null) {
+            var usuario = usuarioService.buscarPorId(dto.responsavelId());
+            despacho.setResponsavel(usuario);
+        } else {
+            despacho.setResponsavel(null);
+        }
+
+        if (dto.status() != null) despacho.setStatus(dto.status());
+        if (dto.dataInicio() != null) despacho.setDataInicio(dto.dataInicio());
+        despacho.setDataFim(dto.dataFim());
+
+        if (dto.latitude() != null && dto.longitude() != null) {
+            org.locationtech.jts.geom.GeometryFactory gf = new org.locationtech.jts.geom.GeometryFactory(new org.locationtech.jts.geom.PrecisionModel(), 4326);
+            despacho.setLocalizacaoGeom(gf.createPoint(new org.locationtech.jts.geom.Coordinate(dto.longitude(), dto.latitude())));
+        } else {
+            despacho.setLocalizacaoGeom(null);
+        }
+
+        Despacho salvo = despachoService.salvar(despacho);
+        return ResponseEntity.ok(toDTO(salvo));
+    }
+
     @PatchMapping("/{id}/status")
     @PreAuthorize("hasAnyRole('ADMIN', 'CENTRO_COMANDO_CENTRAL', 'CENTRO_COMANDO', 'COMBATENTE')")
     public ResponseEntity<Void> atualizarStatus(@PathVariable Long id, @RequestParam SituacaoDespacho status) {

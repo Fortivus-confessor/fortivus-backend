@@ -63,7 +63,7 @@ keycloak:
   realm: fortivus
   client-id: admin-cli
   username: admin
-  password: admin_password
+  password: admin
 
 
 management:

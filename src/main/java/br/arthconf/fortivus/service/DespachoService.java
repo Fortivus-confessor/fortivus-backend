@@ -61,7 +61,7 @@ public class DespachoService {
         
         despacho.setStatus(novoStatus);
         if (novoStatus == SituacaoDespacho.CONCLUIDO) {
-            despacho.setDataFim(LocalDateTime.now());
+            despacho.setDataFim(LocalDateTime.now(java.time.ZoneId.of("America/Sao_Paulo")));
         }
         despachoRepository.save(despacho);
     }
@@ -74,7 +74,7 @@ public class DespachoService {
             long maxId = (anoAtual + 1) * 100000000L;
             Long maxExistente = despachoRepository.findMaxIdByAno(minId, maxId).orElse(minId);
             despacho.setId(maxExistente == minId ? minId + 1 : maxExistente + 1);
-            despacho.setDataInicio(LocalDateTime.now());
+            despacho.setDataInicio(LocalDateTime.now(java.time.ZoneId.of("America/Sao_Paulo")));
         }
         
         // Regra de negócio: Adicionar um novo despacho reativa a OS para EM_EXECUCAO

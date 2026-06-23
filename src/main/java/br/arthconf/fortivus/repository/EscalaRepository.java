@@ -12,11 +12,10 @@ import java.util.UUID;
 
 @Repository
 public interface EscalaRepository extends JpaRepository<Escala, UUID> {
-    
     @Query("SELECT e FROM Escala e JOIN FETCH e.equipe q JOIN FETCH e.comandante c LEFT JOIN FETCH e.veiculo v WHERE e.ativa = true")
     List<Escala> findAtivas();
 
-    @Query("SELECT e FROM Escala e JOIN FETCH e.equipe q LEFT JOIN FETCH e.veiculo v WHERE q.id = :equipeId AND e.ativa = true")
+    @Query("SELECT e FROM Escala e JOIN FETCH e.equipe q JOIN FETCH e.comandante c LEFT JOIN FETCH e.veiculo v WHERE q.id = :equipeId AND e.ativa = true")
     List<Escala> findAtivasPorEquipe(@Param("equipeId") UUID equipeId);
 
     @Query("SELECT e FROM Escala e JOIN FETCH e.equipe q JOIN FETCH e.comandante c LEFT JOIN FETCH e.veiculo v LEFT JOIN FETCH e.integrantes i WHERE e.id = :id")
@@ -26,6 +25,9 @@ public interface EscalaRepository extends JpaRepository<Escala, UUID> {
            countQuery = "SELECT COUNT(e) FROM Escala e WHERE e.equipe.centroComando.id = :centroComandoId")
     org.springframework.data.domain.Page<Escala> findAllByCentroComandoId(@Param("centroComandoId") UUID centroComandoId, org.springframework.data.domain.Pageable pageable);
 
-    @Query("SELECT e FROM Escala e JOIN FETCH e.equipe q LEFT JOIN FETCH e.veiculo v WHERE q.centroComando.id = :centroComandoId")
+    @Query("SELECT e FROM Escala e JOIN FETCH e.equipe q JOIN FETCH e.comandante c LEFT JOIN FETCH e.veiculo v WHERE q.centroComando.id = :centroComandoId")
     List<Escala> findAllByCentroComandoIdList(@Param("centroComandoId") UUID centroComandoId);
+
+    @Query("SELECT e FROM Escala e JOIN FETCH e.equipe q JOIN FETCH e.comandante c LEFT JOIN FETCH e.veiculo v")
+    List<Escala> findAllFetched();
 }

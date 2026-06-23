@@ -31,6 +31,7 @@ public class EscalaController {
 
     @GetMapping
     @PreAuthorize("hasAnyRole('ADMIN', 'CENTRO_COMANDO_CENTRAL', 'CENTRO_COMANDO')")
+    @org.springframework.transaction.annotation.Transactional(readOnly = true)
     public ResponseEntity<List<EscalaDTO>> listar() {
         List<EscalaDTO> escalas = escalaService.listarTodas().stream()
                 .map(this::toDTO)
@@ -40,6 +41,7 @@ public class EscalaController {
 
     @GetMapping("/{id}")
     @PreAuthorize("hasAnyRole('ADMIN', 'CENTRO_COMANDO_CENTRAL', 'CENTRO_COMANDO', 'COMBATENTE')")
+    @org.springframework.transaction.annotation.Transactional(readOnly = true)
     public ResponseEntity<EscalaDTO> buscarPorId(@PathVariable UUID id) {
         Escala escala = escalaService.buscarPorId(id);
         return ResponseEntity.ok(toDTO(escala));
@@ -154,6 +156,7 @@ public class EscalaController {
     public record CentroAtivosDTO(List<EquipeSimplesDTO> equipes, List<UsuarioSimplesDTO> usuarios) {}
 
     @org.springframework.web.bind.annotation.GetMapping("/paged")
+    @org.springframework.transaction.annotation.Transactional(readOnly = true)
     public org.springframework.http.ResponseEntity<org.springframework.data.domain.Page<EscalaDTO>> listarPaginado(
             @org.springframework.data.web.PageableDefault(size = 10) org.springframework.data.domain.Pageable pageable) {
         return org.springframework.http.ResponseEntity.ok(escalaService.listarPaginado(pageable).map(this::toDTO));

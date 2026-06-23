@@ -40,7 +40,7 @@ public class EscalaService {
         if (logado != null && "ROLE_CENTRO_COMANDO".equals(logado.getPerfil().name())) {
             lista = escalaRepository.findAllByCentroComandoIdList(logado.getCentroComando().getId());
         } else {
-            lista = escalaRepository.findAll();
+            lista = escalaRepository.findAllFetched();
         }
         if (lista != null) {
             lista.forEach(e -> e.getIntegrantes().size());
