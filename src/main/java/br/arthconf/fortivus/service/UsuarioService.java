@@ -48,4 +48,19 @@ public class UsuarioService {
     public org.springframework.data.domain.Page<Usuario> listarPaginado(org.springframework.data.domain.Pageable pageable) {
         return usuarioRepository.findAll(pageable);
     }
+
+    @Transactional(readOnly = true)
+    public Usuario getUsuarioLogado() {
+        var authentication = org.springframework.security.core.context.SecurityContextHolder.getContext().getAuthentication();
+        if (authentication != null && authentication.getPrincipal() instanceof org.springframework.security.oauth2.jwt.Jwt jwt) {
+            String email = jwt.getClaimAsString("preferred_username");
+            if (email == null) {
+                email = jwt.getClaimAsString("email");
+            }
+            if (email != null) {
+                return usuarioRepository.findByEmailIgnoreCase(email).orElse(null);
+            }
+        }
+        return null;
+    }
 }

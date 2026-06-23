@@ -52,6 +52,12 @@
             <artifactId>spring-boot-starter-validation</artifactId>
         </dependency>
 
+        <dependency>
+            <groupId>org.keycloak</groupId>
+            <artifactId>keycloak-admin-client</artifactId>
+            <version>24.0.2</version>
+        </dependency>
+
         <!-- Database & Persistence -->
         <dependency>
             <groupId>org.springframework.boot</groupId>

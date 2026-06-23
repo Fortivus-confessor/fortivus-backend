@@ -33,4 +33,8 @@ public class Veiculo extends BaseEntity {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "equipe_id")
     private Equipe equipe;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "centro_comando_id")
+    private CentroComando centroComando;
 }

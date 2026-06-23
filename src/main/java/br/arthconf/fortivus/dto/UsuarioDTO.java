@@ -21,5 +21,6 @@ public record UsuarioDTO(
     PerfilAcesso perfil,
     EstadoOperacionalUsuario estadoOperacional,
     UUID centroComandoId,
-    UUID equipeId
+    UUID equipeId,
+    String senha
 ) {}

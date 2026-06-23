@@ -48,14 +48,29 @@ public class EscalaController {
     @PostMapping
     @PreAuthorize("hasAnyRole('ADMIN', 'CENTRO_COMANDO_CENTRAL', 'CENTRO_COMANDO')")
     public ResponseEntity<EscalaDTO> salvar(@RequestBody EscalaDTO dto) {
+        br.arthconf.fortivus.domain.Usuario logado = usuarioService.getUsuarioLogado();
+        
+        var equipe = equipeService.buscarPorId(dto.equipeId());
+        if (logado != null && "ROLE_CENTRO_COMANDO".equals(logado.getPerfil().name())) {
+            if (equipe.getCentroComando() == null || !equipe.getCentroComando().getId().equals(logado.getCentroComando().getId())) {
+                throw new org.springframework.security.access.AccessDeniedException("Equipe não pertence ao seu Centro de Comando");
+            }
+        }
+        
         Escala escala = new Escala();
         if (dto.id() != null) {
             escala = escalaService.buscarPorId(dto.id());
         }
         
-        escala.setEquipe(equipeService.buscarPorId(dto.equipeId()));
+        escala.setEquipe(equipe);
         if (dto.veiculoId() != null) {
-            escala.setVeiculo(veiculoService.buscarPorId(dto.veiculoId()));
+            var veiculo = veiculoService.buscarPorId(dto.veiculoId());
+            if (logado != null && "ROLE_CENTRO_COMANDO".equals(logado.getPerfil().name())) {
+                if (veiculo.getCentroComando() == null || !veiculo.getCentroComando().getId().equals(logado.getCentroComando().getId())) {
+                    throw new org.springframework.security.access.AccessDeniedException("Veículo não pertence ao seu Centro de Comando");
+                }
+            }
+            escala.setVeiculo(veiculo);
         }
         escala.setComandante(usuarioService.buscarPorId(dto.comandanteId()));
         escala.setDataInicio(dto.dataInicio() != null ? dto.dataInicio() : java.time.LocalDateTime.now());

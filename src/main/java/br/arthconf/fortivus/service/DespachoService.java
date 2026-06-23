@@ -18,10 +18,24 @@ public class DespachoService {
 
     private final DespachoRepository despachoRepository;
     private final RelatorioTerrestreRepository relatorioTerrestreRepository;
+    private final UsuarioService usuarioService;
 
     @Transactional(readOnly = true)
     public List<Despacho> listarTodos() {
-        var lista = despachoRepository.findAllWithDetails();
+        br.arthconf.fortivus.domain.Usuario logado = usuarioService.getUsuarioLogado();
+        List<Despacho> lista;
+        if (logado != null) {
+            String role = logado.getPerfil().name();
+            if ("ROLE_CENTRO_COMANDO".equals(role)) {
+                lista = despachoRepository.findAllByCentroComandoIdList(logado.getCentroComando().getId());
+            } else if ("ROLE_COMBATENTE".equals(role)) {
+                lista = despachoRepository.findAllByCombatenteIdList(logado.getId());
+            } else {
+                lista = despachoRepository.findAllWithDetails();
+            }
+        } else {
+            lista = despachoRepository.findAllWithDetails();
+        }
         return lista != null ? new ArrayList<>(lista) : new ArrayList<>();
     }
 
@@ -29,6 +43,22 @@ public class DespachoService {
     public void atualizarStatus(Long id, SituacaoDespacho novoStatus) {
         var despacho = despachoRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Despacho não encontrado"));
+                
+        br.arthconf.fortivus.domain.Usuario logado = usuarioService.getUsuarioLogado();
+        if (logado != null && "ROLE_COMBATENTE".equals(logado.getPerfil().name())) {
+            boolean isIntegrante = false;
+            if (despacho.getEscala() != null) {
+                if (despacho.getEscala().getComandante().getId().equals(logado.getId())) {
+                    isIntegrante = true;
+                } else {
+                    isIntegrante = despacho.getEscala().getIntegrantes().stream().anyMatch(i -> i.getId().equals(logado.getId()));
+                }
+            }
+            if (!isIntegrante) {
+                throw new org.springframework.security.access.AccessDeniedException("Você só pode atualizar o status dos seus próprios despachos.");
+            }
+        }
+        
         despacho.setStatus(novoStatus);
         if (novoStatus == SituacaoDespacho.CONCLUIDO) {
             despacho.setDataFim(LocalDateTime.now());
@@ -70,6 +100,15 @@ public class DespachoService {
 
     @org.springframework.transaction.annotation.Transactional(readOnly = true)
     public org.springframework.data.domain.Page<Despacho> listarPaginado(org.springframework.data.domain.Pageable pageable) {
+        br.arthconf.fortivus.domain.Usuario logado = usuarioService.getUsuarioLogado();
+        if (logado != null) {
+            String role = logado.getPerfil().name();
+            if ("ROLE_CENTRO_COMANDO".equals(role)) {
+                return despachoRepository.findAllByCentroComandoId(logado.getCentroComando().getId(), pageable);
+            } else if ("ROLE_COMBATENTE".equals(role)) {
+                return despachoRepository.findAllByCombatenteId(logado.getId(), pageable);
+            }
+        }
         return despachoRepository.findAll(pageable);
     }
 }

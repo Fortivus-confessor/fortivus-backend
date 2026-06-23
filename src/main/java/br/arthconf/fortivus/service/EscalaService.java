@@ -21,6 +21,7 @@ public class EscalaService {
 
     private final EscalaRepository escalaRepository;
     private final UsuarioRepository usuarioRepository;
+    private final UsuarioService usuarioService;
 
     @Transactional(readOnly = true)
     public List<Escala> listarAtivas() {
@@ -34,7 +35,13 @@ public class EscalaService {
 
     @Transactional(readOnly = true)
     public List<Escala> listarTodas() {
-        var lista = escalaRepository.findAll();
+        Usuario logado = usuarioService.getUsuarioLogado();
+        List<Escala> lista;
+        if (logado != null && "ROLE_CENTRO_COMANDO".equals(logado.getPerfil().name())) {
+            lista = escalaRepository.findAllByCentroComandoIdList(logado.getCentroComando().getId());
+        } else {
+            lista = escalaRepository.findAll();
+        }
         if (lista != null) {
             lista.forEach(e -> e.getIntegrantes().size());
             return new ArrayList<>(lista);
@@ -157,6 +164,10 @@ public class EscalaService {
 
     @org.springframework.transaction.annotation.Transactional(readOnly = true)
     public org.springframework.data.domain.Page<Escala> listarPaginado(org.springframework.data.domain.Pageable pageable) {
+        Usuario logado = usuarioService.getUsuarioLogado();
+        if (logado != null && "ROLE_CENTRO_COMANDO".equals(logado.getPerfil().name())) {
+            return escalaRepository.findAllByCentroComandoId(logado.getCentroComando().getId(), pageable);
+        }
         return escalaRepository.findAll(pageable);
     }
 }

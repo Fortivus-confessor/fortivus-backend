@@ -21,4 +21,11 @@ public interface EscalaRepository extends JpaRepository<Escala, UUID> {
 
     @Query("SELECT e FROM Escala e JOIN FETCH e.equipe q JOIN FETCH e.comandante c LEFT JOIN FETCH e.veiculo v LEFT JOIN FETCH e.integrantes i WHERE e.id = :id")
     Optional<Escala> findByIdFetched(@Param("id") UUID id);
+
+    @Query(value = "SELECT e FROM Escala e WHERE e.equipe.centroComando.id = :centroComandoId",
+           countQuery = "SELECT COUNT(e) FROM Escala e WHERE e.equipe.centroComando.id = :centroComandoId")
+    org.springframework.data.domain.Page<Escala> findAllByCentroComandoId(@Param("centroComandoId") UUID centroComandoId, org.springframework.data.domain.Pageable pageable);
+
+    @Query("SELECT e FROM Escala e JOIN FETCH e.equipe q LEFT JOIN FETCH e.veiculo v WHERE q.centroComando.id = :centroComandoId")
+    List<Escala> findAllByCentroComandoIdList(@Param("centroComandoId") UUID centroComandoId);
 }

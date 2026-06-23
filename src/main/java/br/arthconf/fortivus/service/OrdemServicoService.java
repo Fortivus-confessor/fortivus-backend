@@ -81,6 +81,15 @@ public class OrdemServicoService {
     }
     
     public List<OrdemServico> listarTodas() {
+        Usuario logado = usuarioService.getUsuarioLogado();
+        if (logado != null) {
+            String role = logado.getPerfil().name();
+            if ("ROLE_CENTRO_COMANDO".equals(role)) {
+                return ordemServicoRepository.findAllByCentroComandoIdList(logado.getCentroComando().getId());
+            } else if ("ROLE_COMBATENTE".equals(role)) {
+                return ordemServicoRepository.findAllByCombatenteIdList(logado.getId());
+            }
+        }
         return ordemServicoRepository.findAll();
     }
     
@@ -120,6 +129,15 @@ public class OrdemServicoService {
 
     @org.springframework.transaction.annotation.Transactional(readOnly = true)
     public org.springframework.data.domain.Page<OrdemServico> listarPaginado(org.springframework.data.domain.Pageable pageable) {
+        Usuario logado = usuarioService.getUsuarioLogado();
+        if (logado != null) {
+            String role = logado.getPerfil().name();
+            if ("ROLE_CENTRO_COMANDO".equals(role)) {
+                return ordemServicoRepository.findAllByCentroComandoId(logado.getCentroComando().getId(), pageable);
+            } else if ("ROLE_COMBATENTE".equals(role)) {
+                return ordemServicoRepository.findAllByCombatenteId(logado.getId(), pageable);
+            }
+        }
         return ordemServicoRepository.findAll(pageable);
     }
 }

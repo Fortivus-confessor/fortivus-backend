@@ -6,6 +6,7 @@ import br.arthconf.fortivus.service.UsuarioService;
 import br.arthconf.fortivus.service.CentroComandoService;
 import br.arthconf.fortivus.service.EquipeService;
 import br.arthconf.fortivus.service.FileStorageService;
+import br.arthconf.fortivus.service.KeycloakService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -27,6 +28,7 @@ public class UsuarioController {
     private final CentroComandoService centroService;
     private final EquipeService equipeService;
     private final FileStorageService storageService;
+    private final KeycloakService keycloakService;
 
     @GetMapping
     @PreAuthorize("hasAnyRole('ADMIN', 'CENTRO_COMANDO_CENTRAL')")
@@ -53,9 +55,12 @@ public class UsuarioController {
             @RequestParam(value = "fotoArquivo", required = false) MultipartFile fotoArquivo) throws IOException {
         
         Usuario usuarioParaSalvar;
+        boolean isNovoUsuario = (usuario.getId() == null);
+        String emailAntigo = null;
         
-        if (usuario.getId() != null) {
+        if (!isNovoUsuario) {
             usuarioParaSalvar = usuarioService.buscarPorId(usuario.getId());
+            emailAntigo = usuarioParaSalvar.getEmail();
             usuarioParaSalvar.setNome(usuario.getNome());
             usuarioParaSalvar.setPrimeiroNome(usuario.getPrimeiroNome());
             usuarioParaSalvar.setEmail(usuario.getEmail());
@@ -73,9 +78,14 @@ public class UsuarioController {
 
         if (centroComandoId != null) {
             usuarioParaSalvar.setCentroComando(centroService.buscarPorId(centroComandoId));
+        } else {
+            usuarioParaSalvar.setCentroComando(null);
         }
+        
         if (equipeId != null) {
             usuarioParaSalvar.setEquipe(equipeService.buscarPorId(equipeId));
+        } else {
+            usuarioParaSalvar.setEquipe(null);
         }
 
         if (fotoArquivo != null && !fotoArquivo.isEmpty()) {
@@ -87,6 +97,13 @@ public class UsuarioController {
         }
         
         usuarioService.salvar(usuarioParaSalvar);
+
+        if (isNovoUsuario) {
+            keycloakService.criarUsuario(usuarioParaSalvar.getEmail(), usuario.getSenha(), usuarioParaSalvar.getNome(), usuarioParaSalvar.getPerfil().name());
+        } else {
+            keycloakService.atualizarUsuario(emailAntigo, usuarioParaSalvar.getEmail(), usuarioParaSalvar.getNome(), usuarioParaSalvar.getPerfil().name());
+        }
+
         return ResponseEntity.ok().build();
     }
 
@@ -97,7 +114,20 @@ public class UsuarioController {
         if (u.getFotoUrl() != null && u.getFotoUrl().startsWith("http")) {
             storageService.delete(u.getFotoUrl());
         }
+        keycloakService.deletarUsuario(u.getEmail());
         usuarioService.deletar(id);
+        return ResponseEntity.noContent().build();
+    }
+
+    @DeleteMapping("/{id}/foto")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<Void> excluirFoto(@PathVariable UUID id) {
+        Usuario usuario = usuarioService.buscarPorId(id);
+        if (usuario.getFotoUrl() != null && usuario.getFotoUrl().startsWith("http")) {
+            storageService.delete(usuario.getFotoUrl());
+            usuario.setFotoUrl(null);
+            usuarioService.salvar(usuario);
+        }
         return ResponseEntity.noContent().build();
     }
 
@@ -117,7 +147,8 @@ public class UsuarioController {
                 usuario.getPerfil(),
                 usuario.getEstadoOperacional(),
                 usuario.getCentroComando() != null ? usuario.getCentroComando().getId() : null,
-                usuario.getEquipe() != null ? usuario.getEquipe().getId() : null
+                usuario.getEquipe() != null ? usuario.getEquipe().getId() : null,
+                null // senha vazia no retorno
         );
     }
 

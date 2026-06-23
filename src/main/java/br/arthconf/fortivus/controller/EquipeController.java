@@ -24,9 +24,10 @@ public class EquipeController {
 
     private final EquipeService equipeService;
     private final CentroComandoService centroService;
+    private final br.arthconf.fortivus.service.UsuarioService usuarioService;
 
     @GetMapping
-    @PreAuthorize("hasAnyRole('ADMIN', 'CENTRO_COMANDO_CENTRAL')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'CENTRO_COMANDO_CENTRAL', 'CENTRO_COMANDO')")
     public ResponseEntity<List<EquipeDTO>> listar() {
         List<EquipeDTO> lista = equipeService.listarTodas().stream()
                 .map(this::toDTO)
@@ -42,7 +43,7 @@ public class EquipeController {
     }
 
     @PostMapping
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'CENTRO_COMANDO_CENTRAL', 'CENTRO_COMANDO')")
     public ResponseEntity<EquipeDTO> salvar(@RequestBody EquipeDTO dto) {
         Equipe equipe = new Equipe();
         if (dto.id() != null) {
@@ -50,7 +51,13 @@ public class EquipeController {
         }
         equipe.setNome(dto.nome());
         equipe.setCategoria(dto.categoria());
-        equipe.setCentroComando(centroService.buscarPorId(dto.centroComandoId()));
+        
+        br.arthconf.fortivus.domain.Usuario logado = usuarioService.getUsuarioLogado();
+        if (logado != null && logado.getPerfil() == br.arthconf.fortivus.domain.PerfilAcesso.ROLE_CENTRO_COMANDO && logado.getCentroComando() != null) {
+            equipe.setCentroComando(logado.getCentroComando());
+        } else {
+            equipe.setCentroComando(centroService.buscarPorId(dto.centroComandoId()));
+        }
         
         Equipe salvo = equipeService.salvar(equipe);
         
@@ -63,13 +70,24 @@ public class EquipeController {
     }
 
     @PutMapping("/{id}")
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'CENTRO_COMANDO_CENTRAL', 'CENTRO_COMANDO')")
     public ResponseEntity<EquipeDTO> atualizar(@PathVariable UUID id, @RequestBody EquipeDTO dto) {
         Equipe equipe = equipeService.buscarPorId(id);
+        
+        br.arthconf.fortivus.domain.Usuario logado = usuarioService.getUsuarioLogado();
+        if (logado != null && logado.getPerfil() == br.arthconf.fortivus.domain.PerfilAcesso.ROLE_CENTRO_COMANDO && logado.getCentroComando() != null) {
+            if (equipe.getCentroComando() == null || !equipe.getCentroComando().getId().equals(logado.getCentroComando().getId())) {
+                return ResponseEntity.status(403).build();
+            }
+        }
+        
         equipe.setNome(dto.nome());
         equipe.setCategoria(dto.categoria());
-        if (dto.centroComandoId() != null) {
-            equipe.setCentroComando(centroService.buscarPorId(dto.centroComandoId()));
+        
+        if (logado == null || logado.getPerfil() != br.arthconf.fortivus.domain.PerfilAcesso.ROLE_CENTRO_COMANDO) {
+            if (dto.centroComandoId() != null) {
+                equipe.setCentroComando(centroService.buscarPorId(dto.centroComandoId()));
+            }
         }
         
         Equipe atualizado = equipeService.salvar(equipe);
@@ -86,6 +104,7 @@ public class EquipeController {
     }
 
     @org.springframework.web.bind.annotation.GetMapping("/paged")
+    @PreAuthorize("hasAnyRole('ADMIN', 'CENTRO_COMANDO_CENTRAL', 'CENTRO_COMANDO')")
     public org.springframework.http.ResponseEntity<org.springframework.data.domain.Page<EquipeDTO>> listarPaginado(
             @org.springframework.data.web.PageableDefault(size = 10) org.springframework.data.domain.Pageable pageable) {
         return org.springframework.http.ResponseEntity.ok(equipeService.listarPaginado(pageable).map(this::toDTO));

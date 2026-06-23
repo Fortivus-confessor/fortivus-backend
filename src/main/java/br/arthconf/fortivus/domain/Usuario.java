@@ -6,6 +6,7 @@ import org.hibernate.envers.Audited;
 import org.hibernate.envers.RelationTargetAuditMode;
 import java.time.LocalDate;
 import java.util.UUID;
+import jakarta.persistence.Transient;
 
 @Entity
 @Table(name = "usuarios")
@@ -45,6 +46,9 @@ public class Usuario {
     private String tipoSanguineo;
     
     private String fotoUrl;
+
+    @Transient
+    private String senha;
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
