@@ -13,5 +13,6 @@ public record VeiculoDTO(
     Integer kmAtual,
     String fotoUrl,
     UUID equipeId,
-    UUID centroComandoId
+    UUID centroComandoId,
+    String contrato
 ) {}

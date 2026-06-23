@@ -56,6 +56,7 @@ public class VeiculoController {
             @RequestParam(value = "kmAtual", required = false) Integer kmAtual,
             @RequestParam(value = "equipeId", required = false) UUID equipeId,
             @RequestParam(value = "centroComandoId", required = false) UUID centroComandoId,
+            @RequestParam(value = "contrato", required = false) String contrato,
             @RequestParam(value = "fotoArquivo", required = false) MultipartFile fotoArquivo) throws IOException {
 
         br.arthconf.fortivus.domain.CategoriaOperacao categoria = null;
@@ -76,6 +77,7 @@ public class VeiculoController {
         if (identificador != null) veiculoParaSalvar.setIdentificador(identificador);
         if (categoria != null) veiculoParaSalvar.setCategoria(categoria);
         if (kmAtual != null) veiculoParaSalvar.setKmAtual(kmAtual);
+        if (contrato != null) veiculoParaSalvar.setContrato(contrato);
 
         if (equipeId != null) {
             veiculoParaSalvar.setEquipe(equipeService.buscarPorId(equipeId));
@@ -134,7 +136,8 @@ public class VeiculoController {
                 veiculo.getKmAtual(),
                 veiculo.getFotoUrl(),
                 veiculo.getEquipe() != null ? veiculo.getEquipe().getId() : null,
-                veiculo.getCentroComando() != null ? veiculo.getCentroComando().getId() : null
+                veiculo.getCentroComando() != null ? veiculo.getCentroComando().getId() : null,
+                veiculo.getContrato()
         );
     }
 

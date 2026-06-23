@@ -1,0 +1,1 @@
+ALTER TABLE veiculo ADD COLUMN contrato VARCHAR(50) DEFAULT 'Próprio';

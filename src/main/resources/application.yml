@@ -36,6 +36,7 @@ spring:
     validate-on-migrate: false
     schemas: operacional
     table: migrations
+    encoding: UTF-8
 
   data:
     redis:

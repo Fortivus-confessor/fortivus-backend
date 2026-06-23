@@ -1,13 +1,13 @@
 -- V1: Schema Inicial Consolidado FORTIVUS V2
--- Criação dos schemas
+-- CriaÃ§Ã£o dos schemas
 CREATE SCHEMA IF NOT EXISTS operacional;
 CREATE SCHEMA IF NOT EXISTS fire_events;
 
--- O Flyway rodará com default_schema = operacional
--- A extensão PostGIS precisa estar no public ou no schema atual
+-- O Flyway rodarÃ¡ com default_schema = operacional
+-- A extensÃ£o PostGIS precisa estar no public ou no schema atual
 CREATE EXTENSION IF NOT EXISTS "postgis" SCHEMA public;
 
--- 1. Gestão Organizacional (Centros e Equipes)
+-- 1. GestÃ£o Organizacional (Centros e Equipes)
 CREATE TABLE centro_comando (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     nome VARCHAR(255) NOT NULL,
@@ -42,7 +42,7 @@ CREATE TABLE usuarios (
     equipe_id UUID REFERENCES equipes(id)
 );
 
--- 2. Gestão de Ativos (Logística & Frota)
+-- 2. GestÃ£o de Ativos (LogÃ­stica & Frota)
 CREATE TABLE veiculo (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     identificador VARCHAR(100) UNIQUE NOT NULL, -- Placa ou Prefixo
@@ -57,7 +57,7 @@ CREATE TABLE veiculo (
 CREATE TABLE equipamento (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     nome VARCHAR(255) NOT NULL,
-    identificador VARCHAR(100) UNIQUE NOT NULL, -- Patrimônio
+    identificador VARCHAR(100) UNIQUE NOT NULL, -- PatrimÃ´nio
     estado VARCHAR(50) DEFAULT 'OPERANTE',
     equipe_id UUID REFERENCES equipes(id)
 );
@@ -117,7 +117,7 @@ CREATE TABLE despacho (
 
 CREATE INDEX idx_despacho_localizacao_geom ON despacho USING GIST (localizacao_geom);
 
--- 4. Relatórios
+-- 4. RelatÃ³rios
 CREATE TABLE relatorio_terrestre (
     id BIGINT PRIMARY KEY REFERENCES despacho(id),
     outros_orgaos_descricao VARCHAR(255),
@@ -220,7 +220,7 @@ CREATE TABLE usuarios_aud (
 
 -- 6. Bootstrap Data
 INSERT INTO centro_comando (id, nome, endereco, central) 
-VALUES ('00000000-0000-0000-0000-000000000001', 'SEDE CENTRAL FORTIVUS', 'AVENIDA DO COMANDO, 1000 - CUIABÁ', TRUE);
+VALUES ('00000000-0000-0000-0000-000000000001', 'SEDE CENTRAL FORTIVUS', 'AVENIDA DO COMANDO, 1000 - CUIABÃ', TRUE);
 
 INSERT INTO usuarios (id, nome, email, perfil, centro_comando_id, estado_operacional)
 VALUES (gen_random_uuid(), 'Admin Fortivus', 'admin@fortivus.local', 'ROLE_ADMIN', '00000000-0000-0000-0000-000000000001', 'DISPONIVEL');

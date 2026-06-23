@@ -27,6 +27,9 @@ public class Veiculo extends BaseEntity {
     @Column(name = "km_atual")
     private Integer kmAtual = 0;
 
+    @Column(length = 50)
+    private String contrato;
+
     @Column(name = "foto_url")
     private String fotoUrl;
 
