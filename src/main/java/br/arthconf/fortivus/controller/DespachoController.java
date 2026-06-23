@@ -27,6 +27,7 @@ public class DespachoController {
     private final br.arthconf.fortivus.service.EscalaService escalaService;
     private final br.arthconf.fortivus.service.RelatorioTerrestreService relatorioTerrestreService;
     private final br.arthconf.fortivus.service.FileStorageService storageService;
+    private final br.arthconf.fortivus.service.UsuarioService usuarioService;
 
     @GetMapping
     @PreAuthorize("hasAnyRole('ADMIN', 'CENTRO_COMANDO_CENTRAL', 'CENTRO_COMANDO', 'COMBATENTE')")
@@ -62,6 +63,11 @@ public class DespachoController {
         despacho.setEscala(escala);
         despacho.setCategoria(escala.getEquipe().getCategoria());
         despacho.setDescricaoTarefa(dto.descricaoTarefa());
+
+        if (dto.responsavelId() != null) {
+            var usuario = usuarioService.buscarPorId(dto.responsavelId());
+            despacho.setResponsavel(usuario);
+        }
 
         if (dto.latitude() != null && dto.longitude() != null) {
             org.locationtech.jts.geom.GeometryFactory gf = new org.locationtech.jts.geom.GeometryFactory(new org.locationtech.jts.geom.PrecisionModel(), 4326);
@@ -154,6 +160,7 @@ public class DespachoController {
                 despacho.getId(),
                 despacho.getOrdemServico() != null ? despacho.getOrdemServico().getId() : null,
                 despacho.getEscala() != null ? despacho.getEscala().getId() : null,
+                despacho.getResponsavel() != null ? despacho.getResponsavel().getId() : null,
                 despacho.getCategoria(),
                 despacho.getDescricaoTarefa(),
                 despacho.getStatus(),

@@ -26,6 +26,10 @@ public class Despacho {
     @JoinColumn(name = "escala_id")
     private Escala escala;
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "responsavel_id")
+    private Usuario responsavel;
+
     @Enumerated(EnumType.STRING)
     @Column(name = "categoria", nullable = false)
     private CategoriaOperacao categoria;
