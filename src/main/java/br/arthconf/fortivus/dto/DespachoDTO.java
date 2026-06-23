@@ -10,6 +10,7 @@ public record DespachoDTO(
     Long id,
     Long ordemServicoId,
     UUID escalaId,
+    UUID responsavelId,
     CategoriaOperacao categoria,
     String descricaoTarefa,
     SituacaoDespacho status,
