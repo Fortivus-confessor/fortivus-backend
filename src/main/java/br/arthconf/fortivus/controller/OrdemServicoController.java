@@ -34,6 +34,13 @@ public class OrdemServicoController {
         return ResponseEntity.ok(list);
     }
 
+    @GetMapping("/{id}")
+    @PreAuthorize("hasAnyRole('ADMIN', 'CENTRO_COMANDO_CENTRAL', 'CENTRO_COMANDO', 'COMBATENTE')")
+    public ResponseEntity<OrdemServicoDTO> buscarPorId(@PathVariable Long id) {
+        OrdemServico os = ordemServicoService.buscarPorId(id);
+        return ResponseEntity.ok(toDTO(os));
+    }
+
     @PostMapping
     @PreAuthorize("hasAnyRole('ADMIN', 'CENTRO_COMANDO_CENTRAL', 'CENTRO_COMANDO')")
     public ResponseEntity<OrdemServicoDTO> criar(@RequestBody CadastrarOsDespachoDTO dto) {
