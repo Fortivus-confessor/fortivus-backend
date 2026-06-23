@@ -16,4 +16,6 @@ public interface EquipeRepository extends JpaRepository<Equipe, UUID> {
 
     @Query("SELECT e FROM Equipe e LEFT JOIN FETCH e.centroComando WHERE e.centroComando.id = :centroId")
     List<Equipe> findByCentroComandoId(UUID centroId);
+
+    org.springframework.data.domain.Page<Equipe> findByCentroComandoId(UUID centroId, org.springframework.data.domain.Pageable pageable);
 }

@@ -15,9 +15,15 @@ import java.util.ArrayList;
 public class EquipeService {
 
     private final EquipeRepository equipeRepository;
+    private final br.arthconf.fortivus.service.UsuarioService usuarioService;
 
     @Transactional(readOnly = true)
     public List<Equipe> listarTodas() {
+        br.arthconf.fortivus.domain.Usuario usuario = usuarioService.getUsuarioLogado();
+        if (usuario != null && usuario.getPerfil() == br.arthconf.fortivus.domain.PerfilAcesso.ROLE_CENTRO_COMANDO && usuario.getCentroComando() != null) {
+            return buscarPorCentro(usuario.getCentroComando().getId());
+        }
+        
         // Busca com JOIN FETCH já definido no Repository
         List<Equipe> lista = equipeRepository.findAllComCentro();
         // Converte para ArrayList pura para garantir que o Thymeleaf 
@@ -49,6 +55,10 @@ public class EquipeService {
 
     @org.springframework.transaction.annotation.Transactional(readOnly = true)
     public org.springframework.data.domain.Page<Equipe> listarPaginado(org.springframework.data.domain.Pageable pageable) {
+        br.arthconf.fortivus.domain.Usuario usuario = usuarioService.getUsuarioLogado();
+        if (usuario != null && usuario.getPerfil() == br.arthconf.fortivus.domain.PerfilAcesso.ROLE_CENTRO_COMANDO && usuario.getCentroComando() != null) {
+            return equipeRepository.findByCentroComandoId(usuario.getCentroComando().getId(), pageable);
+        }
         return equipeRepository.findAll(pageable);
     }
 }

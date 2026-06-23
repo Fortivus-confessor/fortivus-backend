@@ -57,6 +57,13 @@ spring:
         jwt:
           jwk-set-uri: ${SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_JWK_SET_URI:http://localhost:9000/realms/fortivus/protocol/openid-connect/certs}
 
+keycloak:
+  server-url: http://localhost:9000
+  realm: fortivus
+  client-id: admin-cli
+  username: admin
+  password: admin_password
+
 
 management:
   health:

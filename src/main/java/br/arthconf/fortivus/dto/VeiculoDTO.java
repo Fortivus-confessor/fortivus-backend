@@ -12,5 +12,6 @@ public record VeiculoDTO(
     CategoriaOperacao categoria,
     Integer kmAtual,
     String fotoUrl,
-    UUID equipeId
+    UUID equipeId,
+    UUID centroComandoId
 ) {}

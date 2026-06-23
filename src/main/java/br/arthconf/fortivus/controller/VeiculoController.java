@@ -24,6 +24,7 @@ public class VeiculoController {
 
     private final VeiculoService veiculoService;
     private final EquipeService equipeService;
+    private final br.arthconf.fortivus.service.CentroComandoService centroService;
     private final FileStorageService storageService;
 
 
@@ -54,6 +55,7 @@ public class VeiculoController {
             @RequestParam(value = "categoria", required = false) String categoriaStr,
             @RequestParam(value = "kmAtual", required = false) Integer kmAtual,
             @RequestParam(value = "equipeId", required = false) UUID equipeId,
+            @RequestParam(value = "centroComandoId", required = false) UUID centroComandoId,
             @RequestParam(value = "fotoArquivo", required = false) MultipartFile fotoArquivo) throws IOException {
 
         br.arthconf.fortivus.domain.CategoriaOperacao categoria = null;
@@ -81,6 +83,12 @@ public class VeiculoController {
             veiculoParaSalvar.setEquipe(null);
         }
 
+        if (centroComandoId != null) {
+            veiculoParaSalvar.setCentroComando(centroService.buscarPorId(centroComandoId));
+        } else {
+            veiculoParaSalvar.setCentroComando(null);
+        }
+
         if (fotoArquivo != null && !fotoArquivo.isEmpty()) {
             if (veiculoParaSalvar.getFotoUrl() != null && veiculoParaSalvar.getFotoUrl().startsWith("http")) {
                 storageService.delete(veiculoParaSalvar.getFotoUrl());
@@ -106,7 +114,7 @@ public class VeiculoController {
     }
 
     @DeleteMapping("/{id}")
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'CENTRO_COMANDO_CENTRAL')")
     public ResponseEntity<Void> deletar(@PathVariable UUID id) {
         Veiculo v = veiculoService.buscarPorId(id);
         if (v.getFotoUrl() != null && v.getFotoUrl().startsWith("http")) {
@@ -125,11 +133,13 @@ public class VeiculoController {
                 veiculo.getCategoria(),
                 veiculo.getKmAtual(),
                 veiculo.getFotoUrl(),
-                veiculo.getEquipe() != null ? veiculo.getEquipe().getId() : null
+                veiculo.getEquipe() != null ? veiculo.getEquipe().getId() : null,
+                veiculo.getCentroComando() != null ? veiculo.getCentroComando().getId() : null
         );
     }
 
     @org.springframework.web.bind.annotation.GetMapping("/paged")
+    @PreAuthorize("hasAnyRole('ADMIN', 'CENTRO_COMANDO_CENTRAL', 'CENTRO_COMANDO')")
     public org.springframework.http.ResponseEntity<org.springframework.data.domain.Page<VeiculoDTO>> listarPaginado(
             @org.springframework.data.web.PageableDefault(size = 10) org.springframework.data.domain.Pageable pageable) {
         return org.springframework.http.ResponseEntity.ok(veiculoService.listarPaginado(pageable).map(this::toDTO));

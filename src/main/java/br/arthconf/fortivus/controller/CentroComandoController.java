@@ -24,7 +24,7 @@ public class CentroComandoController {
     private final CentroComandoService centroService;
 
     @GetMapping
-    @PreAuthorize("hasAnyRole('ADMIN', 'CENTRO_COMANDO_CENTRAL')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'CENTRO_COMANDO_CENTRAL', 'CENTRO_COMANDO')")
     public ResponseEntity<List<CentroComandoDTO>> listar() {
         List<CentroComandoDTO> lista = centroService.listarTodos().stream()
                 .map(this::toDTO)
@@ -40,7 +40,7 @@ public class CentroComandoController {
     }
 
     @PostMapping
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'CENTRO_COMANDO_CENTRAL')")
     public ResponseEntity<CentroComandoDTO> salvar(@RequestBody CentroComandoDTO dto) {
         CentroComando centro = toEntity(dto);
         centro.updateGeom();
@@ -55,7 +55,7 @@ public class CentroComandoController {
     }
 
     @PutMapping("/{id}")
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'CENTRO_COMANDO_CENTRAL')")
     public ResponseEntity<CentroComandoDTO> atualizar(@PathVariable UUID id, @RequestBody CentroComandoDTO dto) {
         CentroComando centro = centroService.buscarPorId(id);
         centro.setNome(dto.nome());
@@ -71,7 +71,7 @@ public class CentroComandoController {
     }
 
     @DeleteMapping("/{id}")
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'CENTRO_COMANDO_CENTRAL')")
     public ResponseEntity<Void> deletar(@PathVariable UUID id) {
         centroService.deletar(id);
         return ResponseEntity.noContent().build();
@@ -105,6 +105,7 @@ public class CentroComandoController {
     }
 
     @org.springframework.web.bind.annotation.GetMapping("/paged")
+    @PreAuthorize("hasAnyRole('ADMIN', 'CENTRO_COMANDO_CENTRAL', 'CENTRO_COMANDO')")
     public org.springframework.http.ResponseEntity<org.springframework.data.domain.Page<CentroComandoDTO>> listarPaginado(
             @org.springframework.data.web.PageableDefault(size = 10) org.springframework.data.domain.Pageable pageable) {
         return org.springframework.http.ResponseEntity.ok(centroService.listarPaginado(pageable).map(this::toDTO));
