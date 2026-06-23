@@ -12,5 +12,7 @@ public record EscalaDTO(
     LocalDateTime dataInicio,
     LocalDateTime dataFim,
     boolean ativa,
-    List<UUID> integranteIds
+    List<UUID> integranteIds,
+    String equipeNome,
+    String comandanteNome
 ) {}

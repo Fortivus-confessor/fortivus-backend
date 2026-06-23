@@ -52,9 +52,8 @@ public class DespachoController {
         if (dto.id() != null) {
             despacho = despachoService.buscarPorId(dto.id());
         } else {
-            despacho.setId(System.currentTimeMillis());
             despacho.setStatus(SituacaoDespacho.EM_ANDAMENTO);
-            despacho.setDataInicio(java.time.LocalDateTime.now());
+            // ID e data inicio serão gerados pelo DespachoService
         }
 
         var os = osService.buscarPorId(dto.ordemServicoId());

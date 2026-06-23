@@ -142,7 +142,9 @@ public class EscalaController {
                 escala.getDataInicio(),
                 escala.getDataFim(),
                 escala.isAtiva(),
-                integrantes
+                integrantes,
+                escala.getEquipe() != null ? escala.getEquipe().getNome() : null,
+                escala.getComandante() != null ? escala.getComandante().getNome() : null
         );
     }
 
