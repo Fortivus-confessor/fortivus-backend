@@ -43,7 +43,13 @@ public class KeycloakService {
         UserRepresentation user = new UserRepresentation();
         user.setUsername(email);
         user.setEmail(email);
-        user.setFirstName(nome);
+        
+        if (nome != null && !nome.isBlank()) {
+            String[] parts = nome.trim().split(" ", 2);
+            user.setFirstName(parts[0]);
+            user.setLastName(parts.length > 1 ? parts[1] : "");
+        }
+        
         user.setEnabled(true);
 
         CredentialRepresentation cred = new CredentialRepresentation();
@@ -70,7 +76,13 @@ public class KeycloakService {
         if (users != null && !users.isEmpty()) {
             UserRepresentation user = users.get(0);
             user.setEmail(novoEmail);
-            user.setFirstName(nome);
+            
+            if (nome != null && !nome.isBlank()) {
+                String[] parts = nome.trim().split(" ", 2);
+                user.setFirstName(parts[0]);
+                user.setLastName(parts.length > 1 ? parts[1] : "");
+            }
+
             try {
                 keycloak.realm(realm).users().get(user.getId()).update(user);
                 atualizarRole(user.getId(), role);
