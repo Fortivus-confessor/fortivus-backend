@@ -53,7 +53,7 @@ public class EquipamentoController {
             equipamento.setEstado(dto.estado());
         }
         if (dto.equipeId() != null) {
-            equipamento.setEquipe(equipeService.buscarPorId(dto.equipeId()));
+            equipamento.setEquipe(br.arthconf.fortivus.infrastructure.persistence.mapper.EquipeMapper.toEntity(equipeService.buscarPorId(dto.equipeId())));
         } else {
             equipamento.setEquipe(null);
         }

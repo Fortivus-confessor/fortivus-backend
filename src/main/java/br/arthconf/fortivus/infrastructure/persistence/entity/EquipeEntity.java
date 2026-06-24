@@ -1,6 +1,8 @@
-package br.arthconf.fortivus.domain;
+package br.arthconf.fortivus.infrastructure.persistence.entity;
 
 import br.arthconf.fortivus.domain.model.CategoriaOperacao;
+import br.arthconf.fortivus.domain.CentroComando;
+import br.arthconf.fortivus.domain.BaseEntity;
 import jakarta.persistence.*;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -13,7 +15,7 @@ import java.util.List;
 @Data
 @EqualsAndHashCode(callSuper = true, exclude = {"centroComando", "usuarios"})
 @ToString(exclude = {"centroComando", "usuarios"})
-public class Equipe extends BaseEntity {
+public class EquipeEntity extends BaseEntity {
 
     @Column(nullable = false)
     private String nome;
@@ -27,5 +29,5 @@ public class Equipe extends BaseEntity {
     private CentroComando centroComando;
 
     @OneToMany(mappedBy = "equipe")
-    private List<Usuario> usuarios;
+    private List<UsuarioEntity> usuarios;
 }

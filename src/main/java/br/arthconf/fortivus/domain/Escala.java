@@ -18,7 +18,7 @@ public class Escala extends BaseEntity {
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "equipe_id", nullable = false)
-    private Equipe equipe;
+    private br.arthconf.fortivus.infrastructure.persistence.entity.EquipeEntity equipe;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "veiculo_id")
@@ -26,7 +26,7 @@ public class Escala extends BaseEntity {
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "comandante_id", nullable = false)
-    private Usuario comandante;
+    private br.arthconf.fortivus.infrastructure.persistence.entity.UsuarioEntity comandante;
 
     @Column(name = "data_inicio", nullable = false)
     private LocalDateTime dataInicio;
@@ -42,7 +42,7 @@ public class Escala extends BaseEntity {
             joinColumns = @JoinColumn(name = "escala_id"),
             inverseJoinColumns = @JoinColumn(name = "usuario_id")
     )
-    private List<Usuario> integrantes = new ArrayList<>();
+    private List<br.arthconf.fortivus.infrastructure.persistence.entity.UsuarioEntity> integrantes = new ArrayList<>();
 
     @OneToMany(mappedBy = "escala", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<CheckoutEquipamento> checkouts = new ArrayList<>();

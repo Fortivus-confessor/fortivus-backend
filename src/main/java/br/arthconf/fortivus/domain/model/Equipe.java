@@ -1,27 +1,25 @@
 package br.arthconf.fortivus.domain.model;
 
 import br.arthconf.fortivus.domain.CentroComando;
-import br.arthconf.fortivus.domain.model.Equipe;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.util.List;
 import java.util.UUID;
 
 @Data
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class Veiculo {
+public class Equipe {
     private UUID id;
-    private String identificador;
-    private String prefixo;
-    private String modelo;
+    private String nome;
     private CategoriaOperacao categoria;
-    private Integer kmAtual;
-    private String contrato;
-    private String fotoUrl;
-    private Equipe equipe;
+    
+    // Phase 4 will decouple CentroComando
     private CentroComando centroComando;
+    
+    private List<Usuario> usuarios;
 }

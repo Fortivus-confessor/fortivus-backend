@@ -1,6 +1,7 @@
 package br.arthconf.fortivus.service;
 
 import br.arthconf.fortivus.domain.*;
+import br.arthconf.fortivus.domain.model.Usuario;
 import br.arthconf.fortivus.dto.CadastrarOsDespachoDTO;
 import br.arthconf.fortivus.repository.DespachoRepository;
 import br.arthconf.fortivus.repository.OrdemServicoRepository;
@@ -21,6 +22,7 @@ public class OrdemServicoService {
     private final EscalaService escalaService;
     private final UsuarioService usuarioService;
 
+
     @Transactional
     public OrdemServico cadastrarOsEDespacho(CadastrarOsDespachoDTO dto) {
         Long novoId = gerarProximoId();
@@ -38,7 +40,7 @@ public class OrdemServicoService {
         os.setEscala(escala);
         
         Usuario relator = usuarioService.buscarPorId(dto.responsavelId());
-        os.setRelator(relator);
+        os.setRelator(br.arthconf.fortivus.infrastructure.persistence.mapper.UsuarioMapper.toEntity(relator));
 
 
 

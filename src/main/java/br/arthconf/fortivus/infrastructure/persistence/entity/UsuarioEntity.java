@@ -1,12 +1,15 @@
-package br.arthconf.fortivus.domain;
+package br.arthconf.fortivus.infrastructure.persistence.entity;
 
+import br.arthconf.fortivus.domain.CentroComando;
+import br.arthconf.fortivus.domain.EstadoOperacionalUsuario;
+import br.arthconf.fortivus.domain.PerfilAcesso;
 import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.envers.Audited;
 import org.hibernate.envers.RelationTargetAuditMode;
+
 import java.time.LocalDate;
 import java.util.UUID;
-import jakarta.persistence.Transient;
 
 @Entity
 @Table(name = "usuarios")
@@ -16,7 +19,7 @@ import jakarta.persistence.Transient;
 @AllArgsConstructor
 @Builder
 @Audited
-public class Usuario {
+public class UsuarioEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
@@ -40,11 +43,11 @@ public class Usuario {
     private String matricula;
 
     private String posto;
-    
+
     private LocalDate dataNascimento;
-    
+
     private String tipoSanguineo;
-    
+
     private String fotoUrl;
 
     @Transient
@@ -54,6 +57,7 @@ public class Usuario {
     @Column(nullable = false)
     private PerfilAcesso perfil;
 
+    @Builder.Default
     @Enumerated(EnumType.STRING)
     private EstadoOperacionalUsuario estadoOperacional = EstadoOperacionalUsuario.DISPONIVEL;
 
@@ -65,5 +69,5 @@ public class Usuario {
     @Audited(targetAuditMode = RelationTargetAuditMode.NOT_AUDITED)
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "equipe_id")
-    private Equipe equipe;
+    private EquipeEntity equipe;
 }

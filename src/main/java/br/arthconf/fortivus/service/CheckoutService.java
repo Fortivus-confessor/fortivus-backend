@@ -3,7 +3,7 @@ package br.arthconf.fortivus.service;
 import br.arthconf.fortivus.domain.CheckoutEquipamento;
 import br.arthconf.fortivus.domain.Equipamento;
 import br.arthconf.fortivus.domain.Escala;
-import br.arthconf.fortivus.domain.Usuario;
+import br.arthconf.fortivus.domain.model.Usuario;
 import br.arthconf.fortivus.repository.CheckoutEquipamentoRepository;
 import br.arthconf.fortivus.repository.EquipamentoRepository;
 import lombok.RequiredArgsConstructor;
@@ -36,7 +36,7 @@ public class CheckoutService {
         CheckoutEquipamento checkout = new CheckoutEquipamento();
         checkout.setEscala(escala);
         checkout.setEquipamento(eq);
-        checkout.setResponsavelEntrega(responsavelEntrega);
+        checkout.setResponsavelEntrega(br.arthconf.fortivus.infrastructure.persistence.mapper.UsuarioMapper.toEntity(responsavelEntrega));
         checkout.setDataEmprestimo(LocalDateTime.now());
 
         checkoutRepository.save(checkout);
@@ -48,7 +48,7 @@ public class CheckoutService {
                 .orElseThrow(() -> new RuntimeException("Registro de checkout não encontrado"));
 
         checkout.setDataDevolucao(LocalDateTime.now());
-        checkout.setResponsavelRecebimento(responsavelRecebimento);
+        checkout.setResponsavelRecebimento(br.arthconf.fortivus.infrastructure.persistence.mapper.UsuarioMapper.toEntity(responsavelRecebimento));
 
         checkoutRepository.save(checkout);
     }

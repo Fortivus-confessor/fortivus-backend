@@ -19,7 +19,7 @@ public class VeiculoMapper {
                 .kmAtual(entity.getKmAtual())
                 .contrato(entity.getContrato())
                 .fotoUrl(entity.getFotoUrl())
-                .equipe(entity.getEquipe())
+                .equipe(br.arthconf.fortivus.infrastructure.persistence.mapper.EquipeMapper.toDomainWithoutUsuarios(entity.getEquipe()))
                 .centroComando(entity.getCentroComando())
                 .build();
     }
@@ -38,7 +38,7 @@ public class VeiculoMapper {
         entity.setKmAtual(domain.getKmAtual());
         entity.setContrato(domain.getContrato());
         entity.setFotoUrl(domain.getFotoUrl());
-        entity.setEquipe(domain.getEquipe());
+        entity.setEquipe(br.arthconf.fortivus.infrastructure.persistence.mapper.EquipeMapper.toEntityWithoutUsuarios(domain.getEquipe()));
         entity.setCentroComando(domain.getCentroComando());
         
         return entity;

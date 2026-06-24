@@ -29,7 +29,7 @@ public class Despacho {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "responsavel_id")
-    private Usuario responsavel;
+    private br.arthconf.fortivus.infrastructure.persistence.entity.UsuarioEntity responsavel;
 
     @Enumerated(EnumType.STRING)
     @Column(name = "categoria", nullable = false)

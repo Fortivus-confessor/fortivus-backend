@@ -1,6 +1,6 @@
 package br.arthconf.fortivus.controller;
 
-import br.arthconf.fortivus.domain.Usuario;
+import br.arthconf.fortivus.domain.model.Usuario;
 import br.arthconf.fortivus.service.UsuarioService;
 import lombok.Data;
 import lombok.RequiredArgsConstructor;

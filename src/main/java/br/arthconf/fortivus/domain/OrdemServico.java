@@ -25,7 +25,7 @@ public class OrdemServico {
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "relator_id", nullable = false)
-    private Usuario relator;
+    private br.arthconf.fortivus.infrastructure.persistence.entity.UsuarioEntity relator;
 
     @Column(name = "data_criacao", nullable = false)
     private LocalDateTime dataCriacao = LocalDateTime.now();

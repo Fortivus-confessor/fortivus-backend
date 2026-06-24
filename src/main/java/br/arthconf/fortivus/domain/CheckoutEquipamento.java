@@ -24,7 +24,7 @@ public class CheckoutEquipamento extends BaseEntity {
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "responsavel_entrega_id", nullable = false)
-    private Usuario responsavelEntrega;
+    private br.arthconf.fortivus.infrastructure.persistence.entity.UsuarioEntity responsavelEntrega;
 
     @Column(name = "data_emprestimo", nullable = false)
     private LocalDateTime dataEmprestimo = LocalDateTime.now();
@@ -34,5 +34,5 @@ public class CheckoutEquipamento extends BaseEntity {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "responsavel_recebimento_id")
-    private Usuario responsavelRecebimento;
+    private br.arthconf.fortivus.infrastructure.persistence.entity.UsuarioEntity responsavelRecebimento;
 }

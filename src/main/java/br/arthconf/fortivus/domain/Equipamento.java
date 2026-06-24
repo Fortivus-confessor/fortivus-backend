@@ -24,5 +24,5 @@ public class Equipamento extends BaseEntity {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "equipe_id")
-    private Equipe equipe;
+    private br.arthconf.fortivus.infrastructure.persistence.entity.EquipeEntity equipe;
 }

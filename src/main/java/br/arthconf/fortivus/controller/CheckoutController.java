@@ -1,7 +1,7 @@
 package br.arthconf.fortivus.controller;
 
 import br.arthconf.fortivus.domain.Escala;
-import br.arthconf.fortivus.domain.Usuario;
+import br.arthconf.fortivus.domain.model.Usuario;
 import br.arthconf.fortivus.domain.CheckoutEquipamento;
 import br.arthconf.fortivus.dto.CheckoutEquipamentoDTO;
 import br.arthconf.fortivus.service.CheckoutService;
