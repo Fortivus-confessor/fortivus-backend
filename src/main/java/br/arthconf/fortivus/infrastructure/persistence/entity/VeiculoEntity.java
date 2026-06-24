@@ -1,17 +1,21 @@
-package br.arthconf.fortivus.domain;
+package br.arthconf.fortivus.infrastructure.persistence.entity;
 
 import br.arthconf.fortivus.domain.model.CategoriaOperacao;
+import br.arthconf.fortivus.domain.CentroComando;
+import br.arthconf.fortivus.domain.Equipe;
 import jakarta.persistence.*;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.ToString;
+
+import br.arthconf.fortivus.domain.BaseEntity;
 
 @Entity
 @Table(name = "veiculo")
 @Data
 @EqualsAndHashCode(callSuper = true, exclude = {"equipe"})
 @ToString(exclude = {"equipe"})
-public class Veiculo extends BaseEntity {
+public class VeiculoEntity extends BaseEntity {
 
     @Column(nullable = false, unique = true)
     private String identificador;

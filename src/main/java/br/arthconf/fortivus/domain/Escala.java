@@ -22,7 +22,7 @@ public class Escala extends BaseEntity {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "veiculo_id")
-    private Veiculo veiculo;
+    private br.arthconf.fortivus.infrastructure.persistence.entity.VeiculoEntity veiculo;
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "comandante_id", nullable = false)

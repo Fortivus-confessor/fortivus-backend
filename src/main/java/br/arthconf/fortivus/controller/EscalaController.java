@@ -72,7 +72,7 @@ public class EscalaController {
                     throw new org.springframework.security.access.AccessDeniedException("Veículo não pertence ao seu Centro de Comando");
                 }
             }
-            escala.setVeiculo(veiculo);
+            escala.setVeiculo(br.arthconf.fortivus.infrastructure.persistence.mapper.VeiculoMapper.toEntity(veiculo));
         }
         escala.setComandante(usuarioService.buscarPorId(dto.comandanteId()));
         escala.setDataInicio(dto.dataInicio() != null ? dto.dataInicio() : java.time.LocalDateTime.now());

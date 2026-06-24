@@ -1,6 +1,6 @@
 package br.arthconf.fortivus.controller;
 
-import br.arthconf.fortivus.domain.Veiculo;
+import br.arthconf.fortivus.domain.model.Veiculo;
 import br.arthconf.fortivus.dto.VeiculoDTO;
 import br.arthconf.fortivus.service.FileStorageService;
 import br.arthconf.fortivus.service.VeiculoService;
