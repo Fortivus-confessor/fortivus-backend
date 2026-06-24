@@ -15,6 +15,8 @@ public interface UsuarioRepository extends JpaRepository<Usuario, UUID> {
     
     Optional<Usuario> findByEmailIgnoreCase(String email);
 
+    Optional<Usuario> findByCpf(String cpf);
+
     @Query("SELECT u FROM Usuario u LEFT JOIN FETCH u.centroComando LEFT JOIN FETCH u.equipe")
     List<Usuario> findAllFetched();
 

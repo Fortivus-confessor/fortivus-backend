@@ -53,12 +53,19 @@ public class UsuarioService {
     public Usuario getUsuarioLogado() {
         var authentication = org.springframework.security.core.context.SecurityContextHolder.getContext().getAuthentication();
         if (authentication != null && authentication.getPrincipal() instanceof org.springframework.security.oauth2.jwt.Jwt jwt) {
-            String email = jwt.getClaimAsString("preferred_username");
-            if (email == null) {
-                email = jwt.getClaimAsString("email");
-            }
-            if (email != null) {
-                return usuarioRepository.findByEmailIgnoreCase(email).orElse(null);
+            String username = jwt.getClaimAsString("preferred_username");
+            if (username != null) {
+                var byEmail = usuarioRepository.findByEmailIgnoreCase(username);
+                if (byEmail.isPresent()) return byEmail.get();
+
+                String emailClaim = jwt.getClaimAsString("email");
+                if (emailClaim != null) {
+                    var byEmailClaim = usuarioRepository.findByEmailIgnoreCase(emailClaim);
+                    if (byEmailClaim.isPresent()) return byEmailClaim.get();
+                }
+
+                var byCpf = usuarioRepository.findByCpf(username);
+                if (byCpf.isPresent()) return byCpf.get();
             }
         }
         return null;
