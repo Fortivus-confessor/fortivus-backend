@@ -1,7 +1,7 @@
 package br.arthconf.fortivus.controller;
 
 import br.arthconf.fortivus.infrastructure.persistence.entity.DespachoEntity;
-import br.arthconf.fortivus.domain.OrdemServico;
+import br.arthconf.fortivus.infrastructure.persistence.entity.OrdemServicoEntity;
 import br.arthconf.fortivus.dto.CadastrarOsDespachoDTO;
 import br.arthconf.fortivus.dto.OrdemServicoDTO;
 import br.arthconf.fortivus.service.OrdemServicoService;
@@ -37,14 +37,14 @@ public class OrdemServicoController {
     @GetMapping("/{id}")
     @PreAuthorize("hasAnyRole('ADMIN', 'CENTRO_COMANDO_CENTRAL', 'CENTRO_COMANDO', 'COMBATENTE')")
     public ResponseEntity<OrdemServicoDTO> buscarPorId(@PathVariable Long id) {
-        OrdemServico os = ordemServicoService.buscarPorId(id);
+        OrdemServicoEntity os = ordemServicoService.buscarPorId(id);
         return ResponseEntity.ok(toDTO(os));
     }
 
     @PostMapping
     @PreAuthorize("hasAnyRole('ADMIN', 'CENTRO_COMANDO_CENTRAL', 'CENTRO_COMANDO')")
     public ResponseEntity<OrdemServicoDTO> criar(@RequestBody CadastrarOsDespachoDTO dto) {
-        OrdemServico os = ordemServicoService.cadastrarOsEDespacho(dto);
+        OrdemServicoEntity os = ordemServicoService.cadastrarOsEDespacho(dto);
         URI uri = ServletUriComponentsBuilder.fromCurrentRequest()
                 .path("/{id}")
                 .buildAndExpand(os.getId())
@@ -55,7 +55,7 @@ public class OrdemServicoController {
     @PutMapping("/{id}")
     @PreAuthorize("hasAnyRole('ADMIN', 'CENTRO_COMANDO_CENTRAL', 'CENTRO_COMANDO')")
     public ResponseEntity<OrdemServicoDTO> editar(@PathVariable Long id, @RequestBody CadastrarOsDespachoDTO dto) {
-        OrdemServico os = ordemServicoService.editarOrdemServico(id, dto);
+        OrdemServicoEntity os = ordemServicoService.editarOrdemServico(id, dto);
         return ResponseEntity.ok(toDTO(os));
     }
 
@@ -66,7 +66,7 @@ public class OrdemServicoController {
         return ResponseEntity.noContent().build();
     }
 
-    private OrdemServicoDTO toDTO(OrdemServico os) {
+    private OrdemServicoDTO toDTO(OrdemServicoEntity os) {
         DespachoEntity primeiroDespacho = os.getDespachos().isEmpty() ? null : os.getDespachos().get(0);
         String eventoFogoId = os.getEventoFogoId() != null ? os.getEventoFogoId().toString() : null;
         
@@ -91,4 +91,5 @@ public class OrdemServicoController {
         return org.springframework.http.ResponseEntity.ok(ordemServicoService.listarPaginado(pageable).map(this::toDTO));
     }
 }
+
 

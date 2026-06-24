@@ -3,6 +3,7 @@ package br.arthconf.fortivus.service;
 import br.arthconf.fortivus.infrastructure.persistence.entity.DespachoEntity;
 
 import br.arthconf.fortivus.domain.*;
+import br.arthconf.fortivus.infrastructure.persistence.entity.OrdemServicoEntity;
 import br.arthconf.fortivus.domain.model.Usuario;
 import br.arthconf.fortivus.dto.CadastrarOsDespachoDTO;
 import br.arthconf.fortivus.repository.DespachoRepository;
@@ -26,10 +27,10 @@ public class OrdemServicoService {
 
 
     @Transactional
-    public OrdemServico cadastrarOsEDespacho(CadastrarOsDespachoDTO dto) {
+    public OrdemServicoEntity cadastrarOsEDespacho(CadastrarOsDespachoDTO dto) {
         Long novoId = gerarProximoId();
 
-        OrdemServico os = new OrdemServico();
+        OrdemServicoEntity os = new OrdemServicoEntity();
         os.setId(novoId);
         os.setDescricaoTarefa(dto.descricaoTarefa());
         os.setStatus(SituacaoOrdemServico.EM_EXECUCAO); // Regra de negócio: Sempre nasce em execução
@@ -67,8 +68,8 @@ public class OrdemServicoService {
     }
     
     @Transactional
-    public OrdemServico editarOrdemServico(Long id, CadastrarOsDespachoDTO dto) {
-        OrdemServico os = ordemServicoRepository.findById(id)
+    public OrdemServicoEntity editarOrdemServico(Long id, CadastrarOsDespachoDTO dto) {
+        OrdemServicoEntity os = ordemServicoRepository.findById(id)
             .orElseThrow(() -> new RuntimeException("Ordem de serviço não encontrada"));
             
         os.setDescricaoTarefa(dto.descricaoTarefa());
@@ -81,7 +82,7 @@ public class OrdemServicoService {
         return ordemServicoRepository.save(os);
     }
     
-    public List<OrdemServico> listarTodas() {
+    public List<OrdemServicoEntity> listarTodas() {
         Usuario logado = usuarioService.getUsuarioLogado();
         if (logado != null) {
             String role = logado.getPerfil().name();
@@ -94,7 +95,7 @@ public class OrdemServicoService {
         return ordemServicoRepository.findAll();
     }
     
-    public OrdemServico buscarPorId(Long id) {
+    public OrdemServicoEntity buscarPorId(Long id) {
         return ordemServicoRepository.findById(id).orElseThrow(() -> new RuntimeException("OS não encontrada"));
     }
 
@@ -109,7 +110,7 @@ public class OrdemServicoService {
 
     @Transactional
     public void excluirOrdemServico(Long id) {
-        OrdemServico os = ordemServicoRepository.findById(id)
+        OrdemServicoEntity os = ordemServicoRepository.findById(id)
             .orElseThrow(() -> new RuntimeException("Ordem de serviço não encontrada"));
             
         if (!os.getDespachos().isEmpty()) {
@@ -129,7 +130,7 @@ public class OrdemServicoService {
     }
 
     @org.springframework.transaction.annotation.Transactional(readOnly = true)
-    public org.springframework.data.domain.Page<OrdemServico> listarPaginado(org.springframework.data.domain.Pageable pageable) {
+    public org.springframework.data.domain.Page<OrdemServicoEntity> listarPaginado(org.springframework.data.domain.Pageable pageable) {
         Usuario logado = usuarioService.getUsuarioLogado();
         if (logado != null) {
             String role = logado.getPerfil().name();
@@ -142,5 +143,7 @@ public class OrdemServicoService {
         return ordemServicoRepository.findAll(pageable);
     }
 }
+
+
 
 

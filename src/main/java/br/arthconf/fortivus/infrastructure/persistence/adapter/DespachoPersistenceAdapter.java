@@ -12,6 +12,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
 import java.util.Optional;
+import br.arthconf.fortivus.infrastructure.persistence.entity.OrdemServicoEntity;
 
 @Component
 @RequiredArgsConstructor
@@ -47,7 +48,7 @@ public class DespachoPersistenceAdapter implements DespachoRepositoryPort {
         entity.setDataFim(despacho.getDataFim());
 
         if (despacho.getOrdemServicoId() != null) {
-            br.arthconf.fortivus.domain.OrdemServico os = ordemServicoRepository.findById(despacho.getOrdemServicoId()).orElse(null);
+            OrdemServicoEntity os = ordemServicoRepository.findById(despacho.getOrdemServicoId()).orElse(null);
             if (despacho.getId() == null && os != null && os.getStatus() == br.arthconf.fortivus.domain.SituacaoOrdemServico.CONCLUIDA) {
                 os.setStatus(br.arthconf.fortivus.domain.SituacaoOrdemServico.EM_EXECUCAO);
             }
@@ -74,3 +75,7 @@ public class DespachoPersistenceAdapter implements DespachoRepositoryPort {
         despachoRepository.deleteById(id);
     }
 }
+
+
+
+

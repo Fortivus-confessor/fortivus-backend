@@ -1,17 +1,19 @@
-package br.arthconf.fortivus.domain;
+package br.arthconf.fortivus.infrastructure.persistence.entity;
 
 import jakarta.persistence.*;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.ToString;
 import java.time.LocalDateTime;
+import br.arthconf.fortivus.domain.Escala;
+import br.arthconf.fortivus.domain.SituacaoOrdemServico;
 
 @Entity
 @Table(name = "ordem_servico")
 @Data
 @EqualsAndHashCode(exclude = {"escala", "relator"})
 @ToString(exclude = {"escala", "relator"})
-public class OrdemServico {
+public class OrdemServicoEntity {
 
     @Id
     private Long id;    
@@ -41,5 +43,7 @@ public class OrdemServico {
     private Long eventoFogoId;
 
     @OneToMany(mappedBy = "ordemServico", cascade = CascadeType.ALL, orphanRemoval = true)
-    private java.util.List<br.arthconf.fortivus.infrastructure.persistence.entity.DespachoEntity> despachos = new java.util.ArrayList<>();
+    private java.util.List<DespachoEntity> despachos = new java.util.ArrayList<>();
 }
+
+

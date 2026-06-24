@@ -1,7 +1,7 @@
 package br.arthconf.fortivus.service;
 
 import br.arthconf.fortivus.infrastructure.persistence.entity.DespachoEntity;
-import br.arthconf.fortivus.domain.OrdemServico;
+import br.arthconf.fortivus.infrastructure.persistence.entity.OrdemServicoEntity;
 import br.arthconf.fortivus.domain.SituacaoDespacho;
 import br.arthconf.fortivus.domain.SituacaoOrdemServico;
 import br.arthconf.fortivus.repository.OrdemServicoRepository;
@@ -26,12 +26,12 @@ public class OrdemServicoCron {
     public void verificarEConcluirOrdensServico() {
         log.info("Executando verificação de conclusão de Ordens de Serviço (Cron)...");
         
-        List<OrdemServico> ordens = ordemServicoRepository.findAllFetched();
+        List<OrdemServicoEntity> ordens = ordemServicoRepository.findAllFetched();
         LocalDateTime limite = LocalDateTime.now().minusDays(2);
         
         int concluidas = 0;
         
-        for (OrdemServico os : ordens) {
+        for (OrdemServicoEntity os : ordens) {
             if (os.getStatus() != SituacaoOrdemServico.EM_EXECUCAO) {
                 continue;
             }
@@ -69,4 +69,5 @@ public class OrdemServicoCron {
         }
     }
 }
+
 
