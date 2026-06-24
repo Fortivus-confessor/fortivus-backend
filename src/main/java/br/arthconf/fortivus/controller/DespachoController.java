@@ -14,7 +14,6 @@ import br.arthconf.fortivus.application.port.in.BuscarRelatorioMaquinarioUseCase
 import br.arthconf.fortivus.application.port.in.SalvarRelatorioMaquinarioUseCase;
 import br.arthconf.fortivus.application.usecase.*;
 import br.arthconf.fortivus.domain.model.Despacho;
-import br.arthconf.fortivus.service.OrdemServicoService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.locationtech.jts.geom.Coordinate;

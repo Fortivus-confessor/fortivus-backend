@@ -34,6 +34,12 @@ public interface OrdemServicoRepository extends JpaRepository<OrdemServicoEntity
     @Query(value = "SELECT DISTINCT o FROM OrdemServicoEntity o JOIN o.despachos d JOIN d.escala e LEFT JOIN e.integrantes i WHERE e.comandante.id = :usuarioId OR i.id = :usuarioId",
            countQuery = "SELECT COUNT(DISTINCT o) FROM OrdemServicoEntity o JOIN o.despachos d JOIN d.escala e LEFT JOIN e.integrantes i WHERE e.comandante.id = :usuarioId OR i.id = :usuarioId")
     org.springframework.data.domain.Page<OrdemServicoEntity> findAllByCombatenteId(@Param("usuarioId") java.util.UUID usuarioId, org.springframework.data.domain.Pageable pageable);
+
+    @Query("SELECT CASE WHEN COUNT(d) > 0 THEN TRUE ELSE FALSE END FROM DespachoEntity d WHERE d.ordemServico.id = :osId")
+    boolean temDespachos(@Param("osId") Long osId);
+
+    @Query("SELECT DISTINCT o FROM OrdemServicoEntity o JOIN FETCH o.escala e JOIN FETCH e.equipe q LEFT JOIN FETCH o.despachos d WHERE o.status = 'EM_EXECUCAO'")
+    List<OrdemServicoEntity> findAllEmExecucaoComDespachos();
 }
 
 
