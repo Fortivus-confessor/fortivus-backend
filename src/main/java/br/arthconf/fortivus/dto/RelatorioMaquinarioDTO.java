@@ -15,4 +15,9 @@ public class RelatorioMaquinarioDTO {
     private String historicoDescritivo;
     private LocalDateTime dataInicio;
     private LocalDateTime dataFim;
+
+    @com.fasterxml.jackson.annotation.JsonProperty("smartId")
+    public String getSmartId() {
+        return despachoId != null ? "RM" + String.format("%012d", despachoId) : null;
+    }
 }

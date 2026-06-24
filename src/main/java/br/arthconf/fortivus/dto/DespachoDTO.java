@@ -19,7 +19,8 @@ public record DespachoDTO(
     Double latitude,
     Double longitude
 ) {
-    public String getCodigoVisual() {
-        return id != null ? "D" + id : null;
+    @com.fasterxml.jackson.annotation.JsonProperty("smartId")
+    public String getSmartId() {
+        return id != null ? "D" + String.format("%012d", id) : null;
     }
 }
