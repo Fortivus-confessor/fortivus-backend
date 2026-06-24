@@ -1,23 +1,28 @@
 package br.arthconf.fortivus.dto;
 
-import br.arthconf.fortivus.domain.RelatorioMaquinario.TipoMaquinario;
-import lombok.Data;
 import java.time.LocalDateTime;
+import java.time.LocalTime;
+import java.util.List;
 
-@Data
-public class RelatorioMaquinarioDTO {
-    private Long id;
-    private Long despachoId;
-    private String operador;
-    private Double horasTrabalhadas;
-    private TipoMaquinario tipoMaquinario;
-    private Double extensaoLinhaDefesaMetros;
-    private String historicoDescritivo;
-    private LocalDateTime dataInicio;
-    private LocalDateTime dataFim;
-
-    @com.fasterxml.jackson.annotation.JsonProperty("smartId")
-    public String getSmartId() {
-        return despachoId != null ? "RM" + String.format("%012d", despachoId) : null;
-    }
+public record RelatorioMaquinarioDTO(
+        Long despachoId,
+        Double horimetroInicial,
+        Double horimetroFinal,
+        String tempoLiquido,
+        LocalTime horaInicioOperacao,
+        LocalTime horaFimOperacao,
+        List<String> tiposEmprego,
+        Double comprimentoAceiros,
+        String descricaoOutroEmprego,
+        Double areaAtuacaoLat,
+        Double areaAtuacaoLng,
+        String efetividadeCombate,
+        Boolean necessidadeReforco,
+        List<String> tiposReforcoNecessarios,
+        String historicoDescritivo,
+        String resultadoOcorrencia,
+        String outroResultadoDescricao,
+        LocalDateTime dataInicio,
+        LocalDateTime dataFim
+) {
 }

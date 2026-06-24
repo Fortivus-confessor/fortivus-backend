@@ -5,7 +5,13 @@ import br.arthconf.fortivus.domain.PropriedadeRelatorio;
 import br.arthconf.fortivus.domain.RelatorioTerrestre;
 import br.arthconf.fortivus.domain.SituacaoDespacho;
 import br.arthconf.fortivus.dto.DespachoDTO;
+import br.arthconf.fortivus.dto.RelatorioAereoDTO;
+import br.arthconf.fortivus.dto.RelatorioMaquinarioDTO;
 import br.arthconf.fortivus.dto.RelatorioTerrestreDTO;
+import br.arthconf.fortivus.application.port.in.BuscarRelatorioAereoUseCase;
+import br.arthconf.fortivus.application.port.in.SalvarRelatorioAereoUseCase;
+import br.arthconf.fortivus.application.port.in.BuscarRelatorioMaquinarioUseCase;
+import br.arthconf.fortivus.application.port.in.SalvarRelatorioMaquinarioUseCase;
 import br.arthconf.fortivus.service.DespachoService;
 import br.arthconf.fortivus.service.OrdemServicoService;
 import lombok.RequiredArgsConstructor;
@@ -33,6 +39,10 @@ public class DespachoController {
     private final OrdemServicoService osService;
     private final br.arthconf.fortivus.service.EscalaService escalaService;
     private final br.arthconf.fortivus.service.RelatorioTerrestreService relatorioTerrestreService;
+    private final BuscarRelatorioAereoUseCase buscarRelatorioAereoUseCase;
+    private final SalvarRelatorioAereoUseCase salvarRelatorioAereoUseCase;
+    private final BuscarRelatorioMaquinarioUseCase buscarRelatorioMaquinarioUseCase;
+    private final SalvarRelatorioMaquinarioUseCase salvarRelatorioMaquinarioUseCase;
     private final br.arthconf.fortivus.service.UsuarioService usuarioService;
 
     @GetMapping
@@ -224,6 +234,38 @@ public class DespachoController {
         return ResponseEntity.ok(toRelatorioDTO(salvo));
     }
 
+    @GetMapping("/{id}/relatorio-aereo")
+    @PreAuthorize("hasAnyRole('ADMIN', 'CENTRO_COMANDO_CENTRAL', 'CENTRO_COMANDO', 'COMBATENTE')")
+    public ResponseEntity<RelatorioAereoDTO> buscarRelatorioAereo(@PathVariable Long id) {
+        return buscarRelatorioAereoUseCase.buscarPorDespachoId(id)
+                .map(ResponseEntity::ok)
+                .orElse(ResponseEntity.notFound().build());
+    }
+
+    @PostMapping("/finalizar-aereo")
+    @PreAuthorize("hasAnyRole('ADMIN', 'CENTRO_COMANDO_CENTRAL', 'CENTRO_COMANDO', 'COMBATENTE')")
+    public ResponseEntity<RelatorioAereoDTO> finalizarAereo(@RequestBody RelatorioAereoDTO dto) {
+        log.info("Recebendo relatório aéreo para despacho ID: {}", dto.despachoId());
+        RelatorioAereoDTO salvo = salvarRelatorioAereoUseCase.salvar(dto.despachoId(), dto);
+        return ResponseEntity.ok(salvo);
+    }
+
+    @GetMapping("/{id}/relatorio-maquinario")
+    @PreAuthorize("hasAnyRole('ADMIN', 'CENTRO_COMANDO_CENTRAL', 'CENTRO_COMANDO', 'COMBATENTE')")
+    public ResponseEntity<RelatorioMaquinarioDTO> buscarRelatorioMaquinario(@PathVariable Long id) {
+        return buscarRelatorioMaquinarioUseCase.buscarPorDespachoId(id)
+                .map(ResponseEntity::ok)
+                .orElse(ResponseEntity.notFound().build());
+    }
+
+    @PostMapping("/finalizar-maquinario")
+    @PreAuthorize("hasAnyRole('ADMIN', 'CENTRO_COMANDO_CENTRAL', 'CENTRO_COMANDO', 'COMBATENTE')")
+    public ResponseEntity<RelatorioMaquinarioDTO> finalizarMaquinario(@RequestBody RelatorioMaquinarioDTO dto) {
+        log.info("Recebendo relatório maquinário para despacho ID: {}", dto.despachoId());
+        RelatorioMaquinarioDTO salvo = salvarRelatorioMaquinarioUseCase.salvar(dto.despachoId(), dto);
+        return ResponseEntity.ok(salvo);
+    }
+
     private DespachoDTO toDTO(Despacho despacho) {
         Double lat = despacho.getLatitude();
         Double lng = despacho.getLongitude();
@@ -288,6 +330,8 @@ public class DespachoController {
                 r.getDataFim()
         );
     }
+
+
 
     @GetMapping("/paged")
     @PreAuthorize("hasAnyRole('ADMIN', 'CENTRO_COMANDO_CENTRAL', 'CENTRO_COMANDO', 'COMBATENTE')")

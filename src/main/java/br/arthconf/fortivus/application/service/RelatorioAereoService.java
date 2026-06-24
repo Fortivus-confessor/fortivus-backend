@@ -11,6 +11,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDateTime;
 import java.util.Optional;
 
 @Service
@@ -29,15 +30,33 @@ public class RelatorioAereoService implements SalvarRelatorioAereoUseCase, Busca
         RelatorioAereo relatorio = relatorioAereoPort.buscarPorDespachoId(despachoId).orElse(new RelatorioAereo());
         relatorio.setDespacho(despacho);
         relatorio.setId(despachoId);
-        relatorio.setAeronavePrefixo(dto.getAeronavePrefixo());
-        relatorio.setPilotoComandante(dto.getPilotoComandante());
-        relatorio.setTempoVooHoras(dto.getTempoVooHoras());
-        relatorio.setVolumeAguaLancado(dto.getVolumeAguaLancado());
-        relatorio.setQtdeLancamentos(dto.getQtdeLancamentos());
-        relatorio.setTipoAtuacao(dto.getTipoAtuacao());
-        relatorio.setHistoricoDescritivo(dto.getHistoricoDescritivo());
-        relatorio.setDataInicio(dto.getDataInicio());
-        relatorio.setDataFim(dto.getDataFim());
+        relatorio.setHorimetroInicial(dto.horimetroInicial());
+        relatorio.setHorimetroFinal(dto.horimetroFinal());
+        relatorio.setHorasLiquidas(dto.horasLiquidas());
+        relatorio.setTiposEmprego(dto.tiposEmprego());
+        relatorio.setQtdeLancamentos(dto.qtdeLancamentos());
+        relatorio.setHouveUsoAgua(dto.houveUsoAgua());
+        relatorio.setVolumeAguaLitros(dto.volumeAguaLitros());
+        relatorio.setOrigensAgua(dto.origensAgua());
+        relatorio.setOutraOrigemAguaDescricao(dto.outraOrigemAguaDescricao());
+        relatorio.setEfetividadeCombate(dto.efetividadeCombate());
+        relatorio.setNecessidadeReforco(dto.necessidadeReforco());
+        relatorio.setTiposReforcoNecessarios(dto.tiposReforcoNecessarios());
+        relatorio.setHistoricoDescritivo(dto.historicoDescritivo());
+        relatorio.setResultadoOcorrencia(dto.resultadoOcorrencia());
+        relatorio.setOutroResultadoDescricao(dto.outroResultadoDescricao());
+        
+        if (dto.dataInicio() != null) {
+            relatorio.setDataInicio(dto.dataInicio());
+        } else if (relatorio.getDataInicio() == null) {
+            relatorio.setDataInicio(LocalDateTime.now());
+        }
+        relatorio.setDataFim(dto.dataFim() != null ? dto.dataFim() : LocalDateTime.now());
+
+        if (dto.areaAtuacaoLat() != null && dto.areaAtuacaoLng() != null) {
+            org.locationtech.jts.geom.GeometryFactory gf = new org.locationtech.jts.geom.GeometryFactory(new org.locationtech.jts.geom.PrecisionModel(), 4326);
+            relatorio.setAreaAtuacaoGeom(gf.createPoint(new org.locationtech.jts.geom.Coordinate(dto.areaAtuacaoLng(), dto.areaAtuacaoLat())));
+        }
 
         RelatorioAereo salvo = relatorioAereoPort.salvar(relatorio);
         return toDTO(salvo);
@@ -49,18 +68,33 @@ public class RelatorioAereoService implements SalvarRelatorioAereoUseCase, Busca
     }
 
     private RelatorioAereoDTO toDTO(RelatorioAereo rel) {
-        RelatorioAereoDTO dto = new RelatorioAereoDTO();
-        dto.setId(rel.getId());
-        dto.setDespachoId(rel.getDespacho().getId());
-        dto.setAeronavePrefixo(rel.getAeronavePrefixo());
-        dto.setPilotoComandante(rel.getPilotoComandante());
-        dto.setTempoVooHoras(rel.getTempoVooHoras());
-        dto.setVolumeAguaLancado(rel.getVolumeAguaLancado());
-        dto.setQtdeLancamentos(rel.getQtdeLancamentos());
-        dto.setTipoAtuacao(rel.getTipoAtuacao());
-        dto.setHistoricoDescritivo(rel.getHistoricoDescritivo());
-        dto.setDataInicio(rel.getDataInicio());
-        dto.setDataFim(rel.getDataFim());
-        return dto;
+        Double lat = null, lng = null;
+        if (rel.getAreaAtuacaoGeom() != null) {
+            lat = rel.getAreaAtuacaoGeom().getCoordinate().y;
+            lng = rel.getAreaAtuacaoGeom().getCoordinate().x;
+        }
+
+        return new RelatorioAereoDTO(
+            rel.getDespacho().getId(),
+            rel.getHorimetroInicial(),
+            rel.getHorimetroFinal(),
+            rel.getHorasLiquidas(),
+            rel.getTiposEmprego(),
+            lat,
+            lng,
+            rel.getQtdeLancamentos(),
+            rel.getHouveUsoAgua(),
+            rel.getVolumeAguaLitros(),
+            rel.getOrigensAgua(),
+            rel.getOutraOrigemAguaDescricao(),
+            rel.getEfetividadeCombate(),
+            rel.getNecessidadeReforco(),
+            rel.getTiposReforcoNecessarios(),
+            rel.getHistoricoDescritivo(),
+            rel.getResultadoOcorrencia(),
+            rel.getOutroResultadoDescricao(),
+            rel.getDataInicio(),
+            rel.getDataFim()
+        );
     }
 }

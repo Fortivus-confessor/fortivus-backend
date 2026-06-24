@@ -1,25 +1,28 @@
 package br.arthconf.fortivus.dto;
 
-import br.arthconf.fortivus.domain.RelatorioAereo.TipoAtuacaoAerea;
-import lombok.Data;
 import java.time.LocalDateTime;
+import java.util.List;
 
-@Data
-public class RelatorioAereoDTO {
-    private Long id;
-    private Long despachoId;
-    private String aeronavePrefixo;
-    private String pilotoComandante;
-    private Double tempoVooHoras;
-    private Integer volumeAguaLancado;
-    private Integer qtdeLancamentos;
-    private TipoAtuacaoAerea tipoAtuacao;
-    private String historicoDescritivo;
-    private LocalDateTime dataInicio;
-    private LocalDateTime dataFim;
-
-    @com.fasterxml.jackson.annotation.JsonProperty("smartId")
-    public String getSmartId() {
-        return despachoId != null ? "RA" + String.format("%012d", despachoId) : null;
-    }
+public record RelatorioAereoDTO(
+        Long despachoId,
+        Double horimetroInicial,
+        Double horimetroFinal,
+        String horasLiquidas,
+        List<String> tiposEmprego,
+        Double areaAtuacaoLat,
+        Double areaAtuacaoLng,
+        Integer qtdeLancamentos,
+        Boolean houveUsoAgua,
+        Integer volumeAguaLitros,
+        List<String> origensAgua,
+        String outraOrigemAguaDescricao,
+        String efetividadeCombate,
+        Boolean necessidadeReforco,
+        List<String> tiposReforcoNecessarios,
+        String historicoDescritivo,
+        String resultadoOcorrencia,
+        String outroResultadoDescricao,
+        LocalDateTime dataInicio,
+        LocalDateTime dataFim
+) {
 }
