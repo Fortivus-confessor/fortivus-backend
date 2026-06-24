@@ -11,6 +11,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDateTime;
 import java.util.Optional;
 
 @Service
@@ -29,13 +30,32 @@ public class RelatorioMaquinarioService implements SalvarRelatorioMaquinarioUseC
         RelatorioMaquinario relatorio = relatorioMaquinarioPort.buscarPorDespachoId(despachoId).orElse(new RelatorioMaquinario());
         relatorio.setDespacho(despacho);
         relatorio.setId(despachoId);
-        relatorio.setOperador(dto.getOperador());
-        relatorio.setHorasTrabalhadas(dto.getHorasTrabalhadas());
-        relatorio.setTipoMaquinario(dto.getTipoMaquinario());
-        relatorio.setExtensaoLinhaDefesaMetros(dto.getExtensaoLinhaDefesaMetros());
-        relatorio.setHistoricoDescritivo(dto.getHistoricoDescritivo());
-        relatorio.setDataInicio(dto.getDataInicio());
-        relatorio.setDataFim(dto.getDataFim());
+        relatorio.setHorimetroInicial(dto.horimetroInicial());
+        relatorio.setHorimetroFinal(dto.horimetroFinal());
+        relatorio.setTempoLiquido(dto.tempoLiquido());
+        relatorio.setHoraInicioOperacao(dto.horaInicioOperacao());
+        relatorio.setHoraFimOperacao(dto.horaFimOperacao());
+        relatorio.setTiposEmprego(dto.tiposEmprego());
+        relatorio.setComprimentoAceiros(dto.comprimentoAceiros());
+        relatorio.setDescricaoOutroEmprego(dto.descricaoOutroEmprego());
+        relatorio.setEfetividadeCombate(dto.efetividadeCombate());
+        relatorio.setNecessidadeReforco(dto.necessidadeReforco());
+        relatorio.setTiposReforcoNecessarios(dto.tiposReforcoNecessarios());
+        relatorio.setHistoricoDescritivo(dto.historicoDescritivo());
+        relatorio.setResultadoOcorrencia(dto.resultadoOcorrencia());
+        relatorio.setOutroResultadoDescricao(dto.outroResultadoDescricao());
+        
+        if (dto.dataInicio() != null) {
+            relatorio.setDataInicio(dto.dataInicio());
+        } else if (relatorio.getDataInicio() == null) {
+            relatorio.setDataInicio(LocalDateTime.now());
+        }
+        relatorio.setDataFim(dto.dataFim() != null ? dto.dataFim() : LocalDateTime.now());
+
+        if (dto.areaAtuacaoLat() != null && dto.areaAtuacaoLng() != null) {
+            org.locationtech.jts.geom.GeometryFactory gf = new org.locationtech.jts.geom.GeometryFactory(new org.locationtech.jts.geom.PrecisionModel(), 4326);
+            relatorio.setAreaAtuacaoGeom(gf.createPoint(new org.locationtech.jts.geom.Coordinate(dto.areaAtuacaoLng(), dto.areaAtuacaoLat())));
+        }
 
         RelatorioMaquinario salvo = relatorioMaquinarioPort.salvar(relatorio);
         return toDTO(salvo);
@@ -47,16 +67,32 @@ public class RelatorioMaquinarioService implements SalvarRelatorioMaquinarioUseC
     }
 
     private RelatorioMaquinarioDTO toDTO(RelatorioMaquinario rel) {
-        RelatorioMaquinarioDTO dto = new RelatorioMaquinarioDTO();
-        dto.setId(rel.getId());
-        dto.setDespachoId(rel.getDespacho().getId());
-        dto.setOperador(rel.getOperador());
-        dto.setHorasTrabalhadas(rel.getHorasTrabalhadas());
-        dto.setTipoMaquinario(rel.getTipoMaquinario());
-        dto.setExtensaoLinhaDefesaMetros(rel.getExtensaoLinhaDefesaMetros());
-        dto.setHistoricoDescritivo(rel.getHistoricoDescritivo());
-        dto.setDataInicio(rel.getDataInicio());
-        dto.setDataFim(rel.getDataFim());
-        return dto;
+        Double lat = null, lng = null;
+        if (rel.getAreaAtuacaoGeom() != null) {
+            lat = rel.getAreaAtuacaoGeom().getCoordinate().y;
+            lng = rel.getAreaAtuacaoGeom().getCoordinate().x;
+        }
+
+        return new RelatorioMaquinarioDTO(
+            rel.getDespacho().getId(),
+            rel.getHorimetroInicial(),
+            rel.getHorimetroFinal(),
+            rel.getTempoLiquido(),
+            rel.getHoraInicioOperacao(),
+            rel.getHoraFimOperacao(),
+            rel.getTiposEmprego(),
+            rel.getComprimentoAceiros(),
+            rel.getDescricaoOutroEmprego(),
+            lat,
+            lng,
+            rel.getEfetividadeCombate(),
+            rel.getNecessidadeReforco(),
+            rel.getTiposReforcoNecessarios(),
+            rel.getHistoricoDescritivo(),
+            rel.getResultadoOcorrencia(),
+            rel.getOutroResultadoDescricao(),
+            rel.getDataInicio(),
+            rel.getDataFim()
+        );
     }
 }

@@ -4,8 +4,11 @@ import jakarta.persistence.*;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.ToString;
+import org.locationtech.jts.geom.Point;
 import org.springframework.data.domain.Persistable;
+
 import java.time.LocalDateTime;
+import java.util.List;
 
 @Entity
 @Table(name = "relatorio_aereo")
@@ -37,41 +40,63 @@ public class RelatorioAereo implements Persistable<Long> {
     @JoinColumn(name = "id")
     private Despacho despacho;
 
-    @Column(name = "aeronave_prefixo")
-    private String aeronavePrefixo;
+    @Column(name = "horimetro_inicial")
+    private Double horimetroInicial;
 
-    @Column(name = "piloto_comandante")
-    private String pilotoComandante;
+    @Column(name = "horimetro_final")
+    private Double horimetroFinal;
 
-    @Column(name = "tempo_voo_horas")
-    private Double tempoVooHoras;
+    @Column(name = "horas_liquidas")
+    private String horasLiquidas;
 
-    @Column(name = "volume_agua_lancado")
-    private Integer volumeAguaLancado;
+    @ElementCollection
+    @CollectionTable(name = "relatorio_aereo_emprego", joinColumns = @JoinColumn(name = "relatorio_id"))
+    @Column(name = "tipo_emprego")
+    private List<String> tiposEmprego;
+
+    @Column(name = "area_atuacao_geom", columnDefinition = "geometry(Point,4326)")
+    private Point areaAtuacaoGeom;
 
     @Column(name = "qtde_lancamentos")
     private Integer qtdeLancamentos;
 
-    @Enumerated(EnumType.STRING)
-    @Column(name = "tipo_atuacao")
-    private TipoAtuacaoAerea tipoAtuacao;
+    @Column(name = "houve_uso_agua")
+    private Boolean houveUsoAgua;
+
+    @Column(name = "volume_agua_litros")
+    private Integer volumeAguaLitros;
+
+    @ElementCollection
+    @CollectionTable(name = "relatorio_aereo_origem_agua", joinColumns = @JoinColumn(name = "relatorio_id"))
+    @Column(name = "origem_agua")
+    private List<String> origensAgua;
+
+    @Column(name = "outra_origem_agua_descricao")
+    private String outraOrigemAguaDescricao;
+
+    @Column(name = "efetividade_combate")
+    private String efetividadeCombate;
+
+    @Column(name = "necessidade_reforco")
+    private Boolean necessidadeReforco;
+
+    @ElementCollection
+    @CollectionTable(name = "relatorio_aereo_reforco", joinColumns = @JoinColumn(name = "relatorio_id"))
+    @Column(name = "tipo_reforco")
+    private List<String> tiposReforcoNecessarios;
 
     @Column(name = "historico_descritivo", columnDefinition = "TEXT")
     private String historicoDescritivo;
+
+    @Column(name = "resultado_ocorrencia")
+    private String resultadoOcorrencia;
+
+    @Column(name = "outro_resultado_descricao")
+    private String outroResultadoDescricao;
 
     @Column(name = "data_inicio", nullable = false)
     private LocalDateTime dataInicio;
 
     @Column(name = "data_fim")
     private LocalDateTime dataFim;
-
-    public enum TipoAtuacaoAerea {
-        LANCAMENTO_AGUA("Lançamento de água"),
-        MONITORAMENTO("Monitoramento e Patrulha"),
-        TRANSPORTE("Transporte de Tropa/Equipamento");
-
-        private final String descricao;
-        TipoAtuacaoAerea(String d) { this.descricao = d; }
-        public String getDescricao() { return descricao; }
-    }
 }
