@@ -53,8 +53,6 @@ public record RelatorioTerrestreDTO(
         ResultadoOcorrencia resultadoOcorrencia,
         String outroResultadoDescricao,
 
-        // KM rodado
-        Double kmFinal,
 
         // Datas
         LocalDateTime dataInicio,

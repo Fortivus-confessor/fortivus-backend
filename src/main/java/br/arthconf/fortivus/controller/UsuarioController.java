@@ -153,6 +153,7 @@ public class UsuarioController {
     }
 
     @org.springframework.web.bind.annotation.GetMapping("/paged")
+    @PreAuthorize("hasAnyRole('ADMIN', 'CENTRO_COMANDO_CENTRAL')")
     public org.springframework.http.ResponseEntity<org.springframework.data.domain.Page<UsuarioDTO>> listarPaginado(
             @org.springframework.data.web.PageableDefault(size = 10) org.springframework.data.domain.Pageable pageable) {
         return org.springframework.http.ResponseEntity.ok(usuarioService.listarPaginado(pageable).map(this::toDTO));

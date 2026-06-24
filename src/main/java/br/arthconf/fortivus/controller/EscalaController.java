@@ -157,6 +157,7 @@ public class EscalaController {
 
     @org.springframework.web.bind.annotation.GetMapping("/paged")
     @org.springframework.transaction.annotation.Transactional(readOnly = true)
+    @PreAuthorize("hasAnyRole('ADMIN', 'CENTRO_COMANDO_CENTRAL', 'CENTRO_COMANDO', 'COMBATENTE')")
     public org.springframework.http.ResponseEntity<org.springframework.data.domain.Page<EscalaDTO>> listarPaginado(
             @org.springframework.data.web.PageableDefault(size = 10) org.springframework.data.domain.Pageable pageable) {
         return org.springframework.http.ResponseEntity.ok(escalaService.listarPaginado(pageable).map(this::toDTO));

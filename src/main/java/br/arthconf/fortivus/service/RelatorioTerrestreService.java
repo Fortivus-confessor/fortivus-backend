@@ -87,7 +87,6 @@ public class RelatorioTerrestreService {
             persistente.setHistoricoDescritivo(relatorio.getHistoricoDescritivo());
             persistente.setResultadoOcorrencia(relatorio.getResultadoOcorrencia());
             persistente.setOutroResultadoDescricao(relatorio.getOutroResultadoDescricao());
-            persistente.setKmFinal(relatorio.getKmFinal());
             persistente.setDataFim(LocalDateTime.now());
 
             // Sincroniza Propriedades (Mantendo IDs existentes onde possível)

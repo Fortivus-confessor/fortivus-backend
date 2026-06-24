@@ -42,9 +42,7 @@ public class OrdemServicoService {
         Usuario relator = usuarioService.buscarPorId(dto.responsavelId());
         os.setRelator(relator);
 
-        if (dto.latitude() != null && dto.longitude() != null) {
-            os.setLocalizacaoGeom(geometryFactory.createPoint(new Coordinate(dto.longitude(), dto.latitude())));
-        }
+
 
         os = ordemServicoRepository.save(os);
 
@@ -57,7 +55,8 @@ public class OrdemServicoService {
         despacho.setDescricaoTarefa(dto.descricaoTarefa());
         despacho.setStatus(SituacaoDespacho.EM_ANDAMENTO);
         if (dto.latitude() != null && dto.longitude() != null) {
-            despacho.setLocalizacaoGeom(geometryFactory.createPoint(new Coordinate(dto.longitude(), dto.latitude())));
+            despacho.setLatitude(dto.latitude());
+            despacho.setLongitude(dto.longitude());
         }
         
         despachoRepository.save(despacho);

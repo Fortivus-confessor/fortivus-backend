@@ -70,24 +70,14 @@ public class OrdemServicoController {
         Despacho primeiroDespacho = os.getDespachos().isEmpty() ? null : os.getDespachos().get(0);
         String eventoFogoId = os.getEventoFogoId() != null ? os.getEventoFogoId().toString() : null;
         
-        Double lat = null;
-        Double lng = null;
-        if (primeiroDespacho != null && primeiroDespacho.getLocalizacaoGeom() instanceof org.locationtech.jts.geom.Point p) {
-            lat = p.getY();
-            lng = p.getX();
-        }
-        
         return new OrdemServicoDTO(
             os.getId(),
-            os.getLocalizacaoTexto(),
             os.getDescricaoTarefa(),
             os.getEscala() != null ? os.getEscala().getId() : null,
             os.getRelator() != null ? os.getRelator().getId() : null,
             os.getDataCriacao(),
             os.getStatus(),
             eventoFogoId,
-            lat,
-            lng,
             primeiroDespacho != null && primeiroDespacho.getCategoria() != null ? primeiroDespacho.getCategoria().name() : null,
             os.getEscala() != null && os.getEscala().getEquipe() != null ? os.getEscala().getEquipe().getCentroComando().getId() : null,
             os.getDataFim()
@@ -95,6 +85,7 @@ public class OrdemServicoController {
     }
 
     @org.springframework.web.bind.annotation.GetMapping("/paged")
+    @PreAuthorize("hasAnyRole('ADMIN', 'CENTRO_COMANDO_CENTRAL', 'CENTRO_COMANDO', 'COMBATENTE')")
     public org.springframework.http.ResponseEntity<org.springframework.data.domain.Page<OrdemServicoDTO>> listarPaginado(
             @org.springframework.data.web.PageableDefault(size = 10) org.springframework.data.domain.Pageable pageable) {
         return org.springframework.http.ResponseEntity.ok(ordemServicoService.listarPaginado(pageable).map(this::toDTO));
