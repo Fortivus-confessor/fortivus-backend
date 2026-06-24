@@ -5,7 +5,6 @@ import br.arthconf.fortivus.dto.CadastrarOsDespachoDTO;
 import br.arthconf.fortivus.repository.DespachoRepository;
 import br.arthconf.fortivus.repository.OrdemServicoRepository;
 import lombok.RequiredArgsConstructor;
-import org.locationtech.jts.geom.Coordinate;
 import org.locationtech.jts.geom.GeometryFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -21,7 +20,6 @@ public class OrdemServicoService {
     private final DespachoRepository despachoRepository;
     private final EscalaService escalaService;
     private final UsuarioService usuarioService;
-    private final GeometryFactory geometryFactory = new GeometryFactory();
 
     @Transactional
     public OrdemServico cadastrarOsEDespacho(CadastrarOsDespachoDTO dto) {

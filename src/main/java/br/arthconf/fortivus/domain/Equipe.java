@@ -1,5 +1,6 @@
 package br.arthconf.fortivus.domain;
 
+import br.arthconf.fortivus.domain.model.CategoriaOperacao;
 import jakarta.persistence.*;
 import lombok.Data;
 import lombok.EqualsAndHashCode;

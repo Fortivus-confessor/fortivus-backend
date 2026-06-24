@@ -1,6 +1,6 @@
 package br.arthconf.fortivus.dto;
 
-import br.arthconf.fortivus.domain.CategoriaOperacao;
+import br.arthconf.fortivus.domain.model.CategoriaOperacao;
 import br.arthconf.fortivus.domain.SituacaoOrdemServico;
 
 import java.util.UUID;

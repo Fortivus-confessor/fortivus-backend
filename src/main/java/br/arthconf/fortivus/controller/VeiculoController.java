@@ -59,9 +59,9 @@ public class VeiculoController {
             @RequestParam(value = "contrato", required = false) String contrato,
             @RequestParam(value = "fotoArquivo", required = false) MultipartFile fotoArquivo) throws IOException {
 
-        br.arthconf.fortivus.domain.CategoriaOperacao categoria = null;
+        br.arthconf.fortivus.domain.model.CategoriaOperacao categoria = null;
         if (categoriaStr != null && !categoriaStr.isEmpty()) {
-            categoria = br.arthconf.fortivus.domain.CategoriaOperacao.fromString(categoriaStr);
+            categoria = br.arthconf.fortivus.domain.model.CategoriaOperacao.fromString(categoriaStr);
         }
 
         Veiculo veiculoParaSalvar;
