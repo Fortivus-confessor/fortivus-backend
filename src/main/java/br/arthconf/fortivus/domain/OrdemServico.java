@@ -18,12 +18,6 @@ public class OrdemServico {
     @Id
     private Long id; // SmartId (BigInt cronológico)
 
-    @Column(name = "localizacao_texto", columnDefinition = "TEXT")
-    private String localizacaoTexto;
-
-    @Column(name = "localizacao_geom", columnDefinition = "geometry(Geometry, 4326)")
-    private Geometry localizacaoGeom;
-
     @Column(name = "descricao_tarefa", columnDefinition = "TEXT")
     private String descricaoTarefa;
 

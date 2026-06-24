@@ -97,9 +97,6 @@ public class RelatorioTerrestre implements Persistable<Long> {
     @Column(name = "historico_descritivo", columnDefinition = "TEXT")
     private String historicoDescritivo;
 
-    @Column(name = "km_final")
-    private Double kmFinal;
-
     @Enumerated(EnumType.STRING)
     @Column(name = "resultado_ocorrencia")
     private ResultadoOcorrencia resultadoOcorrencia;

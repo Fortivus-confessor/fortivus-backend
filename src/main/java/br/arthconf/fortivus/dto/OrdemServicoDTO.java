@@ -7,15 +7,12 @@ import java.util.UUID;
 
 public record OrdemServicoDTO(
     Long id,
-    String localizacaoTexto,
     String descricaoTarefa,
     UUID escalaId,
     UUID relatorId,
     LocalDateTime dataCriacao,
     SituacaoOrdemServico status,
     String eventoFogoId,
-    Double latitude,
-    Double longitude,
     String tipoDespacho,
     UUID comandoId,
     LocalDateTime dataFim

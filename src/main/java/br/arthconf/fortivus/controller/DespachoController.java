@@ -75,8 +75,8 @@ public class DespachoController {
         }
 
         if (dto.latitude() != null && dto.longitude() != null) {
-            org.locationtech.jts.geom.GeometryFactory gf = new org.locationtech.jts.geom.GeometryFactory(new org.locationtech.jts.geom.PrecisionModel(), 4326);
-            despacho.setLocalizacaoGeom(gf.createPoint(new org.locationtech.jts.geom.Coordinate(dto.longitude(), dto.latitude())));
+            despacho.setLatitude(dto.latitude());
+            despacho.setLongitude(dto.longitude());
         }
 
         Despacho salvo = despachoService.salvar(despacho);
@@ -116,10 +116,11 @@ public class DespachoController {
         despacho.setDataFim(dto.dataFim());
 
         if (dto.latitude() != null && dto.longitude() != null) {
-            org.locationtech.jts.geom.GeometryFactory gf = new org.locationtech.jts.geom.GeometryFactory(new org.locationtech.jts.geom.PrecisionModel(), 4326);
-            despacho.setLocalizacaoGeom(gf.createPoint(new org.locationtech.jts.geom.Coordinate(dto.longitude(), dto.latitude())));
+            despacho.setLatitude(dto.latitude());
+            despacho.setLongitude(dto.longitude());
         } else {
-            despacho.setLocalizacaoGeom(null);
+            despacho.setLatitude(null);
+            despacho.setLongitude(null);
         }
 
         Despacho salvo = despachoService.salvar(despacho);
@@ -166,8 +167,11 @@ public class DespachoController {
 
         var despacho = despachoService.buscarPorId(dto.despachoId());
 
-        RelatorioTerrestre relatorio = new RelatorioTerrestre();
-        relatorio.setDespacho(despacho);
+        RelatorioTerrestre relatorio = relatorioTerrestreService.buscarPorDespachoId(dto.despachoId());
+        if (relatorio == null) {
+            relatorio = new RelatorioTerrestre();
+            relatorio.setDespacho(despacho);
+        }
         relatorio.setAcoesRealizadas(dto.acoesRealizadas());
         relatorio.setOrgaosApoio(dto.orgaosApoio());
         relatorio.setOutrosOrgaosDescricao(dto.outrosOrgaosDescricao());
@@ -184,7 +188,6 @@ public class DespachoController {
         relatorio.setHistoricoDescritivo(dto.historicoDescritivo());
         relatorio.setResultadoOcorrencia(dto.resultadoOcorrencia());
         relatorio.setOutroResultadoDescricao(dto.outroResultadoDescricao());
-        relatorio.setKmFinal(dto.kmFinal());
 
         // Geolocalização da área de atuação
         if (dto.areaAtuacaoLat() != null && dto.areaAtuacaoLng() != null) {
@@ -222,12 +225,8 @@ public class DespachoController {
     }
 
     private DespachoDTO toDTO(Despacho despacho) {
-        Double lat = null;
-        Double lng = null;
-        if (despacho.getLocalizacaoGeom() != null) {
-            lat = despacho.getLocalizacaoGeom().getCoordinate().y;
-            lng = despacho.getLocalizacaoGeom().getCoordinate().x;
-        }
+        Double lat = despacho.getLatitude();
+        Double lng = despacho.getLongitude();
         return new DespachoDTO(
                 despacho.getId(),
                 despacho.getOrdemServico() != null ? despacho.getOrdemServico().getId() : null,
@@ -285,13 +284,13 @@ public class DespachoController {
                 r.getHistoricoDescritivo(),
                 r.getResultadoOcorrencia(),
                 r.getOutroResultadoDescricao(),
-                r.getKmFinal(),
                 r.getDataInicio(),
                 r.getDataFim()
         );
     }
 
     @GetMapping("/paged")
+    @PreAuthorize("hasAnyRole('ADMIN', 'CENTRO_COMANDO_CENTRAL', 'CENTRO_COMANDO', 'COMBATENTE')")
     public ResponseEntity<org.springframework.data.domain.Page<DespachoDTO>> listarPaginado(
             @org.springframework.data.web.PageableDefault(size = 10) org.springframework.data.domain.Pageable pageable) {
         return ResponseEntity.ok(despachoService.listarPaginado(pageable).map(this::toDTO));

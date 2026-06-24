@@ -34,8 +34,11 @@ public class Despacho {
     @Column(name = "categoria", nullable = false)
     private CategoriaOperacao categoria;
 
-    @Column(name = "localizacao_geom", columnDefinition = "geometry(Point, 4326)")
-    private org.locationtech.jts.geom.Geometry localizacaoGeom;
+    @Column(name = "latitude")
+    private Double latitude;
+
+    @Column(name = "longitude")
+    private Double longitude;
 
     @Column(name = "descricao_tarefa", columnDefinition = "TEXT")
     private String descricaoTarefa;
