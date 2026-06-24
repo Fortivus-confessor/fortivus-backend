@@ -5,14 +5,15 @@ import lombok.Builder;
 import lombok.Data;
 
 import java.time.LocalDateTime;
+import java.util.UUID;
 
 @Data
 @Builder
 public class Despacho {
     private Long id;
     private Long ordemServicoId;
-    private Long escalaId;
-    private Long responsavelId;
+    private UUID escalaId;
+    private UUID responsavelId;
     private CategoriaOperacao categoria;
     private Double latitude;
     private Double longitude;
