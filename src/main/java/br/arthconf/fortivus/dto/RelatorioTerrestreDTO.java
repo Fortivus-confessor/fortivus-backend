@@ -58,7 +58,10 @@ public record RelatorioTerrestreDTO(
         LocalDateTime dataInicio,
         LocalDateTime dataFim
 ) {
-
+    @com.fasterxml.jackson.annotation.JsonProperty("smartId")
+    public String getSmartId() {
+        return despachoId != null ? "RT" + String.format("%012d", despachoId) : null;
+    }
     /**
      * Sub-DTO para propriedades rurais (apoio ou recusa).
      */

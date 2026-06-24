@@ -17,7 +17,8 @@ public record OrdemServicoDTO(
     UUID comandoId,
     LocalDateTime dataFim
 ) {
-    public String getCodigoVisual() {
+    @com.fasterxml.jackson.annotation.JsonProperty("smartId")
+    public String getSmartId() {
         return id != null ? "OS" + id : null;
     }
 }
