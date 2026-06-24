@@ -22,13 +22,22 @@ public class RelatorioTerrestreService {
     public RelatorioTerrestre buscarPorDespachoId(Long despachoId) {
         RelatorioTerrestre relatorio = repository.findById(despachoId).orElse(null);
         if (relatorio != null) {
-            org.hibernate.Hibernate.initialize(relatorio.getAcoesRealizadas());
-            org.hibernate.Hibernate.initialize(relatorio.getOrgaosApoio());
-            org.hibernate.Hibernate.initialize(relatorio.getOrigensAgua());
-            org.hibernate.Hibernate.initialize(relatorio.getAnexos());
-            org.hibernate.Hibernate.initialize(relatorio.getPropriedades());
+            inicializarColecoes(relatorio);
         }
         return relatorio;
+    }
+
+    private void inicializarColecoes(RelatorioTerrestre relatorio) {
+        org.hibernate.Hibernate.initialize(relatorio.getAcoesRealizadas());
+        org.hibernate.Hibernate.initialize(relatorio.getOrgaosApoio());
+        org.hibernate.Hibernate.initialize(relatorio.getOrigensAgua());
+        org.hibernate.Hibernate.initialize(relatorio.getTiposReforcoNecessarios());
+        org.hibernate.Hibernate.initialize(relatorio.getAnexos());
+        org.hibernate.Hibernate.initialize(relatorio.getPropriedades());
+        // Inicializa o despacho para serialização
+        if (relatorio.getDespacho() != null) {
+            org.hibernate.Hibernate.initialize(relatorio.getDespacho());
+        }
     }
 
     @Transactional
@@ -91,6 +100,9 @@ public class RelatorioTerrestreService {
         despacho.setStatus(SituacaoDespacho.CONCLUIDO);
         despacho.setDataFim(persistente.getDataFim());
         // despachoService.salvar(despacho); // Save implícito pelo @Transactional
+
+        // Inicializa todas as coleções antes de retornar (evita LazyInitializationException na serialização JSON)
+        inicializarColecoes(persistente);
         
         return persistente;
     }
