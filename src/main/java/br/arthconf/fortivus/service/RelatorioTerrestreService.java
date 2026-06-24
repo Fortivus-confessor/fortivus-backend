@@ -18,7 +18,7 @@ import java.time.LocalDateTime;
 public class RelatorioTerrestreService {
     
     private final RelatorioTerrestreRepository repository;
-    private final DespachoService despachoService;
+    private final br.arthconf.fortivus.repository.DespachoRepository despachoRepository;
 
     @Transactional(readOnly = true)
     public RelatorioTerrestre buscarPorDespachoId(Long despachoId) {
@@ -47,7 +47,7 @@ public class RelatorioTerrestreService {
         Long id = relatorio.getDespacho().getId();
         
         // Garante que o DespachoEntity está atrelado à sessão do Hibernate (Managed)
-        DespachoEntity despachoGerenciado = despachoService.buscarPorId(id);
+        DespachoEntity despachoGerenciado = despachoRepository.findByIdFetched(id).orElse(null);
         relatorio.setDespacho(despachoGerenciado);
         
         // Busca a instância gerenciada para atualização cirúrgica

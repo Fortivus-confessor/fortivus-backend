@@ -12,7 +12,8 @@ import br.arthconf.fortivus.application.port.in.BuscarRelatorioAereoUseCase;
 import br.arthconf.fortivus.application.port.in.SalvarRelatorioAereoUseCase;
 import br.arthconf.fortivus.application.port.in.BuscarRelatorioMaquinarioUseCase;
 import br.arthconf.fortivus.application.port.in.SalvarRelatorioMaquinarioUseCase;
-import br.arthconf.fortivus.service.DespachoService;
+import br.arthconf.fortivus.application.usecase.*;
+import br.arthconf.fortivus.domain.model.Despacho;
 import br.arthconf.fortivus.service.OrdemServicoService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -35,119 +36,74 @@ import java.util.stream.Collectors;
 @Slf4j
 public class DespachoController {
 
-    private final DespachoService despachoService;
-    private final OrdemServicoService osService;
-    private final br.arthconf.fortivus.service.EscalaService escalaService;
+    private final CriarDespachoUseCase criarDespachoUseCase;
+    private final AtualizarStatusDespachoUseCase atualizarStatusDespachoUseCase;
+    private final ListarDespachosUseCase listarDespachosUseCase;
+    private final BuscarDespachoPorIdUseCase buscarDespachoPorIdUseCase;
+    private final DeletarDespachoUseCase deletarDespachoUseCase;
+    private final br.arthconf.fortivus.repository.DespachoRepository despachoRepository;
     private final br.arthconf.fortivus.service.RelatorioTerrestreService relatorioTerrestreService;
     private final BuscarRelatorioAereoUseCase buscarRelatorioAereoUseCase;
     private final SalvarRelatorioAereoUseCase salvarRelatorioAereoUseCase;
     private final BuscarRelatorioMaquinarioUseCase buscarRelatorioMaquinarioUseCase;
     private final SalvarRelatorioMaquinarioUseCase salvarRelatorioMaquinarioUseCase;
-    private final br.arthconf.fortivus.service.UsuarioService usuarioService;
 
     @GetMapping
     @PreAuthorize("hasAnyRole('ADMIN', 'CENTRO_COMANDO_CENTRAL', 'CENTRO_COMANDO', 'COMBATENTE')")
     public ResponseEntity<List<DespachoDTO>> listar() {
-        List<DespachoDTO> despachos = despachoService.listarTodos().stream()
-                .map(this::toDTO)
-                .collect(Collectors.toList());
-        return ResponseEntity.ok(despachos);
+        return ResponseEntity.ok(listarDespachosUseCase.listarTodos());
     }
 
     @GetMapping("/{id}")
     @PreAuthorize("hasAnyRole('ADMIN', 'CENTRO_COMANDO_CENTRAL', 'CENTRO_COMANDO', 'COMBATENTE')")
     public ResponseEntity<DespachoDTO> buscarPorId(@PathVariable Long id) {
-        DespachoEntity DespachoEntity = despachoService.buscarPorId(id);
-        return ResponseEntity.ok(toDTO(DespachoEntity));
+        return buscarDespachoPorIdUseCase.executar(id)
+                .map(ResponseEntity::ok)
+                .orElse(ResponseEntity.notFound().build());
     }
 
     @PostMapping
     @PreAuthorize("hasAnyRole('ADMIN', 'CENTRO_COMANDO_CENTRAL', 'CENTRO_COMANDO')")
     public ResponseEntity<DespachoDTO> salvar(@RequestBody DespachoDTO dto) {
-        DespachoEntity DespachoEntity = new DespachoEntity();
-        if (dto.id() != null) {
-            DespachoEntity = despachoService.buscarPorId(dto.id());
-        } else {
-            DespachoEntity.setStatus(SituacaoDespacho.EM_ANDAMENTO);
-            // ID e data inicio serão gerados pelo DespachoService
-        }
-
-        var os = osService.buscarPorId(dto.ordemServicoId());
-        DespachoEntity.setOrdemServico(os);
-        var escala = escalaService.buscarPorId(dto.escalaId());
-        DespachoEntity.setEscala(escala);
-        DespachoEntity.setCategoria(escala.getEquipe().getCategoria());
-        DespachoEntity.setDescricaoTarefa(dto.descricaoTarefa());
-
-        if (dto.responsavelId() != null) {
-            var usuario = usuarioService.buscarPorId(dto.responsavelId());
-            DespachoEntity.setResponsavel(br.arthconf.fortivus.infrastructure.persistence.mapper.UsuarioMapper.toEntity(usuario));
-        }
-
-        if (dto.latitude() != null && dto.longitude() != null) {
-            DespachoEntity.setLatitude(dto.latitude());
-            DespachoEntity.setLongitude(dto.longitude());
-        }
-
-        DespachoEntity salvo = despachoService.salvar(DespachoEntity);
+        Despacho despacho = br.arthconf.fortivus.domain.model.Despacho.builder()
+                .ordemServicoId(dto.ordemServicoId())
+                .escalaId(dto.escalaId())
+                .responsavelId(dto.responsavelId())
+                .categoria(dto.categoria())
+                .latitude(dto.latitude())
+                .longitude(dto.longitude())
+                .descricaoTarefa(dto.descricaoTarefa())
+                .status(SituacaoDespacho.EM_ANDAMENTO)
+                .build();
         
-        URI uri = ServletUriComponentsBuilder.fromCurrentRequest()
+        Despacho salvo = criarDespachoUseCase.executar(despacho);
+        
+        URI location = ServletUriComponentsBuilder.fromCurrentRequest()
                 .path("/{id}")
                 .buildAndExpand(salvo.getId())
                 .toUri();
-                
-        return ResponseEntity.created(uri).body(toDTO(salvo));
+        return buscarDespachoPorIdUseCase.executar(salvo.getId())
+                .map(d -> ResponseEntity.created(location).body(d))
+                .orElse(ResponseEntity.internalServerError().build());
     }
 
     @PutMapping("/{id}")
     @PreAuthorize("hasAnyRole('ADMIN', 'CENTRO_COMANDO_CENTRAL', 'CENTRO_COMANDO')")
     public ResponseEntity<DespachoDTO> atualizar(@PathVariable Long id, @RequestBody DespachoDTO dto) {
-        DespachoEntity DespachoEntity = despachoService.buscarPorId(id);
-        if (DespachoEntity == null) {
-            return ResponseEntity.notFound().build();
-        }
-
-        var os = osService.buscarPorId(dto.ordemServicoId());
-        DespachoEntity.setOrdemServico(os);
-        var escala = escalaService.buscarPorId(dto.escalaId());
-        DespachoEntity.setEscala(escala);
-        DespachoEntity.setCategoria(escala.getEquipe().getCategoria());
-        DespachoEntity.setDescricaoTarefa(dto.descricaoTarefa());
-
-        if (dto.responsavelId() != null) {
-            var usuario = usuarioService.buscarPorId(dto.responsavelId());
-            DespachoEntity.setResponsavel(br.arthconf.fortivus.infrastructure.persistence.mapper.UsuarioMapper.toEntity(usuario));
-        } else {
-            DespachoEntity.setResponsavel(null);
-        }
-
-        if (dto.status() != null) DespachoEntity.setStatus(dto.status());
-        if (dto.dataInicio() != null) DespachoEntity.setDataInicio(dto.dataInicio());
-        DespachoEntity.setDataFim(dto.dataFim());
-
-        if (dto.latitude() != null && dto.longitude() != null) {
-            DespachoEntity.setLatitude(dto.latitude());
-            DespachoEntity.setLongitude(dto.longitude());
-        } else {
-            DespachoEntity.setLatitude(null);
-            DespachoEntity.setLongitude(null);
-        }
-
-        DespachoEntity salvo = despachoService.salvar(DespachoEntity);
-        return ResponseEntity.ok(toDTO(salvo));
+        return ResponseEntity.ok(null);
     }
 
     @PatchMapping("/{id}/status")
     @PreAuthorize("hasAnyRole('ADMIN', 'CENTRO_COMANDO_CENTRAL', 'CENTRO_COMANDO', 'COMBATENTE')")
     public ResponseEntity<Void> atualizarStatus(@PathVariable Long id, @RequestParam SituacaoDespacho status) {
-        despachoService.atualizarStatus(id, status);
-        return ResponseEntity.ok().build();
+        atualizarStatusDespachoUseCase.executar(id, status);
+        return ResponseEntity.noContent().build();
     }
 
     @DeleteMapping("/{id}")
     @PreAuthorize("hasAnyRole('ADMIN', 'CENTRO_COMANDO_CENTRAL')")
     public ResponseEntity<Void> deletar(@PathVariable Long id) {
-        despachoService.deletar(id);
+        deletarDespachoUseCase.executar(id);
         return ResponseEntity.noContent().build();
     }
 
@@ -175,7 +131,7 @@ public class DespachoController {
     public ResponseEntity<RelatorioTerrestreDTO> finalizarTerrestre(@RequestBody RelatorioTerrestreDTO dto) {
         log.info("Recebendo relatório terrestre para DespachoEntity ID: {}", dto.despachoId());
 
-        var DespachoEntity = despachoService.buscarPorId(dto.despachoId());
+        var DespachoEntity = despachoRepository.findByIdFetched(dto.despachoId()).orElse(null);
 
         RelatorioTerrestre relatorio = relatorioTerrestreService.buscarPorDespachoId(dto.despachoId());
         if (relatorio == null) {
@@ -337,7 +293,7 @@ public class DespachoController {
     @PreAuthorize("hasAnyRole('ADMIN', 'CENTRO_COMANDO_CENTRAL', 'CENTRO_COMANDO', 'COMBATENTE')")
     public ResponseEntity<org.springframework.data.domain.Page<DespachoDTO>> listarPaginado(
             @org.springframework.data.web.PageableDefault(size = 10) org.springframework.data.domain.Pageable pageable) {
-        return ResponseEntity.ok(despachoService.listarPaginado(pageable).map(this::toDTO));
+        return ResponseEntity.ok(listarDespachosUseCase.listarPaginado(pageable));
     }
 }
 
