@@ -71,7 +71,7 @@ public class DespachoController {
 
         if (dto.responsavelId() != null) {
             var usuario = usuarioService.buscarPorId(dto.responsavelId());
-            despacho.setResponsavel(usuario);
+            despacho.setResponsavel(br.arthconf.fortivus.infrastructure.persistence.mapper.UsuarioMapper.toEntity(usuario));
         }
 
         if (dto.latitude() != null && dto.longitude() != null) {
@@ -106,7 +106,7 @@ public class DespachoController {
 
         if (dto.responsavelId() != null) {
             var usuario = usuarioService.buscarPorId(dto.responsavelId());
-            despacho.setResponsavel(usuario);
+            despacho.setResponsavel(br.arthconf.fortivus.infrastructure.persistence.mapper.UsuarioMapper.toEntity(usuario));
         } else {
             despacho.setResponsavel(null);
         }

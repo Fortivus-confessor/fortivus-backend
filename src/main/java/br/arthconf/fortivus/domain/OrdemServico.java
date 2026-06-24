@@ -4,8 +4,6 @@ import jakarta.persistence.*;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.ToString;
-import org.locationtech.jts.geom.Geometry;
-
 import java.time.LocalDateTime;
 
 @Entity
@@ -16,7 +14,7 @@ import java.time.LocalDateTime;
 public class OrdemServico {
 
     @Id
-    private Long id; // SmartId (BigInt cronológico)
+    private Long id;    
 
     @Column(name = "descricao_tarefa", columnDefinition = "TEXT")
     private String descricaoTarefa;
@@ -27,7 +25,7 @@ public class OrdemServico {
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "relator_id", nullable = false)
-    private Usuario relator;
+    private br.arthconf.fortivus.infrastructure.persistence.entity.UsuarioEntity relator;
 
     @Column(name = "data_criacao", nullable = false)
     private LocalDateTime dataCriacao = LocalDateTime.now();

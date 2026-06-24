@@ -1,5 +1,6 @@
 package br.arthconf.fortivus.domain;
 
+import br.arthconf.fortivus.domain.model.CategoriaOperacao;
 import jakarta.persistence.*;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -28,7 +29,7 @@ public class Despacho {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "responsavel_id")
-    private Usuario responsavel;
+    private br.arthconf.fortivus.infrastructure.persistence.entity.UsuarioEntity responsavel;
 
     @Enumerated(EnumType.STRING)
     @Column(name = "categoria", nullable = false)

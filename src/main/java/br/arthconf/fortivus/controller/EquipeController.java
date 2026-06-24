@@ -1,6 +1,6 @@
 package br.arthconf.fortivus.controller;
 
-import br.arthconf.fortivus.domain.Equipe;
+import br.arthconf.fortivus.domain.model.Equipe;
 import br.arthconf.fortivus.dto.EquipeDTO;
 import br.arthconf.fortivus.service.EquipeService;
 import br.arthconf.fortivus.service.CentroComandoService;
@@ -52,7 +52,7 @@ public class EquipeController {
         equipe.setNome(dto.nome());
         equipe.setCategoria(dto.categoria());
         
-        br.arthconf.fortivus.domain.Usuario logado = usuarioService.getUsuarioLogado();
+        br.arthconf.fortivus.domain.model.Usuario logado = usuarioService.getUsuarioLogado();
         if (logado != null && logado.getPerfil() == br.arthconf.fortivus.domain.PerfilAcesso.ROLE_CENTRO_COMANDO && logado.getCentroComando() != null) {
             equipe.setCentroComando(logado.getCentroComando());
         } else {
@@ -74,7 +74,7 @@ public class EquipeController {
     public ResponseEntity<EquipeDTO> atualizar(@PathVariable UUID id, @RequestBody EquipeDTO dto) {
         Equipe equipe = equipeService.buscarPorId(id);
         
-        br.arthconf.fortivus.domain.Usuario logado = usuarioService.getUsuarioLogado();
+        br.arthconf.fortivus.domain.model.Usuario logado = usuarioService.getUsuarioLogado();
         if (logado != null && logado.getPerfil() == br.arthconf.fortivus.domain.PerfilAcesso.ROLE_CENTRO_COMANDO && logado.getCentroComando() != null) {
             if (equipe.getCentroComando() == null || !equipe.getCentroComando().getId().equals(logado.getCentroComando().getId())) {
                 return ResponseEntity.status(403).build();

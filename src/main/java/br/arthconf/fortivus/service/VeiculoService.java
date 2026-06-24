@@ -1,7 +1,7 @@
 package br.arthconf.fortivus.service;
 
-import br.arthconf.fortivus.domain.Veiculo;
-import br.arthconf.fortivus.repository.VeiculoRepository;
+import br.arthconf.fortivus.domain.model.Veiculo;
+import br.arthconf.fortivus.application.port.out.VeiculoPort;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -14,32 +14,32 @@ import java.util.UUID;
 @RequiredArgsConstructor
 public class VeiculoService {
 
-    private final VeiculoRepository veiculoRepository;
+    private final VeiculoPort veiculoPort;
 
     @Transactional(readOnly = true)
     public List<Veiculo> listarTodos() {
-        var lista = veiculoRepository.findAllFetched();
+        var lista = veiculoPort.findAllFetched();
         return lista != null ? new ArrayList<>(lista) : new ArrayList<>();
     }
 
     @Transactional
     public Veiculo salvar(Veiculo veiculo) {
-        return veiculoRepository.save(veiculo);
+        return veiculoPort.save(veiculo);
     }
 
     @Transactional(readOnly = true)
     public Veiculo buscarPorId(UUID id) {
-        return veiculoRepository.findById(id)
+        return veiculoPort.findById(id)
                 .orElseThrow(() -> new RuntimeException("Veículo não encontrado"));
     }
 
     @Transactional
     public void deletar(UUID id) {
-        veiculoRepository.deleteById(id);
+        veiculoPort.deleteById(id);
     }
 
     @org.springframework.transaction.annotation.Transactional(readOnly = true)
     public org.springframework.data.domain.Page<Veiculo> listarPaginado(org.springframework.data.domain.Pageable pageable) {
-        return veiculoRepository.findAll(pageable);
+        return veiculoPort.findAll(pageable);
     }
 }

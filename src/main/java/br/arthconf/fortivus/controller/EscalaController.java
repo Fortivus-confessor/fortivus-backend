@@ -50,7 +50,7 @@ public class EscalaController {
     @PostMapping
     @PreAuthorize("hasAnyRole('ADMIN', 'CENTRO_COMANDO_CENTRAL', 'CENTRO_COMANDO')")
     public ResponseEntity<EscalaDTO> salvar(@RequestBody EscalaDTO dto) {
-        br.arthconf.fortivus.domain.Usuario logado = usuarioService.getUsuarioLogado();
+        br.arthconf.fortivus.domain.model.Usuario logado = usuarioService.getUsuarioLogado();
         
         var equipe = equipeService.buscarPorId(dto.equipeId());
         if (logado != null && "ROLE_CENTRO_COMANDO".equals(logado.getPerfil().name())) {
@@ -64,7 +64,7 @@ public class EscalaController {
             escala = escalaService.buscarPorId(dto.id());
         }
         
-        escala.setEquipe(equipe);
+        escala.setEquipe(br.arthconf.fortivus.infrastructure.persistence.mapper.EquipeMapper.toEntity(equipe));
         if (dto.veiculoId() != null) {
             var veiculo = veiculoService.buscarPorId(dto.veiculoId());
             if (logado != null && "ROLE_CENTRO_COMANDO".equals(logado.getPerfil().name())) {
@@ -72,9 +72,9 @@ public class EscalaController {
                     throw new org.springframework.security.access.AccessDeniedException("Veículo não pertence ao seu Centro de Comando");
                 }
             }
-            escala.setVeiculo(veiculo);
+            escala.setVeiculo(br.arthconf.fortivus.infrastructure.persistence.mapper.VeiculoMapper.toEntity(veiculo));
         }
-        escala.setComandante(usuarioService.buscarPorId(dto.comandanteId()));
+        escala.setComandante(br.arthconf.fortivus.infrastructure.persistence.mapper.UsuarioMapper.toEntity(usuarioService.buscarPorId(dto.comandanteId())));
         escala.setDataInicio(dto.dataInicio() != null ? dto.dataInicio() : java.time.LocalDateTime.now());
         escala.setDataFim(dto.dataFim());
         
@@ -133,7 +133,7 @@ public class EscalaController {
 
     private EscalaDTO toDTO(Escala escala) {
         List<UUID> integrantes = escala.getIntegrantes().stream()
-                .map(br.arthconf.fortivus.domain.Usuario::getId)
+                .map(br.arthconf.fortivus.infrastructure.persistence.entity.UsuarioEntity::getId)
                 .collect(Collectors.toList());
                 
         return new EscalaDTO(

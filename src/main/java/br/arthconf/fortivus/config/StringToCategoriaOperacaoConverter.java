@@ -1,6 +1,6 @@
 package br.arthconf.fortivus.config;
 
-import br.arthconf.fortivus.domain.CategoriaOperacao;
+import br.arthconf.fortivus.domain.model.CategoriaOperacao;
 import org.springframework.core.convert.converter.Converter;
 import org.springframework.stereotype.Component;
 

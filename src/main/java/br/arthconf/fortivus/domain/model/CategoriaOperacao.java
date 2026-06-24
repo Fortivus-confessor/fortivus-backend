@@ -1,4 +1,4 @@
-package br.arthconf.fortivus.domain;
+package br.arthconf.fortivus.domain.model;
 
 import java.text.Normalizer;
 

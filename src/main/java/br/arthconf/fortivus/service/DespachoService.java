@@ -22,7 +22,7 @@ public class DespachoService {
 
     @Transactional(readOnly = true)
     public List<Despacho> listarTodos() {
-        br.arthconf.fortivus.domain.Usuario logado = usuarioService.getUsuarioLogado();
+        br.arthconf.fortivus.domain.model.Usuario logado = usuarioService.getUsuarioLogado();
         List<Despacho> lista;
         if (logado != null) {
             String role = logado.getPerfil().name();
@@ -44,7 +44,7 @@ public class DespachoService {
         var despacho = despachoRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Despacho não encontrado"));
                 
-        br.arthconf.fortivus.domain.Usuario logado = usuarioService.getUsuarioLogado();
+        br.arthconf.fortivus.domain.model.Usuario logado = usuarioService.getUsuarioLogado();
         if (logado != null && "ROLE_COMBATENTE".equals(logado.getPerfil().name())) {
             boolean isIntegrante = false;
             if (despacho.getEscala() != null) {
@@ -100,7 +100,7 @@ public class DespachoService {
 
     @org.springframework.transaction.annotation.Transactional(readOnly = true)
     public org.springframework.data.domain.Page<Despacho> listarPaginado(org.springframework.data.domain.Pageable pageable) {
-        br.arthconf.fortivus.domain.Usuario logado = usuarioService.getUsuarioLogado();
+        br.arthconf.fortivus.domain.model.Usuario logado = usuarioService.getUsuarioLogado();
         if (logado != null) {
             String role = logado.getPerfil().name();
             if ("ROLE_CENTRO_COMANDO".equals(role)) {

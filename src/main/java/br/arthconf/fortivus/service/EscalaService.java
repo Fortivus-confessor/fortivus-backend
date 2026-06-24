@@ -2,9 +2,10 @@ package br.arthconf.fortivus.service;
 
 import br.arthconf.fortivus.domain.Escala;
 import br.arthconf.fortivus.domain.EstadoOperacionalUsuario;
-import br.arthconf.fortivus.domain.Usuario;
+import br.arthconf.fortivus.domain.model.Usuario;
 import br.arthconf.fortivus.repository.EscalaRepository;
-import br.arthconf.fortivus.repository.UsuarioRepository;
+import br.arthconf.fortivus.infrastructure.persistence.repository.SpringDataUsuarioRepository;
+import br.arthconf.fortivus.infrastructure.persistence.entity.UsuarioEntity;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -20,7 +21,7 @@ import java.util.stream.Collectors;
 public class EscalaService {
 
     private final EscalaRepository escalaRepository;
-    private final UsuarioRepository usuarioRepository;
+    private final SpringDataUsuarioRepository usuarioRepository;
     private final UsuarioService usuarioService;
 
     @Transactional(readOnly = true)
@@ -52,11 +53,11 @@ public class EscalaService {
     @Transactional
     public Escala ativarEscala(Escala escala, List<UUID> integrantesIds) {
         // Busca integrantes selecionados
-        List<Usuario> integrantes = usuarioRepository.findAllById(integrantesIds);
+        List<UsuarioEntity> integrantes = usuarioRepository.findAllById(integrantesIds);
         
         List<Escala> ativas = escalaRepository.findAtivas();
         
-        List<Usuario> aptos = integrantes.stream()
+        List<UsuarioEntity> aptos = integrantes.stream()
                 .filter(u -> {
                     if (u.getEstadoOperacional() == EstadoOperacionalUsuario.FERIAS || 
                         u.getEstadoOperacional() == EstadoOperacionalUsuario.AFASTADO_SAUDE ||
@@ -91,8 +92,8 @@ public class EscalaService {
 
         // Se houver integrantes removidos, voltar para DISPONIVEL
         if (escala.getIntegrantes() != null) {
-            java.util.Set<UUID> novosIds = aptos.stream().map(br.arthconf.fortivus.domain.Usuario::getId).collect(Collectors.toSet());
-            List<Usuario> removidos = escala.getIntegrantes().stream()
+            java.util.Set<UUID> novosIds = aptos.stream().map(UsuarioEntity::getId).collect(Collectors.toSet());
+            List<UsuarioEntity> removidos = escala.getIntegrantes().stream()
                 .filter(u -> !novosIds.contains(u.getId()))
                 .collect(Collectors.toList());
             removidos.forEach(u -> u.setEstadoOperacional(EstadoOperacionalUsuario.DISPONIVEL));
