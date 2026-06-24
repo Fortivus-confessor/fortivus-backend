@@ -94,6 +94,21 @@ public class KeycloakService {
         }
     }
 
+    public void atualizarSenha(String email, String novaSenha) {
+        List<UserRepresentation> users = keycloak.realm(realm).users().searchByEmail(email, true);
+        if (users != null && !users.isEmpty()) {
+            String userId = users.get(0).getId();
+            CredentialRepresentation cred = new CredentialRepresentation();
+            cred.setType(CredentialRepresentation.PASSWORD);
+            cred.setValue(novaSenha);
+            cred.setTemporary(false);
+            keycloak.realm(realm).users().get(userId).resetPassword(cred);
+            log.info("Senha atualizada no Keycloak para o email: {}", email);
+        } else {
+            log.warn("Usuário com email {} não encontrado no Keycloak para atualizar a senha", email);
+        }
+    }
+
     private void atribuirRole(String userId, String roleName) {
         try {
             RoleRepresentation realmRole = keycloak.realm(realm).roles().get(roleName).toRepresentation();
