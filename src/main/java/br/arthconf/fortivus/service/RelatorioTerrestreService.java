@@ -78,12 +78,16 @@ public class RelatorioTerrestreService {
             persistente.setVolumeAguaLitros(relatorio.getVolumeAguaLitros());
             persistente.setOrigensAgua(relatorio.getOrigensAgua());
             persistente.setOutraOrigemAguaDescricao(relatorio.getOutraOrigemAguaDescricao());
+            persistente.setHouveApoioPropriedades(relatorio.getHouveApoioPropriedades());
+            persistente.setHouveRecusaPropriedades(relatorio.getHouveRecusaPropriedades());
             persistente.setPossivelOrigemIncendio(relatorio.getPossivelOrigemIncendio());
+            persistente.setEfetividadeCombate(relatorio.getEfetividadeCombate());
+            persistente.setNecessidadeReforco(relatorio.getNecessidadeReforco());
+            persistente.setTiposReforcoNecessarios(relatorio.getTiposReforcoNecessarios());
             persistente.setHistoricoDescritivo(relatorio.getHistoricoDescritivo());
             persistente.setResultadoOcorrencia(relatorio.getResultadoOcorrencia());
             persistente.setOutroResultadoDescricao(relatorio.getOutroResultadoDescricao());
             persistente.setKmFinal(relatorio.getKmFinal());
-            persistente.setNecessidadeReforco(relatorio.getNecessidadeReforco());
             persistente.setDataFim(LocalDateTime.now());
 
             // Sincroniza Propriedades (Mantendo IDs existentes onde possível)
