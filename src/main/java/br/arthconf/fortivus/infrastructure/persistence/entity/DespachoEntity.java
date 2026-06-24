@@ -1,4 +1,4 @@
-package br.arthconf.fortivus.domain;
+package br.arthconf.fortivus.infrastructure.persistence.entity;
 
 import br.arthconf.fortivus.domain.model.CategoriaOperacao;
 import jakarta.persistence.*;
@@ -13,7 +13,7 @@ import java.time.LocalDateTime;
 @Data
 @EqualsAndHashCode(exclude = {"ordemServico"})
 @ToString(exclude = {"ordemServico"})
-public class Despacho {
+public class DespachoEntity {
 
     @Id
     @Column(name = "id")
@@ -21,11 +21,11 @@ public class Despacho {
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "ordem_servico_id", nullable = false)
-    private OrdemServico ordemServico;
+    private br.arthconf.fortivus.domain.OrdemServico ordemServico;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "escala_id")
-    private Escala escala;
+    private br.arthconf.fortivus.domain.Escala escala;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "responsavel_id")
@@ -46,7 +46,7 @@ public class Despacho {
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
-    private SituacaoDespacho status = SituacaoDespacho.EM_ANDAMENTO;
+    private br.arthconf.fortivus.domain.SituacaoDespacho status = br.arthconf.fortivus.domain.SituacaoDespacho.EM_ANDAMENTO;
 
     @Column(name = "data_inicio", nullable = false)
     private LocalDateTime dataInicio = LocalDateTime.now();

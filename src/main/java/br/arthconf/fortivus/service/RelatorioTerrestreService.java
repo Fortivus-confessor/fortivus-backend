@@ -1,5 +1,7 @@
 package br.arthconf.fortivus.service;
 
+import br.arthconf.fortivus.infrastructure.persistence.entity.DespachoEntity;
+
 import br.arthconf.fortivus.domain.AnexoRelatorio;
 import br.arthconf.fortivus.domain.PropriedadeRelatorio;
 import br.arthconf.fortivus.domain.RelatorioTerrestre;
@@ -16,7 +18,7 @@ import java.time.LocalDateTime;
 public class RelatorioTerrestreService {
     
     private final RelatorioTerrestreRepository repository;
-    private final DespachoService despachoService;
+    private final br.arthconf.fortivus.repository.DespachoRepository despachoRepository;
 
     @Transactional(readOnly = true)
     public RelatorioTerrestre buscarPorDespachoId(Long despachoId) {
@@ -34,7 +36,7 @@ public class RelatorioTerrestreService {
         org.hibernate.Hibernate.initialize(relatorio.getTiposReforcoNecessarios());
         org.hibernate.Hibernate.initialize(relatorio.getAnexos());
         org.hibernate.Hibernate.initialize(relatorio.getPropriedades());
-        // Inicializa o despacho para serialização
+        // Inicializa o DespachoEntity para serialização
         if (relatorio.getDespacho() != null) {
             org.hibernate.Hibernate.initialize(relatorio.getDespacho());
         }
@@ -44,8 +46,8 @@ public class RelatorioTerrestreService {
     public RelatorioTerrestre salvar(RelatorioTerrestre relatorio) {
         Long id = relatorio.getDespacho().getId();
         
-        // Garante que o Despacho está atrelado à sessão do Hibernate (Managed)
-        br.arthconf.fortivus.domain.Despacho despachoGerenciado = despachoService.buscarPorId(id);
+        // Garante que o DespachoEntity está atrelado à sessão do Hibernate (Managed)
+        DespachoEntity despachoGerenciado = despachoRepository.findByIdFetched(id).orElse(null);
         relatorio.setDespacho(despachoGerenciado);
         
         // Busca a instância gerenciada para atualização cirúrgica
@@ -98,11 +100,11 @@ public class RelatorioTerrestreService {
             persistente = repository.save(persistente);
         }
         
-        // Atualiza o Despacho vinculado
-        var despacho = persistente.getDespacho();
-        despacho.setStatus(SituacaoDespacho.CONCLUIDO);
-        despacho.setDataFim(persistente.getDataFim());
-        // despachoService.salvar(despacho); // Save implícito pelo @Transactional
+        // Atualiza o DespachoEntity vinculado
+        var despachoEntity = persistente.getDespacho();
+        despachoEntity.setStatus(SituacaoDespacho.CONCLUIDO);
+        despachoEntity.setDataFim(persistente.getDataFim());
+        // despachoService.salvar(despachoEntity); // Save implícito pelo @Transactional
 
         // Inicializa todas as coleções antes de retornar (evita LazyInitializationException na serialização JSON)
         inicializarColecoes(persistente);
@@ -130,3 +132,5 @@ public class RelatorioTerrestreService {
         }
     }
 }
+
+

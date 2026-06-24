@@ -1,5 +1,7 @@
 package br.arthconf.fortivus.service;
 
+import br.arthconf.fortivus.infrastructure.persistence.entity.DespachoEntity;
+
 import br.arthconf.fortivus.domain.*;
 import br.arthconf.fortivus.domain.model.Usuario;
 import br.arthconf.fortivus.dto.CadastrarOsDespachoDTO;
@@ -46,20 +48,20 @@ public class OrdemServicoService {
 
         os = ordemServicoRepository.save(os);
 
-        // Criar despacho inicial
-        Despacho despacho = new Despacho();
-        despacho.setId(gerarProximoIdDespacho());
-        despacho.setOrdemServico(os);
-        despacho.setEscala(escala);
-        despacho.setCategoria(dto.tipoDespacho());
-        despacho.setDescricaoTarefa(dto.descricaoTarefa());
-        despacho.setStatus(SituacaoDespacho.EM_ANDAMENTO);
+        // Criar DespachoEntity inicial
+        DespachoEntity DespachoEntity = new DespachoEntity();
+        DespachoEntity.setId(gerarProximoIdDespacho());
+        DespachoEntity.setOrdemServico(os);
+        DespachoEntity.setEscala(escala);
+        DespachoEntity.setCategoria(dto.tipoDespacho());
+        DespachoEntity.setDescricaoTarefa(dto.descricaoTarefa());
+        DespachoEntity.setStatus(SituacaoDespacho.EM_ANDAMENTO);
         if (dto.latitude() != null && dto.longitude() != null) {
-            despacho.setLatitude(dto.latitude());
-            despacho.setLongitude(dto.longitude());
+            DespachoEntity.setLatitude(dto.latitude());
+            DespachoEntity.setLongitude(dto.longitude());
         }
         
-        despachoRepository.save(despacho);
+        despachoRepository.save(DespachoEntity);
         
         return os;
     }
@@ -140,3 +142,5 @@ public class OrdemServicoService {
         return ordemServicoRepository.findAll(pageable);
     }
 }
+
+

@@ -39,7 +39,7 @@ public class RelatorioMaquinario implements Persistable<Long> {
     @OneToOne(fetch = FetchType.LAZY, optional = false)
     @MapsId
     @JoinColumn(name = "id")
-    private Despacho despacho;
+    private br.arthconf.fortivus.infrastructure.persistence.entity.DespachoEntity despacho;
 
     @Column(name = "horimetro_inicial")
     private Double horimetroInicial;

@@ -1,6 +1,6 @@
 package br.arthconf.fortivus.service;
 
-import br.arthconf.fortivus.domain.Despacho;
+import br.arthconf.fortivus.infrastructure.persistence.entity.DespachoEntity;
 import br.arthconf.fortivus.domain.OrdemServico;
 import br.arthconf.fortivus.domain.SituacaoDespacho;
 import br.arthconf.fortivus.domain.SituacaoOrdemServico;
@@ -36,7 +36,7 @@ public class OrdemServicoCron {
                 continue;
             }
             
-            List<Despacho> despachos = os.getDespachos();
+            List<DespachoEntity> despachos = os.getDespachos();
             if (despachos == null || despachos.isEmpty()) {
                 continue;
             }
@@ -44,7 +44,7 @@ public class OrdemServicoCron {
             boolean todosConcluidos = true;
             LocalDateTime ultimoDespachoData = LocalDateTime.MIN;
             
-            for (Despacho d : despachos) {
+            for (DespachoEntity d : despachos) {
                 if (d.getStatus() != SituacaoDespacho.CONCLUIDO) {
                     todosConcluidos = false;
                     break;
@@ -55,7 +55,7 @@ public class OrdemServicoCron {
                 }
             }
             
-            // Regra: Todos despachos concluídos E passaram 2 dias desde o último despacho
+            // Regra: Todos despachos concluídos E passaram 2 dias desde o último DespachoEntity
             if (todosConcluidos && ultimoDespachoData.isBefore(limite)) {
                 os.setStatus(SituacaoOrdemServico.CONCLUIDA);
                 os.setDataFim(LocalDateTime.now());
@@ -69,3 +69,4 @@ public class OrdemServicoCron {
         }
     }
 }
+

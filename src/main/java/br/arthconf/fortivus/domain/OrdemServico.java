@@ -41,5 +41,5 @@ public class OrdemServico {
     private Long eventoFogoId;
 
     @OneToMany(mappedBy = "ordemServico", cascade = CascadeType.ALL, orphanRemoval = true)
-    private java.util.List<Despacho> despachos = new java.util.ArrayList<>();
+    private java.util.List<br.arthconf.fortivus.infrastructure.persistence.entity.DespachoEntity> despachos = new java.util.ArrayList<>();
 }
