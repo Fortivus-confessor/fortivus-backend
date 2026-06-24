@@ -3,16 +3,22 @@ package br.arthconf.fortivus.infrastructure.persistence.adapter;
 import br.arthconf.fortivus.application.port.output.DespachoRepositoryPort;
 import br.arthconf.fortivus.domain.model.Despacho;
 import br.arthconf.fortivus.infrastructure.persistence.entity.DespachoEntity;
-import br.arthconf.fortivus.infrastructure.persistence.mapper.DespachoMapper;
-import br.arthconf.fortivus.repository.DespachoRepository;
-import br.arthconf.fortivus.repository.OrdemServicoRepository;
-import br.arthconf.fortivus.repository.EscalaRepository;
-import br.arthconf.fortivus.infrastructure.persistence.repository.SpringDataUsuarioRepository;
-import lombok.RequiredArgsConstructor;
-import org.springframework.stereotype.Component;
-
-import java.util.Optional;
 import br.arthconf.fortivus.infrastructure.persistence.entity.OrdemServicoEntity;
+import br.arthconf.fortivus.infrastructure.persistence.mapper.DespachoMapper;
+import br.arthconf.fortivus.infrastructure.persistence.repository.SpringDataUsuarioRepository;
+import br.arthconf.fortivus.repository.DespachoRepository;
+import br.arthconf.fortivus.repository.EscalaRepository;
+import br.arthconf.fortivus.repository.OrdemServicoRepository;
+import br.arthconf.fortivus.repository.RelatorioTerrestreRepository;
+import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Transactional;
+
+import java.util.List;
+import java.util.Optional;
+import java.util.UUID;
 
 @Component
 @RequiredArgsConstructor
@@ -23,20 +29,23 @@ public class DespachoPersistenceAdapter implements DespachoRepositoryPort {
     private final OrdemServicoRepository ordemServicoRepository;
     private final EscalaRepository escalaRepository;
     private final SpringDataUsuarioRepository usuarioRepository;
+    private final RelatorioTerrestreRepository relatorioTerrestreRepository;
 
     @Override
+    @Transactional
     public Despacho salvar(Despacho despacho) {
-        DespachoEntity entity = new DespachoEntity();
-        
+        DespachoEntity entity;
+
         if (despacho.getId() != null) {
             entity = despachoRepository.findById(despacho.getId()).orElse(new DespachoEntity());
             entity.setId(despacho.getId());
         } else {
+            entity = new DespachoEntity();
             long anoAtual = java.time.LocalDateTime.now().getYear();
             long minId = anoAtual * 100000000L;
             long maxId = (anoAtual + 1) * 100000000L;
             Long maxExistente = despachoRepository.findMaxIdByAno(minId, maxId).orElse(minId);
-            entity.setId(maxExistente == minId ? minId + 1 : maxExistente + 1);
+            entity.setId(maxExistente.equals(minId) ? minId + 1 : maxExistente + 1);
         }
 
         entity.setCategoria(despacho.getCategoria());
@@ -61,8 +70,7 @@ public class DespachoPersistenceAdapter implements DespachoRepositoryPort {
             entity.setResponsavel(usuarioRepository.findById(despacho.getResponsavelId()).orElse(null));
         }
 
-        DespachoEntity salvo = despachoRepository.save(entity);
-        return mapper.toDomain(salvo);
+        return mapper.toDomain(despachoRepository.save(entity));
     }
 
     @Override
@@ -71,11 +79,52 @@ public class DespachoPersistenceAdapter implements DespachoRepositoryPort {
     }
 
     @Override
+    @Transactional
     public void deletar(Long id) {
+        if (relatorioTerrestreRepository.existsById(id)) {
+            relatorioTerrestreRepository.deleteById(id);
+        }
         despachoRepository.deleteById(id);
     }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<Despacho> listarTodas() {
+        return mapper.toDomainList(despachoRepository.findAllWithDetails());
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<Despacho> listarPorCentroComando(UUID centroId) {
+        return mapper.toDomainList(despachoRepository.findAllByCentroComandoIdList(centroId));
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<Despacho> listarPorCombatente(UUID usuarioId) {
+        return mapper.toDomainList(despachoRepository.findAllByCombatenteIdList(usuarioId));
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Page<Despacho> listarPaginado(Pageable pageable) {
+        return despachoRepository.findAll(pageable).map(mapper::toDomain);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Page<Despacho> listarPorCentroComandoPaginado(UUID centroId, Pageable pageable) {
+        return despachoRepository.findAllByCentroComandoId(centroId, pageable).map(mapper::toDomain);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Page<Despacho> listarPorCombatentePaginado(UUID usuarioId, Pageable pageable) {
+        return despachoRepository.findAllByCombatenteId(usuarioId, pageable).map(mapper::toDomain);
+    }
+
+    @Override
+    public boolean pertenceAoDespacho(Long despachoId, UUID usuarioId) {
+        return despachoRepository.pertenceAoDespacho(despachoId, usuarioId);
+    }
 }
-
-
-
-
