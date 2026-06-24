@@ -1,32 +1,38 @@
 package br.arthconf.fortivus.controller;
 
 import br.arthconf.fortivus.domain.Despacho;
+import br.arthconf.fortivus.domain.PropriedadeRelatorio;
+import br.arthconf.fortivus.domain.RelatorioTerrestre;
 import br.arthconf.fortivus.domain.SituacaoDespacho;
 import br.arthconf.fortivus.dto.DespachoDTO;
+import br.arthconf.fortivus.dto.RelatorioTerrestreDTO;
 import br.arthconf.fortivus.service.DespachoService;
 import br.arthconf.fortivus.service.OrdemServicoService;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.locationtech.jts.geom.Coordinate;
+import org.locationtech.jts.geom.GeometryFactory;
+import org.locationtech.jts.geom.PrecisionModel;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
-import org.springframework.http.MediaType;
 
 import java.net.URI;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api/v1/operacional/despachos")
 @RequiredArgsConstructor
+@Slf4j
 public class DespachoController {
 
     private final DespachoService despachoService;
     private final OrdemServicoService osService;
     private final br.arthconf.fortivus.service.EscalaService escalaService;
     private final br.arthconf.fortivus.service.RelatorioTerrestreService relatorioTerrestreService;
-    private final br.arthconf.fortivus.service.FileStorageService storageService;
     private final br.arthconf.fortivus.service.UsuarioService usuarioService;
 
     @GetMapping
@@ -134,55 +140,85 @@ public class DespachoController {
         return ResponseEntity.noContent().build();
     }
 
-    // Mantido como consumo multipart/form-data para compatibilidade com o envio de relatórios e arquivos
-    @PostMapping(value = "/finalizar-terrestre", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    /**
+     * GET /despachos/{id}/relatorio-terrestre
+     * Busca o relatório terrestre existente para um despacho.
+     * Retorna 404 se o despacho não possui relatório ainda.
+     */
+    @GetMapping("/{id}/relatorio-terrestre")
     @PreAuthorize("hasAnyRole('ADMIN', 'CENTRO_COMANDO_CENTRAL', 'CENTRO_COMANDO', 'COMBATENTE')")
-    public ResponseEntity<Void> finalizarTerrestre(
-            @ModelAttribute br.arthconf.fortivus.domain.RelatorioTerrestre relatorio,
-            @RequestParam("despachoId") Long despachoId,
-            @RequestParam(value = "areaAtuacaoLat", required = false) Double lat,
-            @RequestParam(value = "areaAtuacaoLng", required = false) Double lng,
-            @RequestParam(value = "anexosParaRemover", required = false) java.util.List<java.util.UUID> anexosParaRemover,
-            @RequestParam(value = "files", required = false) MultipartFile[] files) {
-            
-        var despacho = despachoService.buscarPorId(despachoId);
+    public ResponseEntity<RelatorioTerrestreDTO> buscarRelatorioTerrestre(@PathVariable Long id) {
+        RelatorioTerrestre relatorio = relatorioTerrestreService.buscarPorDespachoId(id);
+        if (relatorio == null) {
+            return ResponseEntity.notFound().build();
+        }
+        return ResponseEntity.ok(toRelatorioDTO(relatorio));
+    }
+
+    /**
+     * POST /despachos/finalizar-terrestre
+     * Cria ou atualiza o relatório terrestre de um despacho via JSON.
+     */
+    @PostMapping("/finalizar-terrestre")
+    @PreAuthorize("hasAnyRole('ADMIN', 'CENTRO_COMANDO_CENTRAL', 'CENTRO_COMANDO', 'COMBATENTE')")
+    public ResponseEntity<RelatorioTerrestreDTO> finalizarTerrestre(@RequestBody RelatorioTerrestreDTO dto) {
+        log.info("Recebendo relatório terrestre para despacho ID: {}", dto.despachoId());
+
+        var despacho = despachoService.buscarPorId(dto.despachoId());
+
+        RelatorioTerrestre relatorio = new RelatorioTerrestre();
         relatorio.setDespacho(despacho);
-        
-        br.arthconf.fortivus.domain.RelatorioTerrestre relatorioExistente = relatorioTerrestreService.buscarPorDespachoId(despachoId);
-        java.util.List<br.arthconf.fortivus.domain.AnexoRelatorio> listaFinalAnexos = new java.util.ArrayList<>();
-        
-        if (relatorioExistente != null && relatorioExistente.getAnexos() != null) {
-            listaFinalAnexos.addAll(relatorioExistente.getAnexos());
+        relatorio.setAcoesRealizadas(dto.acoesRealizadas());
+        relatorio.setOrgaosApoio(dto.orgaosApoio());
+        relatorio.setOutrosOrgaosDescricao(dto.outrosOrgaosDescricao());
+        relatorio.setHouveUsoAgua(dto.houveUsoAgua());
+        relatorio.setVolumeAguaLitros(dto.volumeAguaLitros());
+        relatorio.setOrigensAgua(dto.origensAgua());
+        relatorio.setOutraOrigemAguaDescricao(dto.outraOrigemAguaDescricao());
+        relatorio.setHouveApoioPropriedades(dto.houveApoioPropriedades());
+        relatorio.setHouveRecusaPropriedades(dto.houveRecusaPropriedades());
+        relatorio.setPossivelOrigemIncendio(dto.possivelOrigemIncendio());
+        relatorio.setEfetividadeCombate(dto.efetividadeCombate());
+        relatorio.setNecessidadeReforco(dto.necessidadeReforco());
+        relatorio.setTiposReforcoNecessarios(dto.tiposReforcoNecessarios());
+        relatorio.setHistoricoDescritivo(dto.historicoDescritivo());
+        relatorio.setResultadoOcorrencia(dto.resultadoOcorrencia());
+        relatorio.setOutroResultadoDescricao(dto.outroResultadoDescricao());
+        relatorio.setKmFinal(dto.kmFinal());
+
+        // Geolocalização da área de atuação
+        if (dto.areaAtuacaoLat() != null && dto.areaAtuacaoLng() != null) {
+            GeometryFactory gf = new GeometryFactory(new PrecisionModel(), 4326);
+            relatorio.setAreaAtuacaoGeom(gf.createPoint(new Coordinate(dto.areaAtuacaoLng(), dto.areaAtuacaoLat())));
         }
 
-        if (anexosParaRemover != null) {
-            listaFinalAnexos.removeIf(a -> anexosParaRemover.contains(a.getId()));
-        }
-
-        if (lat != null && lng != null) {
-            org.locationtech.jts.geom.GeometryFactory gf = new org.locationtech.jts.geom.GeometryFactory(new org.locationtech.jts.geom.PrecisionModel(), 4326);
-            relatorio.setAreaAtuacaoGeom(gf.createPoint(new org.locationtech.jts.geom.Coordinate(lng, lat)));
-        }
-
-        String storageFolder = "relatorios/despacho-" + despachoId;
-        if (files != null && files.length > 0) {
-            for (var file : files) {
-                if (!file.isEmpty()) {
-                    String url = storageService.upload(file, storageFolder);
-                    var anexo = new br.arthconf.fortivus.domain.AnexoRelatorio();
-                    anexo.setNomeArquivo(file.getOriginalFilename());
-                    anexo.setChaveS3(url);
-                    anexo.setContentType(file.getContentType());
-                    anexo.setTamanho(file.getSize());
-                    anexo.setRelatorio(relatorio);
-                    listaFinalAnexos.add(anexo);
+        // Propriedades rurais
+        if (dto.propriedades() != null) {
+            List<PropriedadeRelatorio> propriedades = new ArrayList<>();
+            for (var p : dto.propriedades()) {
+                var prop = new PropriedadeRelatorio();
+                prop.setNomePropriedade(p.nomePropriedade());
+                prop.setResponsavel(p.responsavel());
+                prop.setTelefone(p.telefone());
+                prop.setTipoRegistro(p.tipoRegistro());
+                prop.setTipoApoio(p.tipoApoio());
+                prop.setQuantidadeApoio(p.quantidadeApoio());
+                prop.setDescricaoApoioOutro(p.descricaoApoioOutro());
+                prop.setMotivoRecusa(p.motivoRecusa());
+                prop.setDescricaoRecusaOutro(p.descricaoRecusaOutro());
+                if (p.localizacaoLat() != null && p.localizacaoLng() != null) {
+                    GeometryFactory gf = new GeometryFactory(new PrecisionModel(), 4326);
+                    prop.setLocalizacaoGeom(gf.createPoint(new Coordinate(p.localizacaoLng(), p.localizacaoLat())));
                 }
+                prop.setRelatorio(relatorio);
+                propriedades.add(prop);
             }
+            relatorio.setPropriedades(propriedades);
         }
-        relatorio.setAnexos(listaFinalAnexos);
 
-        relatorioTerrestreService.salvar(relatorio);
-        return ResponseEntity.ok().build();
+        RelatorioTerrestre salvo = relatorioTerrestreService.salvar(relatorio);
+        log.info("Relatório terrestre salvo com sucesso para despacho ID: {}", dto.despachoId());
+        return ResponseEntity.ok(toRelatorioDTO(salvo));
     }
 
     private DespachoDTO toDTO(Despacho despacho) {
@@ -207,9 +243,57 @@ public class DespachoController {
         );
     }
 
-    @org.springframework.web.bind.annotation.GetMapping("/paged")
-    public org.springframework.http.ResponseEntity<org.springframework.data.domain.Page<DespachoDTO>> listarPaginado(
+    private RelatorioTerrestreDTO toRelatorioDTO(RelatorioTerrestre r) {
+        Double areaLat = null, areaLng = null;
+        if (r.getAreaAtuacaoGeom() != null) {
+            areaLat = r.getAreaAtuacaoGeom().getCoordinate().y;
+            areaLng = r.getAreaAtuacaoGeom().getCoordinate().x;
+        }
+        List<RelatorioTerrestreDTO.PropriedadeRelatorioDTO> props = new ArrayList<>();
+        if (r.getPropriedades() != null) {
+            for (var p : r.getPropriedades()) {
+                Double pLat = null, pLng = null;
+                if (p.getLocalizacaoGeom() != null) {
+                    pLat = p.getLocalizacaoGeom().getCoordinate().y;
+                    pLng = p.getLocalizacaoGeom().getCoordinate().x;
+                }
+                props.add(new RelatorioTerrestreDTO.PropriedadeRelatorioDTO(
+                        p.getId(), p.getNomePropriedade(), p.getResponsavel(), p.getTelefone(),
+                        pLat, pLng, p.getTipoRegistro(), p.getTipoApoio(), p.getQuantidadeApoio(),
+                        p.getDescricaoApoioOutro(), p.getMotivoRecusa(), p.getDescricaoRecusaOutro()
+                ));
+            }
+        }
+        return new RelatorioTerrestreDTO(
+                r.getDespacho().getId(),
+                r.getAcoesRealizadas(),
+                r.getOrgaosApoio(),
+                r.getOutrosOrgaosDescricao(),
+                areaLat, areaLng,
+                r.getHouveUsoAgua(),
+                r.getVolumeAguaLitros(),
+                r.getOrigensAgua(),
+                r.getOutraOrigemAguaDescricao(),
+                r.getHouveApoioPropriedades(),
+                r.getHouveRecusaPropriedades(),
+                props,
+                r.getPossivelOrigemIncendio(),
+                r.getOutroResultadoDescricao(),
+                r.getEfetividadeCombate(),
+                r.getNecessidadeReforco(),
+                r.getTiposReforcoNecessarios(),
+                r.getHistoricoDescritivo(),
+                r.getResultadoOcorrencia(),
+                r.getOutroResultadoDescricao(),
+                r.getKmFinal(),
+                r.getDataInicio(),
+                r.getDataFim()
+        );
+    }
+
+    @GetMapping("/paged")
+    public ResponseEntity<org.springframework.data.domain.Page<DespachoDTO>> listarPaginado(
             @org.springframework.data.web.PageableDefault(size = 10) org.springframework.data.domain.Pageable pageable) {
-        return org.springframework.http.ResponseEntity.ok(despachoService.listarPaginado(pageable).map(this::toDTO));
+        return ResponseEntity.ok(despachoService.listarPaginado(pageable).map(this::toDTO));
     }
 }
