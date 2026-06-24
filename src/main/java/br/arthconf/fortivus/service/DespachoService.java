@@ -1,6 +1,6 @@
 package br.arthconf.fortivus.service;
 
-import br.arthconf.fortivus.domain.Despacho;
+import br.arthconf.fortivus.infrastructure.persistence.entity.DespachoEntity;
 import br.arthconf.fortivus.domain.SituacaoDespacho;
 import br.arthconf.fortivus.repository.DespachoRepository;
 import br.arthconf.fortivus.repository.RelatorioTerrestreRepository;
@@ -21,9 +21,9 @@ public class DespachoService {
     private final UsuarioService usuarioService;
 
     @Transactional(readOnly = true)
-    public List<Despacho> listarTodos() {
+    public List<DespachoEntity> listarTodos() {
         br.arthconf.fortivus.domain.model.Usuario logado = usuarioService.getUsuarioLogado();
-        List<Despacho> lista;
+        List<DespachoEntity> lista;
         if (logado != null) {
             String role = logado.getPerfil().name();
             if ("ROLE_CENTRO_COMANDO".equals(role)) {
@@ -41,17 +41,17 @@ public class DespachoService {
 
     @Transactional
     public void atualizarStatus(Long id, SituacaoDespacho novoStatus) {
-        var despacho = despachoRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Despacho não encontrado"));
+        var DespachoEntity = despachoRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("DespachoEntity não encontrado"));
                 
         br.arthconf.fortivus.domain.model.Usuario logado = usuarioService.getUsuarioLogado();
         if (logado != null && "ROLE_COMBATENTE".equals(logado.getPerfil().name())) {
             boolean isIntegrante = false;
-            if (despacho.getEscala() != null) {
-                if (despacho.getEscala().getComandante().getId().equals(logado.getId())) {
+            if (DespachoEntity.getEscala() != null) {
+                if (DespachoEntity.getEscala().getComandante().getId().equals(logado.getId())) {
                     isIntegrante = true;
                 } else {
-                    isIntegrante = despacho.getEscala().getIntegrantes().stream().anyMatch(i -> i.getId().equals(logado.getId()));
+                    isIntegrante = DespachoEntity.getEscala().getIntegrantes().stream().anyMatch(i -> i.getId().equals(logado.getId()));
                 }
             }
             if (!isIntegrante) {
@@ -59,30 +59,30 @@ public class DespachoService {
             }
         }
         
-        despacho.setStatus(novoStatus);
+        DespachoEntity.setStatus(novoStatus);
         if (novoStatus == SituacaoDespacho.CONCLUIDO) {
-            despacho.setDataFim(LocalDateTime.now(java.time.ZoneId.of("America/Sao_Paulo")));
+            DespachoEntity.setDataFim(LocalDateTime.now(java.time.ZoneId.of("America/Sao_Paulo")));
         }
-        despachoRepository.save(despacho);
+        despachoRepository.save(DespachoEntity);
     }
 
     @Transactional
-    public Despacho salvar(Despacho despacho) {
-        if (despacho.getId() == null) {
+    public DespachoEntity salvar(DespachoEntity DespachoEntity) {
+        if (DespachoEntity.getId() == null) {
             long anoAtual = LocalDateTime.now().getYear();
             long minId = anoAtual * 100000000L;
             long maxId = (anoAtual + 1) * 100000000L;
             Long maxExistente = despachoRepository.findMaxIdByAno(minId, maxId).orElse(minId);
-            despacho.setId(maxExistente == minId ? minId + 1 : maxExistente + 1);
-            despacho.setDataInicio(LocalDateTime.now(java.time.ZoneId.of("America/Sao_Paulo")));
+            DespachoEntity.setId(maxExistente == minId ? minId + 1 : maxExistente + 1);
+            DespachoEntity.setDataInicio(LocalDateTime.now(java.time.ZoneId.of("America/Sao_Paulo")));
         }
         
-        // Regra de negócio: Adicionar um novo despacho reativa a OS para EM_EXECUCAO
-        if (despacho.getOrdemServico() != null && despacho.getOrdemServico().getStatus() == br.arthconf.fortivus.domain.SituacaoOrdemServico.CONCLUIDA) {
-            despacho.getOrdemServico().setStatus(br.arthconf.fortivus.domain.SituacaoOrdemServico.EM_EXECUCAO);
+        // Regra de negócio: Adicionar um novo DespachoEntity reativa a OS para EM_EXECUCAO
+        if (DespachoEntity.getOrdemServico() != null && DespachoEntity.getOrdemServico().getStatus() == br.arthconf.fortivus.domain.SituacaoOrdemServico.CONCLUIDA) {
+            DespachoEntity.getOrdemServico().setStatus(br.arthconf.fortivus.domain.SituacaoOrdemServico.EM_EXECUCAO);
         }
         
-        return despachoRepository.save(despacho);
+        return despachoRepository.save(DespachoEntity);
     }
 
     @Transactional
@@ -94,12 +94,12 @@ public class DespachoService {
     }
 
     @Transactional(readOnly = true)
-    public Despacho buscarPorId(Long id) {
+    public DespachoEntity buscarPorId(Long id) {
         return despachoRepository.findByIdFetched(id).orElse(null);
     }
 
     @org.springframework.transaction.annotation.Transactional(readOnly = true)
-    public org.springframework.data.domain.Page<Despacho> listarPaginado(org.springframework.data.domain.Pageable pageable) {
+    public org.springframework.data.domain.Page<DespachoEntity> listarPaginado(org.springframework.data.domain.Pageable pageable) {
         br.arthconf.fortivus.domain.model.Usuario logado = usuarioService.getUsuarioLogado();
         if (logado != null) {
             String role = logado.getPerfil().name();
@@ -112,3 +112,4 @@ public class DespachoService {
         return despachoRepository.findAll(pageable);
     }
 }
+

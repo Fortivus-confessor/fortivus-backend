@@ -3,7 +3,7 @@ package br.arthconf.fortivus.application.service;
 import br.arthconf.fortivus.application.port.in.BuscarRelatorioMaquinarioUseCase;
 import br.arthconf.fortivus.application.port.in.SalvarRelatorioMaquinarioUseCase;
 import br.arthconf.fortivus.application.port.out.RelatorioMaquinarioPort;
-import br.arthconf.fortivus.domain.Despacho;
+import br.arthconf.fortivus.infrastructure.persistence.entity.DespachoEntity;
 import br.arthconf.fortivus.domain.RelatorioMaquinario;
 import br.arthconf.fortivus.dto.RelatorioMaquinarioDTO;
 import br.arthconf.fortivus.repository.DespachoRepository;
@@ -24,11 +24,11 @@ public class RelatorioMaquinarioService implements SalvarRelatorioMaquinarioUseC
     @Override
     @Transactional
     public RelatorioMaquinarioDTO salvar(Long despachoId, RelatorioMaquinarioDTO dto) {
-        Despacho despacho = despachoRepository.findById(despachoId)
-                .orElseThrow(() -> new RuntimeException("Despacho não encontrado"));
+        DespachoEntity DespachoEntity = despachoRepository.findById(despachoId)
+                .orElseThrow(() -> new RuntimeException("DespachoEntity não encontrado"));
 
         RelatorioMaquinario relatorio = relatorioMaquinarioPort.buscarPorDespachoId(despachoId).orElse(new RelatorioMaquinario());
-        relatorio.setDespacho(despacho);
+        relatorio.setDespacho(DespachoEntity);
         relatorio.setId(despachoId);
         relatorio.setHorimetroInicial(dto.horimetroInicial());
         relatorio.setHorimetroFinal(dto.horimetroFinal());
@@ -96,3 +96,4 @@ public class RelatorioMaquinarioService implements SalvarRelatorioMaquinarioUseC
         );
     }
 }
+

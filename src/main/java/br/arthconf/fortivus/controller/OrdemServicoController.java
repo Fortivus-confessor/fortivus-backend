@@ -1,6 +1,6 @@
 package br.arthconf.fortivus.controller;
 
-import br.arthconf.fortivus.domain.Despacho;
+import br.arthconf.fortivus.infrastructure.persistence.entity.DespachoEntity;
 import br.arthconf.fortivus.domain.OrdemServico;
 import br.arthconf.fortivus.dto.CadastrarOsDespachoDTO;
 import br.arthconf.fortivus.dto.OrdemServicoDTO;
@@ -67,7 +67,7 @@ public class OrdemServicoController {
     }
 
     private OrdemServicoDTO toDTO(OrdemServico os) {
-        Despacho primeiroDespacho = os.getDespachos().isEmpty() ? null : os.getDespachos().get(0);
+        DespachoEntity primeiroDespacho = os.getDespachos().isEmpty() ? null : os.getDespachos().get(0);
         String eventoFogoId = os.getEventoFogoId() != null ? os.getEventoFogoId().toString() : null;
         
         return new OrdemServicoDTO(
@@ -91,3 +91,4 @@ public class OrdemServicoController {
         return org.springframework.http.ResponseEntity.ok(ordemServicoService.listarPaginado(pageable).map(this::toDTO));
     }
 }
+

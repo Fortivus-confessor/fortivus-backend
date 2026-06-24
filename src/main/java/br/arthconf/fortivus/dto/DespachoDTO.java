@@ -24,3 +24,4 @@ public record DespachoDTO(
         return id != null ? "D" + String.format("%012d", id) : null;
     }
 }
+

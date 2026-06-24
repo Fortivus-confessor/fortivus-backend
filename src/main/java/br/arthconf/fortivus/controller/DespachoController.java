@@ -1,6 +1,6 @@
 package br.arthconf.fortivus.controller;
 
-import br.arthconf.fortivus.domain.Despacho;
+import br.arthconf.fortivus.infrastructure.persistence.entity.DespachoEntity;
 import br.arthconf.fortivus.domain.PropriedadeRelatorio;
 import br.arthconf.fortivus.domain.RelatorioTerrestre;
 import br.arthconf.fortivus.domain.SituacaoDespacho;
@@ -57,39 +57,39 @@ public class DespachoController {
     @GetMapping("/{id}")
     @PreAuthorize("hasAnyRole('ADMIN', 'CENTRO_COMANDO_CENTRAL', 'CENTRO_COMANDO', 'COMBATENTE')")
     public ResponseEntity<DespachoDTO> buscarPorId(@PathVariable Long id) {
-        Despacho despacho = despachoService.buscarPorId(id);
-        return ResponseEntity.ok(toDTO(despacho));
+        DespachoEntity DespachoEntity = despachoService.buscarPorId(id);
+        return ResponseEntity.ok(toDTO(DespachoEntity));
     }
 
     @PostMapping
     @PreAuthorize("hasAnyRole('ADMIN', 'CENTRO_COMANDO_CENTRAL', 'CENTRO_COMANDO')")
     public ResponseEntity<DespachoDTO> salvar(@RequestBody DespachoDTO dto) {
-        Despacho despacho = new Despacho();
+        DespachoEntity DespachoEntity = new DespachoEntity();
         if (dto.id() != null) {
-            despacho = despachoService.buscarPorId(dto.id());
+            DespachoEntity = despachoService.buscarPorId(dto.id());
         } else {
-            despacho.setStatus(SituacaoDespacho.EM_ANDAMENTO);
+            DespachoEntity.setStatus(SituacaoDespacho.EM_ANDAMENTO);
             // ID e data inicio serão gerados pelo DespachoService
         }
 
         var os = osService.buscarPorId(dto.ordemServicoId());
-        despacho.setOrdemServico(os);
+        DespachoEntity.setOrdemServico(os);
         var escala = escalaService.buscarPorId(dto.escalaId());
-        despacho.setEscala(escala);
-        despacho.setCategoria(escala.getEquipe().getCategoria());
-        despacho.setDescricaoTarefa(dto.descricaoTarefa());
+        DespachoEntity.setEscala(escala);
+        DespachoEntity.setCategoria(escala.getEquipe().getCategoria());
+        DespachoEntity.setDescricaoTarefa(dto.descricaoTarefa());
 
         if (dto.responsavelId() != null) {
             var usuario = usuarioService.buscarPorId(dto.responsavelId());
-            despacho.setResponsavel(br.arthconf.fortivus.infrastructure.persistence.mapper.UsuarioMapper.toEntity(usuario));
+            DespachoEntity.setResponsavel(br.arthconf.fortivus.infrastructure.persistence.mapper.UsuarioMapper.toEntity(usuario));
         }
 
         if (dto.latitude() != null && dto.longitude() != null) {
-            despacho.setLatitude(dto.latitude());
-            despacho.setLongitude(dto.longitude());
+            DespachoEntity.setLatitude(dto.latitude());
+            DespachoEntity.setLongitude(dto.longitude());
         }
 
-        Despacho salvo = despachoService.salvar(despacho);
+        DespachoEntity salvo = despachoService.salvar(DespachoEntity);
         
         URI uri = ServletUriComponentsBuilder.fromCurrentRequest()
                 .path("/{id}")
@@ -102,38 +102,38 @@ public class DespachoController {
     @PutMapping("/{id}")
     @PreAuthorize("hasAnyRole('ADMIN', 'CENTRO_COMANDO_CENTRAL', 'CENTRO_COMANDO')")
     public ResponseEntity<DespachoDTO> atualizar(@PathVariable Long id, @RequestBody DespachoDTO dto) {
-        Despacho despacho = despachoService.buscarPorId(id);
-        if (despacho == null) {
+        DespachoEntity DespachoEntity = despachoService.buscarPorId(id);
+        if (DespachoEntity == null) {
             return ResponseEntity.notFound().build();
         }
 
         var os = osService.buscarPorId(dto.ordemServicoId());
-        despacho.setOrdemServico(os);
+        DespachoEntity.setOrdemServico(os);
         var escala = escalaService.buscarPorId(dto.escalaId());
-        despacho.setEscala(escala);
-        despacho.setCategoria(escala.getEquipe().getCategoria());
-        despacho.setDescricaoTarefa(dto.descricaoTarefa());
+        DespachoEntity.setEscala(escala);
+        DespachoEntity.setCategoria(escala.getEquipe().getCategoria());
+        DespachoEntity.setDescricaoTarefa(dto.descricaoTarefa());
 
         if (dto.responsavelId() != null) {
             var usuario = usuarioService.buscarPorId(dto.responsavelId());
-            despacho.setResponsavel(br.arthconf.fortivus.infrastructure.persistence.mapper.UsuarioMapper.toEntity(usuario));
+            DespachoEntity.setResponsavel(br.arthconf.fortivus.infrastructure.persistence.mapper.UsuarioMapper.toEntity(usuario));
         } else {
-            despacho.setResponsavel(null);
+            DespachoEntity.setResponsavel(null);
         }
 
-        if (dto.status() != null) despacho.setStatus(dto.status());
-        if (dto.dataInicio() != null) despacho.setDataInicio(dto.dataInicio());
-        despacho.setDataFim(dto.dataFim());
+        if (dto.status() != null) DespachoEntity.setStatus(dto.status());
+        if (dto.dataInicio() != null) DespachoEntity.setDataInicio(dto.dataInicio());
+        DespachoEntity.setDataFim(dto.dataFim());
 
         if (dto.latitude() != null && dto.longitude() != null) {
-            despacho.setLatitude(dto.latitude());
-            despacho.setLongitude(dto.longitude());
+            DespachoEntity.setLatitude(dto.latitude());
+            DespachoEntity.setLongitude(dto.longitude());
         } else {
-            despacho.setLatitude(null);
-            despacho.setLongitude(null);
+            DespachoEntity.setLatitude(null);
+            DespachoEntity.setLongitude(null);
         }
 
-        Despacho salvo = despachoService.salvar(despacho);
+        DespachoEntity salvo = despachoService.salvar(DespachoEntity);
         return ResponseEntity.ok(toDTO(salvo));
     }
 
@@ -153,8 +153,8 @@ public class DespachoController {
 
     /**
      * GET /despachos/{id}/relatorio-terrestre
-     * Busca o relatório terrestre existente para um despacho.
-     * Retorna 404 se o despacho não possui relatório ainda.
+     * Busca o relatório terrestre existente para um DespachoEntity.
+     * Retorna 404 se o DespachoEntity não possui relatório ainda.
      */
     @GetMapping("/{id}/relatorio-terrestre")
     @PreAuthorize("hasAnyRole('ADMIN', 'CENTRO_COMANDO_CENTRAL', 'CENTRO_COMANDO', 'COMBATENTE')")
@@ -168,19 +168,19 @@ public class DespachoController {
 
     /**
      * POST /despachos/finalizar-terrestre
-     * Cria ou atualiza o relatório terrestre de um despacho via JSON.
+     * Cria ou atualiza o relatório terrestre de um DespachoEntity via JSON.
      */
     @PostMapping("/finalizar-terrestre")
     @PreAuthorize("hasAnyRole('ADMIN', 'CENTRO_COMANDO_CENTRAL', 'CENTRO_COMANDO', 'COMBATENTE')")
     public ResponseEntity<RelatorioTerrestreDTO> finalizarTerrestre(@RequestBody RelatorioTerrestreDTO dto) {
-        log.info("Recebendo relatório terrestre para despacho ID: {}", dto.despachoId());
+        log.info("Recebendo relatório terrestre para DespachoEntity ID: {}", dto.despachoId());
 
-        var despacho = despachoService.buscarPorId(dto.despachoId());
+        var DespachoEntity = despachoService.buscarPorId(dto.despachoId());
 
         RelatorioTerrestre relatorio = relatorioTerrestreService.buscarPorDespachoId(dto.despachoId());
         if (relatorio == null) {
             relatorio = new RelatorioTerrestre();
-            relatorio.setDespacho(despacho);
+            relatorio.setDespacho(DespachoEntity);
         }
         relatorio.setAcoesRealizadas(dto.acoesRealizadas());
         relatorio.setOrgaosApoio(dto.orgaosApoio());
@@ -230,7 +230,7 @@ public class DespachoController {
         }
 
         RelatorioTerrestre salvo = relatorioTerrestreService.salvar(relatorio);
-        log.info("Relatório terrestre salvo com sucesso para despacho ID: {}", dto.despachoId());
+        log.info("Relatório terrestre salvo com sucesso para DespachoEntity ID: {}", dto.despachoId());
         return ResponseEntity.ok(toRelatorioDTO(salvo));
     }
 
@@ -245,7 +245,7 @@ public class DespachoController {
     @PostMapping("/finalizar-aereo")
     @PreAuthorize("hasAnyRole('ADMIN', 'CENTRO_COMANDO_CENTRAL', 'CENTRO_COMANDO', 'COMBATENTE')")
     public ResponseEntity<RelatorioAereoDTO> finalizarAereo(@RequestBody RelatorioAereoDTO dto) {
-        log.info("Recebendo relatório aéreo para despacho ID: {}", dto.despachoId());
+        log.info("Recebendo relatório aéreo para DespachoEntity ID: {}", dto.despachoId());
         RelatorioAereoDTO salvo = salvarRelatorioAereoUseCase.salvar(dto.despachoId(), dto);
         return ResponseEntity.ok(salvo);
     }
@@ -261,24 +261,24 @@ public class DespachoController {
     @PostMapping("/finalizar-maquinario")
     @PreAuthorize("hasAnyRole('ADMIN', 'CENTRO_COMANDO_CENTRAL', 'CENTRO_COMANDO', 'COMBATENTE')")
     public ResponseEntity<RelatorioMaquinarioDTO> finalizarMaquinario(@RequestBody RelatorioMaquinarioDTO dto) {
-        log.info("Recebendo relatório maquinário para despacho ID: {}", dto.despachoId());
+        log.info("Recebendo relatório maquinário para DespachoEntity ID: {}", dto.despachoId());
         RelatorioMaquinarioDTO salvo = salvarRelatorioMaquinarioUseCase.salvar(dto.despachoId(), dto);
         return ResponseEntity.ok(salvo);
     }
 
-    private DespachoDTO toDTO(Despacho despacho) {
-        Double lat = despacho.getLatitude();
-        Double lng = despacho.getLongitude();
+    private DespachoDTO toDTO(DespachoEntity DespachoEntity) {
+        Double lat = DespachoEntity.getLatitude();
+        Double lng = DespachoEntity.getLongitude();
         return new DespachoDTO(
-                despacho.getId(),
-                despacho.getOrdemServico() != null ? despacho.getOrdemServico().getId() : null,
-                despacho.getEscala() != null ? despacho.getEscala().getId() : null,
-                despacho.getResponsavel() != null ? despacho.getResponsavel().getId() : null,
-                despacho.getCategoria(),
-                despacho.getDescricaoTarefa(),
-                despacho.getStatus(),
-                despacho.getDataInicio(),
-                despacho.getDataFim(),
+                DespachoEntity.getId(),
+                DespachoEntity.getOrdemServico() != null ? DespachoEntity.getOrdemServico().getId() : null,
+                DespachoEntity.getEscala() != null ? DespachoEntity.getEscala().getId() : null,
+                DespachoEntity.getResponsavel() != null ? DespachoEntity.getResponsavel().getId() : null,
+                DespachoEntity.getCategoria(),
+                DespachoEntity.getDescricaoTarefa(),
+                DespachoEntity.getStatus(),
+                DespachoEntity.getDataInicio(),
+                DespachoEntity.getDataFim(),
                 lat,
                 lng
         );
@@ -340,3 +340,4 @@ public class DespachoController {
         return ResponseEntity.ok(despachoService.listarPaginado(pageable).map(this::toDTO));
     }
 }
+
