@@ -32,7 +32,9 @@ public class AtualizarStatusDespachoService implements AtualizarStatusDespachoUs
         }
 
         if (novoStatus == SituacaoDespacho.CONCLUIDO) {
-            despacho.finalizar(LocalDateTime.now(ZoneId.of("America/Sao_Paulo")));
+            if (despacho.getStatus() != SituacaoDespacho.CONCLUIDO) {
+                despacho.finalizar(LocalDateTime.now(ZoneId.of("America/Sao_Paulo")));
+            }
         } else {
             despacho.setStatus(novoStatus);
         }

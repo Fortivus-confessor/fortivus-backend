@@ -1,6 +1,5 @@
 package br.arthconf.fortivus.domain.model;
 
-import br.arthconf.fortivus.domain.model.Equipe;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;

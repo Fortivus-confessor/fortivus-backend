@@ -1,7 +1,6 @@
 package br.arthconf.fortivus.controller;
 
 import br.arthconf.fortivus.application.port.in.*;
-import br.arthconf.fortivus.domain.model.CategoriaOperacao;
 import br.arthconf.fortivus.domain.model.OrdemServico;
 import br.arthconf.fortivus.dto.CadastrarOsDespachoDTO;
 import br.arthconf.fortivus.dto.OrdemServicoDTO;

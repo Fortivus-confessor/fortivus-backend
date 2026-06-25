@@ -25,7 +25,13 @@ public class RelatorioAereoService implements SalvarRelatorioAereoUseCase, Busca
     @Transactional
     public RelatorioAereoDTO salvar(Long despachoId, RelatorioAereoDTO dto) {
         RelatorioAereoEntity relatorio = relatorioAereoPort.buscarPorDespachoId(despachoId)
-                .orElse(new RelatorioAereoEntity());
+                .orElseGet(() -> {
+                    br.arthconf.fortivus.infrastructure.persistence.entity.DespachoEntity stub = new br.arthconf.fortivus.infrastructure.persistence.entity.DespachoEntity();
+                    stub.setId(despachoId);
+                    RelatorioAereoEntity novo = new RelatorioAereoEntity();
+                    novo.setDespacho(stub);
+                    return novo;
+                });
         relatorio.setId(despachoId);
         relatorio.setHorimetroInicial(dto.horimetroInicial());
         relatorio.setHorimetroFinal(dto.horimetroFinal());
@@ -60,6 +66,7 @@ public class RelatorioAereoService implements SalvarRelatorioAereoUseCase, Busca
     }
 
     @Override
+    @Transactional(readOnly = true)
     public Optional<RelatorioAereoDTO> buscarPorDespachoId(Long despachoId) {
         return relatorioAereoPort.buscarPorDespachoId(despachoId).map(this::toDTO);
     }
@@ -71,21 +78,21 @@ public class RelatorioAereoService implements SalvarRelatorioAereoUseCase, Busca
             lng = rel.getAreaAtuacaoGeom().getCoordinate().x;
         }
         return new RelatorioAereoDTO(
-            rel.getDespacho().getId(),
+            rel.getId(),
             rel.getHorimetroInicial(),
             rel.getHorimetroFinal(),
             rel.getHorasLiquidas(),
-            rel.getTiposEmprego(),
+            rel.getTiposEmprego() != null ? new java.util.ArrayList<>(rel.getTiposEmprego()) : null,
             lat,
             lng,
             rel.getQtdeLancamentos(),
             rel.getHouveUsoAgua(),
             rel.getVolumeAguaLitros(),
-            rel.getOrigensAgua(),
+            rel.getOrigensAgua() != null ? new java.util.ArrayList<>(rel.getOrigensAgua()) : null,
             rel.getOutraOrigemAguaDescricao(),
             rel.getEfetividadeCombate(),
             rel.getNecessidadeReforco(),
-            rel.getTiposReforcoNecessarios(),
+            rel.getTiposReforcoNecessarios() != null ? new java.util.ArrayList<>(rel.getTiposReforcoNecessarios()) : null,
             rel.getHistoricoDescritivo(),
             rel.getResultadoOcorrencia(),
             rel.getOutroResultadoDescricao(),

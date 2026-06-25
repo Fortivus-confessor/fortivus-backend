@@ -36,6 +36,7 @@ public class CriarOrdemServicoService implements CriarOrdemServicoUseCase {
         Despacho despacho = Despacho.builder()
                 .ordemServicoId(os.getId())
                 .escalaId(cmd.escalaId())
+                .responsavelId(cmd.responsavelId())
                 .categoria(cmd.tipoDespacho())
                 .descricaoTarefa(cmd.descricaoTarefa())
                 .status(SituacaoDespacho.EM_ANDAMENTO)

@@ -5,7 +5,6 @@ import br.arthconf.fortivus.domain.model.Equipamento;
 import br.arthconf.fortivus.infrastructure.persistence.entity.EquipamentoEntity;
 import br.arthconf.fortivus.infrastructure.persistence.mapper.EquipamentoMapper;
 import br.arthconf.fortivus.repository.EquipamentoRepository;
-import br.arthconf.fortivus.repository.EscalaRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;

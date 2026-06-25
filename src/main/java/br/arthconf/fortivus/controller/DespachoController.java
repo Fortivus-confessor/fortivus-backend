@@ -12,6 +12,7 @@ import br.arthconf.fortivus.application.port.in.DeletarDespachoUseCase;
 import br.arthconf.fortivus.application.port.in.ListarDespachosUseCase;
 import br.arthconf.fortivus.application.port.in.BuscarRelatorioAereoUseCase;
 import br.arthconf.fortivus.application.port.in.SalvarRelatorioAereoUseCase;
+import br.arthconf.fortivus.application.port.in.AtualizarDespachoUseCase;
 import br.arthconf.fortivus.application.port.in.BuscarRelatorioMaquinarioUseCase;
 import br.arthconf.fortivus.application.port.in.SalvarRelatorioMaquinarioUseCase;
 import br.arthconf.fortivus.application.port.in.BuscarRelatorioTerrestreUseCase;
@@ -45,6 +46,7 @@ import java.util.stream.Collectors;
 public class DespachoController {
 
     private final CriarDespachoUseCase criarDespachoUseCase;
+    private final AtualizarDespachoUseCase atualizarDespachoUseCase;
     private final AtualizarStatusDespachoUseCase atualizarStatusDespachoUseCase;
     private final ListarDespachosUseCase listarDespachosUseCase;
     private final BuscarDespachoPorIdUseCase buscarDespachoPorIdUseCase;
@@ -108,7 +110,21 @@ public class DespachoController {
     @PutMapping("/{id}")
     @PreAuthorize("hasAnyRole('ADMIN', 'CENTRO_COMANDO_CENTRAL', 'CENTRO_COMANDO')")
     public ResponseEntity<DespachoDTO> atualizar(@PathVariable Long id, @RequestBody DespachoDTO dto) {
-        return ResponseEntity.ok(null);
+        Despacho despacho = Despacho.builder()
+                .ordemServicoId(dto.ordemServicoId())
+                .escalaId(dto.escalaId())
+                .responsavelId(dto.responsavelId())
+                .categoria(dto.categoria())
+                .latitude(dto.latitude())
+                .longitude(dto.longitude())
+                .descricaoTarefa(dto.descricaoTarefa())
+                .status(dto.status())
+                .dataInicio(dto.dataInicio())
+                .dataFim(dto.dataFim())
+                .build();
+                
+        Despacho salvo = atualizarDespachoUseCase.executar(id, despacho);
+        return ResponseEntity.ok(toDTO(salvo));
     }
 
     @PatchMapping("/{id}/status")
@@ -209,7 +225,9 @@ public class DespachoController {
     @PreAuthorize("hasAnyRole('ADMIN', 'CENTRO_COMANDO_CENTRAL', 'CENTRO_COMANDO', 'COMBATENTE')")
     public ResponseEntity<RelatorioAereoDTO> finalizarAereo(@RequestBody RelatorioAereoDTO dto) {
         log.info("Recebendo relatório aéreo para DespachoEntity ID: {}", dto.despachoId());
-        return ResponseEntity.ok(salvarRelatorioAereoUseCase.salvar(dto.despachoId(), dto));
+        RelatorioAereoDTO salvo = salvarRelatorioAereoUseCase.salvar(dto.despachoId(), dto);
+        atualizarStatusDespachoUseCase.executar(dto.despachoId(), SituacaoDespacho.CONCLUIDO);
+        return ResponseEntity.ok(salvo);
     }
 
     @GetMapping("/{id}/relatorio-maquinario")
@@ -224,7 +242,9 @@ public class DespachoController {
     @PreAuthorize("hasAnyRole('ADMIN', 'CENTRO_COMANDO_CENTRAL', 'CENTRO_COMANDO', 'COMBATENTE')")
     public ResponseEntity<RelatorioMaquinarioDTO> finalizarMaquinario(@RequestBody RelatorioMaquinarioDTO dto) {
         log.info("Recebendo relatório maquinário para DespachoEntity ID: {}", dto.despachoId());
-        return ResponseEntity.ok(salvarRelatorioMaquinarioUseCase.salvar(dto.despachoId(), dto));
+        RelatorioMaquinarioDTO salvo = salvarRelatorioMaquinarioUseCase.salvar(dto.despachoId(), dto);
+        atualizarStatusDespachoUseCase.executar(dto.despachoId(), SituacaoDespacho.CONCLUIDO);
+        return ResponseEntity.ok(salvo);
     }
 
     private DespachoDTO toDTO(Despacho d) {

@@ -25,7 +25,13 @@ public class RelatorioMaquinarioService implements SalvarRelatorioMaquinarioUseC
     @Transactional
     public RelatorioMaquinarioDTO salvar(Long despachoId, RelatorioMaquinarioDTO dto) {
         RelatorioMaquinarioEntity relatorio = relatorioMaquinarioPort.buscarPorDespachoId(despachoId)
-                .orElse(new RelatorioMaquinarioEntity());
+                .orElseGet(() -> {
+                    br.arthconf.fortivus.infrastructure.persistence.entity.DespachoEntity stub = new br.arthconf.fortivus.infrastructure.persistence.entity.DespachoEntity();
+                    stub.setId(despachoId);
+                    RelatorioMaquinarioEntity novo = new RelatorioMaquinarioEntity();
+                    novo.setDespacho(stub);
+                    return novo;
+                });
         relatorio.setId(despachoId);
         relatorio.setHorimetroInicial(dto.horimetroInicial());
         relatorio.setHorimetroFinal(dto.horimetroFinal());
@@ -59,6 +65,7 @@ public class RelatorioMaquinarioService implements SalvarRelatorioMaquinarioUseC
     }
 
     @Override
+    @Transactional(readOnly = true)
     public Optional<RelatorioMaquinarioDTO> buscarPorDespachoId(Long despachoId) {
         return relatorioMaquinarioPort.buscarPorDespachoId(despachoId).map(this::toDTO);
     }
@@ -70,20 +77,20 @@ public class RelatorioMaquinarioService implements SalvarRelatorioMaquinarioUseC
             lng = rel.getAreaAtuacaoGeom().getCoordinate().x;
         }
         return new RelatorioMaquinarioDTO(
-            rel.getDespacho().getId(),
+            rel.getId(),
             rel.getHorimetroInicial(),
             rel.getHorimetroFinal(),
             rel.getTempoLiquido(),
             rel.getHoraInicioOperacao(),
             rel.getHoraFimOperacao(),
-            rel.getTiposEmprego(),
+            rel.getTiposEmprego() != null ? new java.util.ArrayList<>(rel.getTiposEmprego()) : null,
             rel.getComprimentoAceiros(),
             rel.getDescricaoOutroEmprego(),
             lat,
             lng,
             rel.getEfetividadeCombate(),
             rel.getNecessidadeReforco(),
-            rel.getTiposReforcoNecessarios(),
+            rel.getTiposReforcoNecessarios() != null ? new java.util.ArrayList<>(rel.getTiposReforcoNecessarios()) : null,
             rel.getHistoricoDescritivo(),
             rel.getResultadoOcorrencia(),
             rel.getOutroResultadoDescricao(),
