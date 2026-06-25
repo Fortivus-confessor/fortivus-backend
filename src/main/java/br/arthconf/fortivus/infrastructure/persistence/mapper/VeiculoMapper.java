@@ -6,10 +6,7 @@ import br.arthconf.fortivus.infrastructure.persistence.entity.VeiculoEntity;
 public class VeiculoMapper {
 
     public static Veiculo toDomain(VeiculoEntity entity) {
-        if (entity == null) {
-            return null;
-        }
-
+        if (entity == null) return null;
         return Veiculo.builder()
                 .id(entity.getId())
                 .identificador(entity.getIdentificador())
@@ -19,16 +16,13 @@ public class VeiculoMapper {
                 .kmAtual(entity.getKmAtual())
                 .contrato(entity.getContrato())
                 .fotoUrl(entity.getFotoUrl())
-                .equipe(br.arthconf.fortivus.infrastructure.persistence.mapper.EquipeMapper.toDomainWithoutUsuarios(entity.getEquipe()))
-                .centroComando(entity.getCentroComando())
+                .equipe(EquipeMapper.toDomainWithoutUsuarios(entity.getEquipe()))
+                .centroComando(CentroComandoMapper.toDomain(entity.getCentroComando()))
                 .build();
     }
 
     public static VeiculoEntity toEntity(Veiculo domain) {
-        if (domain == null) {
-            return null;
-        }
-
+        if (domain == null) return null;
         VeiculoEntity entity = new VeiculoEntity();
         entity.setId(domain.getId());
         entity.setIdentificador(domain.getIdentificador());
@@ -38,9 +32,8 @@ public class VeiculoMapper {
         entity.setKmAtual(domain.getKmAtual());
         entity.setContrato(domain.getContrato());
         entity.setFotoUrl(domain.getFotoUrl());
-        entity.setEquipe(br.arthconf.fortivus.infrastructure.persistence.mapper.EquipeMapper.toEntityWithoutUsuarios(domain.getEquipe()));
-        entity.setCentroComando(domain.getCentroComando());
-        
+        entity.setEquipe(EquipeMapper.toEntityWithoutUsuarios(domain.getEquipe()));
+        entity.setCentroComando(CentroComandoMapper.toEntity(domain.getCentroComando()));
         return entity;
     }
 }

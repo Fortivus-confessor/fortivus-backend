@@ -1,6 +1,5 @@
 package br.arthconf.fortivus.infrastructure.persistence.entity;
 
-import br.arthconf.fortivus.domain.CentroComando;
 import br.arthconf.fortivus.domain.EstadoOperacionalUsuario;
 import br.arthconf.fortivus.domain.PerfilAcesso;
 import jakarta.persistence.*;
@@ -64,7 +63,7 @@ public class UsuarioEntity {
     @Audited(targetAuditMode = RelationTargetAuditMode.NOT_AUDITED)
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "centro_comando_id")
-    private CentroComando centroComando;
+    private CentroComandoEntity centroComando;
 
     @Audited(targetAuditMode = RelationTargetAuditMode.NOT_AUDITED)
     @ManyToOne(fetch = FetchType.LAZY)

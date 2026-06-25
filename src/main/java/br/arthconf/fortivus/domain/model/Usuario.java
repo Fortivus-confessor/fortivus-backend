@@ -1,6 +1,5 @@
 package br.arthconf.fortivus.domain.model;
 
-import br.arthconf.fortivus.domain.CentroComando;
 import br.arthconf.fortivus.domain.EstadoOperacionalUsuario;
 import br.arthconf.fortivus.domain.PerfilAcesso;
 import lombok.AllArgsConstructor;
@@ -33,6 +32,6 @@ public class Usuario {
     @Builder.Default
     private EstadoOperacionalUsuario estadoOperacional = EstadoOperacionalUsuario.DISPONIVEL;
 
-    private CentroComando centroComando;
+    private CentroComando centroComando; // domain.model.CentroComando, sem JPA
     private Equipe equipe;
 }

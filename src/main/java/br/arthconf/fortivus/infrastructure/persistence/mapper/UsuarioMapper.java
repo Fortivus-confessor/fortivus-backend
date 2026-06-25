@@ -6,21 +6,14 @@ import br.arthconf.fortivus.infrastructure.persistence.entity.UsuarioEntity;
 public class UsuarioMapper {
 
     public static Usuario toDomain(UsuarioEntity entity) {
-        if (entity == null) {
-            return null;
-        }
-
+        if (entity == null) return null;
         Usuario domain = toDomainWithoutEquipe(entity);
         domain.setEquipe(EquipeMapper.toDomainWithoutUsuarios(entity.getEquipe()));
-        
         return domain;
     }
 
     public static Usuario toDomainWithoutEquipe(UsuarioEntity entity) {
-        if (entity == null) {
-            return null;
-        }
-
+        if (entity == null) return null;
         return Usuario.builder()
                 .id(entity.getId())
                 .nome(entity.getNome())
@@ -36,26 +29,19 @@ public class UsuarioMapper {
                 .senha(entity.getSenha())
                 .perfil(entity.getPerfil())
                 .estadoOperacional(entity.getEstadoOperacional())
-                .centroComando(entity.getCentroComando())
+                .centroComando(CentroComandoMapper.toDomain(entity.getCentroComando()))
                 .build();
     }
 
     public static UsuarioEntity toEntity(Usuario domain) {
-        if (domain == null) {
-            return null;
-        }
-
+        if (domain == null) return null;
         UsuarioEntity entity = toEntityWithoutEquipe(domain);
         entity.setEquipe(EquipeMapper.toEntityWithoutUsuarios(domain.getEquipe()));
-        
         return entity;
     }
 
     public static UsuarioEntity toEntityWithoutEquipe(Usuario domain) {
-        if (domain == null) {
-            return null;
-        }
-
+        if (domain == null) return null;
         UsuarioEntity entity = new UsuarioEntity();
         entity.setId(domain.getId());
         entity.setNome(domain.getNome());
@@ -73,8 +59,7 @@ public class UsuarioMapper {
         if (domain.getEstadoOperacional() != null) {
             entity.setEstadoOperacional(domain.getEstadoOperacional());
         }
-        entity.setCentroComando(domain.getCentroComando());
-        
+        entity.setCentroComando(CentroComandoMapper.toEntity(domain.getCentroComando()));
         return entity;
     }
 }

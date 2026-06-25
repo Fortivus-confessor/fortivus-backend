@@ -1,10 +1,16 @@
 package br.arthconf.fortivus.controller;
 
-import br.arthconf.fortivus.domain.CentroComando;
+import br.arthconf.fortivus.application.port.in.BuscarCentroComandoPorIdUseCase;
+import br.arthconf.fortivus.application.port.in.DeletarCentroComandoUseCase;
+import br.arthconf.fortivus.application.port.in.ListarCentrosComandoUseCase;
+import br.arthconf.fortivus.application.port.in.SalvarCentroComandoUseCase;
+import br.arthconf.fortivus.domain.model.CentroComando;
 import br.arthconf.fortivus.dto.CentroComandoDTO;
-import br.arthconf.fortivus.service.CentroComandoService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.web.PageableDefault;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
@@ -21,93 +27,79 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class CentroComandoController {
 
-    private final CentroComandoService centroService;
+    private final ListarCentrosComandoUseCase listarUseCase;
+    private final BuscarCentroComandoPorIdUseCase buscarUseCase;
+    private final SalvarCentroComandoUseCase salvarUseCase;
+    private final DeletarCentroComandoUseCase deletarUseCase;
 
     @GetMapping
     @PreAuthorize("hasAnyRole('ADMIN', 'CENTRO_COMANDO_CENTRAL', 'CENTRO_COMANDO')")
     public ResponseEntity<List<CentroComandoDTO>> listar() {
-        List<CentroComandoDTO> lista = centroService.listarTodos().stream()
+        List<CentroComandoDTO> lista = listarUseCase.listarTodos().stream()
                 .map(this::toDTO)
                 .collect(Collectors.toList());
         return ResponseEntity.ok(lista);
     }
 
+    @GetMapping("/paged")
+    @PreAuthorize("hasAnyRole('ADMIN', 'CENTRO_COMANDO_CENTRAL', 'CENTRO_COMANDO')")
+    public ResponseEntity<Page<CentroComandoDTO>> listarPaginado(@PageableDefault(size = 10) Pageable pageable) {
+        return ResponseEntity.ok(listarUseCase.listarPaginado(pageable).map(this::toDTO));
+    }
+
     @GetMapping("/{id}")
     @PreAuthorize("hasAnyRole('ADMIN', 'CENTRO_COMANDO_CENTRAL', 'CENTRO_COMANDO')")
     public ResponseEntity<CentroComandoDTO> buscarPorId(@PathVariable UUID id) {
-        CentroComando centro = centroService.buscarPorId(id);
-        return ResponseEntity.ok(toDTO(centro));
+        return buscarUseCase.executar(id)
+                .map(c -> ResponseEntity.ok(toDTO(c)))
+                .orElse(ResponseEntity.notFound().build());
     }
 
     @PostMapping
     @PreAuthorize("hasAnyRole('ADMIN', 'CENTRO_COMANDO_CENTRAL')")
     public ResponseEntity<CentroComandoDTO> salvar(@RequestBody CentroComandoDTO dto) {
-        CentroComando centro = toEntity(dto);
-        centro.updateGeom();
-        CentroComando salvo = centroService.salvar(centro);
-        
+        CentroComando centro = fromDTO(dto);
+        CentroComando salvo = salvarUseCase.executar(centro);
         URI uri = ServletUriComponentsBuilder.fromCurrentRequest()
-                .path("/{id}")
-                .buildAndExpand(salvo.getId())
-                .toUri();
-                
+                .path("/{id}").buildAndExpand(salvo.getId()).toUri();
         return ResponseEntity.created(uri).body(toDTO(salvo));
     }
 
     @PutMapping("/{id}")
     @PreAuthorize("hasAnyRole('ADMIN', 'CENTRO_COMANDO_CENTRAL')")
     public ResponseEntity<CentroComandoDTO> atualizar(@PathVariable UUID id, @RequestBody CentroComandoDTO dto) {
-        CentroComando centro = centroService.buscarPorId(id);
+        CentroComando centro = buscarUseCase.executar(id)
+                .orElseThrow(() -> new RuntimeException("Centro de Comando não encontrado"));
         centro.setNome(dto.nome());
         centro.setEndereco(dto.endereco());
         centro.setTelefone(dto.telefone());
         centro.setCentral(dto.central());
         centro.setLatitude(dto.latitude());
         centro.setLongitude(dto.longitude());
-        centro.updateGeom();
-        
-        CentroComando atualizado = centroService.salvar(centro);
-        return ResponseEntity.ok(toDTO(atualizado));
+        return ResponseEntity.ok(toDTO(salvarUseCase.executar(centro)));
     }
 
     @DeleteMapping("/{id}")
     @PreAuthorize("hasAnyRole('ADMIN', 'CENTRO_COMANDO_CENTRAL')")
     public ResponseEntity<Void> deletar(@PathVariable UUID id) {
-        centroService.deletar(id);
+        deletarUseCase.executar(id);
         return ResponseEntity.noContent().build();
     }
 
-    private CentroComandoDTO toDTO(CentroComando centro) {
-        centro.loadCoordinates();
-        return new CentroComandoDTO(
-                centro.getId(),
-                centro.getNome(),
-                centro.getEndereco(),
-                centro.getTelefone(),
-                centro.isCentral(),
-                centro.getLatitude(),
-                centro.getLongitude()
-        );
+    private CentroComandoDTO toDTO(CentroComando c) {
+        return new CentroComandoDTO(c.getId(), c.getNome(), c.getEndereco(), c.getTelefone(),
+                c.isCentral(), c.getLatitude(), c.getLongitude());
     }
 
-    private CentroComando toEntity(CentroComandoDTO dto) {
-        CentroComando centro = new CentroComando();
-        if (dto.id() != null) {
-            centro.setId(dto.id());
-        }
-        centro.setNome(dto.nome());
-        centro.setEndereco(dto.endereco());
-        centro.setTelefone(dto.telefone());
-        centro.setCentral(dto.central());
-        centro.setLatitude(dto.latitude());
-        centro.setLongitude(dto.longitude());
-        return centro;
-    }
-
-    @org.springframework.web.bind.annotation.GetMapping("/paged")
-    @PreAuthorize("hasAnyRole('ADMIN', 'CENTRO_COMANDO_CENTRAL', 'CENTRO_COMANDO')")
-    public org.springframework.http.ResponseEntity<org.springframework.data.domain.Page<CentroComandoDTO>> listarPaginado(
-            @org.springframework.data.web.PageableDefault(size = 10) org.springframework.data.domain.Pageable pageable) {
-        return org.springframework.http.ResponseEntity.ok(centroService.listarPaginado(pageable).map(this::toDTO));
+    private CentroComando fromDTO(CentroComandoDTO dto) {
+        return CentroComando.builder()
+                .id(dto.id())
+                .nome(dto.nome())
+                .endereco(dto.endereco())
+                .telefone(dto.telefone())
+                .central(dto.central())
+                .latitude(dto.latitude())
+                .longitude(dto.longitude())
+                .build();
     }
 }

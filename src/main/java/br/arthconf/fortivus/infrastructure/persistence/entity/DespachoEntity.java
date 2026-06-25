@@ -21,11 +21,11 @@ public class DespachoEntity {
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "ordem_servico_id", nullable = false)
-    private br.arthconf.fortivus.domain.OrdemServico ordemServico;
+    private OrdemServicoEntity ordemServico;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "escala_id")
-    private br.arthconf.fortivus.domain.Escala escala;
+    private EscalaEntity escala;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "responsavel_id")
@@ -54,3 +54,5 @@ public class DespachoEntity {
     @Column(name = "data_fim")
     private LocalDateTime dataFim;
 }
+
+

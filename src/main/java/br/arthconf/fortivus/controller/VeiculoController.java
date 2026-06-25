@@ -1,16 +1,22 @@
 package br.arthconf.fortivus.controller;
 
+import br.arthconf.fortivus.application.port.in.BuscarCentroComandoPorIdUseCase;
+import br.arthconf.fortivus.application.port.in.GerenciarEquipeUseCase;
+import br.arthconf.fortivus.application.port.in.GerenciarVeiculoUseCase;
+import br.arthconf.fortivus.application.port.in.ListarVeiculosUseCase;
+import br.arthconf.fortivus.domain.model.CategoriaOperacao;
 import br.arthconf.fortivus.domain.model.Veiculo;
 import br.arthconf.fortivus.dto.VeiculoDTO;
 import br.arthconf.fortivus.service.FileStorageService;
-import br.arthconf.fortivus.service.VeiculoService;
-import br.arthconf.fortivus.service.EquipeService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.web.PageableDefault;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
-import org.springframework.http.MediaType;
 
 import java.io.IOException;
 import java.util.List;
@@ -22,26 +28,31 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class VeiculoController {
 
-    private final VeiculoService veiculoService;
-    private final EquipeService equipeService;
-    private final br.arthconf.fortivus.service.CentroComandoService centroService;
+    private final ListarVeiculosUseCase listarVeiculosUseCase;
+    private final GerenciarVeiculoUseCase gerenciarVeiculoUseCase;
+    private final GerenciarEquipeUseCase gerenciarEquipeUseCase;
+    private final BuscarCentroComandoPorIdUseCase buscarCentroUseCase;
     private final FileStorageService storageService;
-
-
 
     @GetMapping
     @PreAuthorize("hasAnyRole('ADMIN', 'CENTRO_COMANDO_CENTRAL', 'CENTRO_COMANDO')")
     public ResponseEntity<List<VeiculoDTO>> listar() {
-        List<VeiculoDTO> veiculos = veiculoService.listarTodos().stream()
+        List<VeiculoDTO> veiculos = listarVeiculosUseCase.listarTodos().stream()
                 .map(this::toDTO)
                 .collect(Collectors.toList());
         return ResponseEntity.ok(veiculos);
     }
 
+    @GetMapping("/paged")
+    @PreAuthorize("hasAnyRole('ADMIN', 'CENTRO_COMANDO_CENTRAL', 'CENTRO_COMANDO')")
+    public ResponseEntity<Page<VeiculoDTO>> listarPaginado(@PageableDefault(size = 10) Pageable pageable) {
+        return ResponseEntity.ok(listarVeiculosUseCase.listarPaginado(pageable).map(this::toDTO));
+    }
+
     @GetMapping("/{id}")
     @PreAuthorize("hasAnyRole('ADMIN', 'CENTRO_COMANDO_CENTRAL', 'CENTRO_COMANDO')")
     public ResponseEntity<VeiculoDTO> buscarPorId(@PathVariable UUID id) {
-        Veiculo veiculo = veiculoService.buscarPorId(id);
+        Veiculo veiculo = gerenciarVeiculoUseCase.buscarPorId(id);
         return ResponseEntity.ok(toDTO(veiculo));
     }
 
@@ -59,15 +70,14 @@ public class VeiculoController {
             @RequestParam(value = "contrato", required = false) String contrato,
             @RequestParam(value = "fotoArquivo", required = false) MultipartFile fotoArquivo) throws IOException {
 
-        br.arthconf.fortivus.domain.model.CategoriaOperacao categoria = null;
+        CategoriaOperacao categoria = null;
         if (categoriaStr != null && !categoriaStr.isEmpty()) {
-            categoria = br.arthconf.fortivus.domain.model.CategoriaOperacao.fromString(categoriaStr);
+            categoria = CategoriaOperacao.fromString(categoriaStr);
         }
 
         Veiculo veiculoParaSalvar;
-        
         if (id != null) {
-            veiculoParaSalvar = veiculoService.buscarPorId(id);
+            veiculoParaSalvar = gerenciarVeiculoUseCase.buscarPorId(id);
         } else {
             veiculoParaSalvar = new Veiculo();
         }
@@ -80,13 +90,14 @@ public class VeiculoController {
         if (contrato != null) veiculoParaSalvar.setContrato(contrato);
 
         if (equipeId != null) {
-            veiculoParaSalvar.setEquipe(equipeService.buscarPorId(equipeId));
+            veiculoParaSalvar.setEquipe(gerenciarEquipeUseCase.buscarPorId(equipeId));
         } else {
             veiculoParaSalvar.setEquipe(null);
         }
 
         if (centroComandoId != null) {
-            veiculoParaSalvar.setCentroComando(centroService.buscarPorId(centroComandoId));
+            veiculoParaSalvar.setCentroComando(buscarCentroUseCase.executar(centroComandoId)
+                    .orElseThrow(() -> new RuntimeException("Centro de Comando não encontrado")));
         } else {
             veiculoParaSalvar.setCentroComando(null);
         }
@@ -98,31 +109,31 @@ public class VeiculoController {
             String url = storageService.upload(fotoArquivo, "veiculos");
             veiculoParaSalvar.setFotoUrl(url);
         }
-        
-        veiculoService.salvar(veiculoParaSalvar);
+
+        gerenciarVeiculoUseCase.salvar(veiculoParaSalvar);
         return ResponseEntity.ok().build();
     }
 
     @DeleteMapping("/{id}/foto")
     @PreAuthorize("hasAnyRole('ADMIN', 'CENTRO_COMANDO_CENTRAL')")
     public ResponseEntity<Void> excluirFoto(@PathVariable UUID id) {
-        Veiculo v = veiculoService.buscarPorId(id);
+        Veiculo v = gerenciarVeiculoUseCase.buscarPorId(id);
         if (v.getFotoUrl() != null && v.getFotoUrl().startsWith("http")) {
             storageService.delete(v.getFotoUrl());
         }
         v.setFotoUrl(null);
-        veiculoService.salvar(v);
+        gerenciarVeiculoUseCase.salvar(v);
         return ResponseEntity.ok().build();
     }
 
     @DeleteMapping("/{id}")
     @PreAuthorize("hasAnyRole('ADMIN', 'CENTRO_COMANDO_CENTRAL')")
     public ResponseEntity<Void> deletar(@PathVariable UUID id) {
-        Veiculo v = veiculoService.buscarPorId(id);
+        Veiculo v = gerenciarVeiculoUseCase.buscarPorId(id);
         if (v.getFotoUrl() != null && v.getFotoUrl().startsWith("http")) {
             storageService.delete(v.getFotoUrl());
         }
-        veiculoService.deletar(id);
+        gerenciarVeiculoUseCase.deletar(id);
         return ResponseEntity.noContent().build();
     }
 
@@ -139,12 +150,5 @@ public class VeiculoController {
                 veiculo.getCentroComando() != null ? veiculo.getCentroComando().getId() : null,
                 veiculo.getContrato()
         );
-    }
-
-    @org.springframework.web.bind.annotation.GetMapping("/paged")
-    @PreAuthorize("hasAnyRole('ADMIN', 'CENTRO_COMANDO_CENTRAL', 'CENTRO_COMANDO')")
-    public org.springframework.http.ResponseEntity<org.springframework.data.domain.Page<VeiculoDTO>> listarPaginado(
-            @org.springframework.data.web.PageableDefault(size = 10) org.springframework.data.domain.Pageable pageable) {
-        return org.springframework.http.ResponseEntity.ok(veiculoService.listarPaginado(pageable).map(this::toDTO));
     }
 }

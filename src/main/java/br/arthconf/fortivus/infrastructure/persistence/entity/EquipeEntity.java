@@ -1,7 +1,6 @@
 package br.arthconf.fortivus.infrastructure.persistence.entity;
 
 import br.arthconf.fortivus.domain.model.CategoriaOperacao;
-import br.arthconf.fortivus.domain.CentroComando;
 import br.arthconf.fortivus.domain.BaseEntity;
 import jakarta.persistence.*;
 import lombok.Data;
@@ -26,7 +25,7 @@ public class EquipeEntity extends BaseEntity {
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "centro_comando_id", nullable = false)
-    private CentroComando centroComando;
+    private CentroComandoEntity centroComando;
 
     @OneToMany(mappedBy = "equipe")
     private List<UsuarioEntity> usuarios;

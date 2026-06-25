@@ -1,25 +1,33 @@
 package br.arthconf.fortivus.controller;
 
-import br.arthconf.fortivus.infrastructure.persistence.entity.DespachoEntity;
-import br.arthconf.fortivus.domain.PropriedadeRelatorio;
-import br.arthconf.fortivus.domain.RelatorioTerrestre;
 import br.arthconf.fortivus.domain.SituacaoDespacho;
 import br.arthconf.fortivus.dto.DespachoDTO;
 import br.arthconf.fortivus.dto.RelatorioAereoDTO;
 import br.arthconf.fortivus.dto.RelatorioMaquinarioDTO;
 import br.arthconf.fortivus.dto.RelatorioTerrestreDTO;
+import br.arthconf.fortivus.application.port.in.AtualizarStatusDespachoUseCase;
+import br.arthconf.fortivus.application.port.in.BuscarDespachoPorIdUseCase;
+import br.arthconf.fortivus.application.port.in.CriarDespachoUseCase;
+import br.arthconf.fortivus.application.port.in.DeletarDespachoUseCase;
+import br.arthconf.fortivus.application.port.in.ListarDespachosUseCase;
 import br.arthconf.fortivus.application.port.in.BuscarRelatorioAereoUseCase;
 import br.arthconf.fortivus.application.port.in.SalvarRelatorioAereoUseCase;
 import br.arthconf.fortivus.application.port.in.BuscarRelatorioMaquinarioUseCase;
 import br.arthconf.fortivus.application.port.in.SalvarRelatorioMaquinarioUseCase;
-import br.arthconf.fortivus.application.usecase.*;
+import br.arthconf.fortivus.application.port.in.BuscarRelatorioTerrestreUseCase;
+import br.arthconf.fortivus.application.port.in.SalvarRelatorioTerrestreUseCase;
 import br.arthconf.fortivus.domain.model.Despacho;
-import br.arthconf.fortivus.service.OrdemServicoService;
+import br.arthconf.fortivus.infrastructure.persistence.entity.DespachoEntity;
+import br.arthconf.fortivus.infrastructure.persistence.entity.PropriedadeRelatorioEntity;
+import br.arthconf.fortivus.infrastructure.persistence.entity.RelatorioTerrestreEntity;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.locationtech.jts.geom.Coordinate;
 import org.locationtech.jts.geom.GeometryFactory;
 import org.locationtech.jts.geom.PrecisionModel;
+import org.springframework.data.domain.Page;
+import org.springframework.data.web.PageableDefault;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
@@ -41,8 +49,8 @@ public class DespachoController {
     private final ListarDespachosUseCase listarDespachosUseCase;
     private final BuscarDespachoPorIdUseCase buscarDespachoPorIdUseCase;
     private final DeletarDespachoUseCase deletarDespachoUseCase;
-    private final br.arthconf.fortivus.repository.DespachoRepository despachoRepository;
-    private final br.arthconf.fortivus.service.RelatorioTerrestreService relatorioTerrestreService;
+    private final BuscarRelatorioTerrestreUseCase buscarRelatorioTerrestreUseCase;
+    private final SalvarRelatorioTerrestreUseCase salvarRelatorioTerrestreUseCase;
     private final BuscarRelatorioAereoUseCase buscarRelatorioAereoUseCase;
     private final SalvarRelatorioAereoUseCase salvarRelatorioAereoUseCase;
     private final BuscarRelatorioMaquinarioUseCase buscarRelatorioMaquinarioUseCase;
@@ -51,21 +59,31 @@ public class DespachoController {
     @GetMapping
     @PreAuthorize("hasAnyRole('ADMIN', 'CENTRO_COMANDO_CENTRAL', 'CENTRO_COMANDO', 'COMBATENTE')")
     public ResponseEntity<List<DespachoDTO>> listar() {
-        return ResponseEntity.ok(listarDespachosUseCase.listarTodos());
+        List<DespachoDTO> list = listarDespachosUseCase.listarTodos().stream()
+                .map(this::toDTO)
+                .collect(Collectors.toList());
+        return ResponseEntity.ok(list);
+    }
+
+    @GetMapping("/paged")
+    @PreAuthorize("hasAnyRole('ADMIN', 'CENTRO_COMANDO_CENTRAL', 'CENTRO_COMANDO', 'COMBATENTE')")
+    public ResponseEntity<Page<DespachoDTO>> listarPaginado(
+            @PageableDefault(size = 10) Pageable pageable) {
+        return ResponseEntity.ok(listarDespachosUseCase.listarPaginado(pageable).map(this::toDTO));
     }
 
     @GetMapping("/{id}")
     @PreAuthorize("hasAnyRole('ADMIN', 'CENTRO_COMANDO_CENTRAL', 'CENTRO_COMANDO', 'COMBATENTE')")
     public ResponseEntity<DespachoDTO> buscarPorId(@PathVariable Long id) {
         return buscarDespachoPorIdUseCase.executar(id)
-                .map(ResponseEntity::ok)
+                .map(d -> ResponseEntity.ok(toDTO(d)))
                 .orElse(ResponseEntity.notFound().build());
     }
 
     @PostMapping
     @PreAuthorize("hasAnyRole('ADMIN', 'CENTRO_COMANDO_CENTRAL', 'CENTRO_COMANDO')")
     public ResponseEntity<DespachoDTO> salvar(@RequestBody DespachoDTO dto) {
-        Despacho despacho = br.arthconf.fortivus.domain.model.Despacho.builder()
+        Despacho despacho = Despacho.builder()
                 .ordemServicoId(dto.ordemServicoId())
                 .escalaId(dto.escalaId())
                 .responsavelId(dto.responsavelId())
@@ -75,15 +93,15 @@ public class DespachoController {
                 .descricaoTarefa(dto.descricaoTarefa())
                 .status(SituacaoDespacho.EM_ANDAMENTO)
                 .build();
-        
+
         Despacho salvo = criarDespachoUseCase.executar(despacho);
-        
+
         URI location = ServletUriComponentsBuilder.fromCurrentRequest()
                 .path("/{id}")
                 .buildAndExpand(salvo.getId())
                 .toUri();
         return buscarDespachoPorIdUseCase.executar(salvo.getId())
-                .map(d -> ResponseEntity.created(location).body(d))
+                .map(d -> ResponseEntity.created(location).body(toDTO(d)))
                 .orElse(ResponseEntity.internalServerError().build());
     }
 
@@ -107,37 +125,28 @@ public class DespachoController {
         return ResponseEntity.noContent().build();
     }
 
-    /**
-     * GET /despachos/{id}/relatorio-terrestre
-     * Busca o relatório terrestre existente para um DespachoEntity.
-     * Retorna 404 se o DespachoEntity não possui relatório ainda.
-     */
     @GetMapping("/{id}/relatorio-terrestre")
     @PreAuthorize("hasAnyRole('ADMIN', 'CENTRO_COMANDO_CENTRAL', 'CENTRO_COMANDO', 'COMBATENTE')")
     public ResponseEntity<RelatorioTerrestreDTO> buscarRelatorioTerrestre(@PathVariable Long id) {
-        RelatorioTerrestre relatorio = relatorioTerrestreService.buscarPorDespachoId(id);
-        if (relatorio == null) {
-            return ResponseEntity.notFound().build();
-        }
-        return ResponseEntity.ok(toRelatorioDTO(relatorio));
+        return buscarRelatorioTerrestreUseCase.executar(id)
+                .map(this::toRelatorioDTO)
+                .map(ResponseEntity::ok)
+                .orElse(ResponseEntity.notFound().build());
     }
 
-    /**
-     * POST /despachos/finalizar-terrestre
-     * Cria ou atualiza o relatório terrestre de um DespachoEntity via JSON.
-     */
     @PostMapping("/finalizar-terrestre")
     @PreAuthorize("hasAnyRole('ADMIN', 'CENTRO_COMANDO_CENTRAL', 'CENTRO_COMANDO', 'COMBATENTE')")
     public ResponseEntity<RelatorioTerrestreDTO> finalizarTerrestre(@RequestBody RelatorioTerrestreDTO dto) {
         log.info("Recebendo relatório terrestre para DespachoEntity ID: {}", dto.despachoId());
 
-        var DespachoEntity = despachoRepository.findByIdFetched(dto.despachoId()).orElse(null);
-
-        RelatorioTerrestre relatorio = relatorioTerrestreService.buscarPorDespachoId(dto.despachoId());
-        if (relatorio == null) {
-            relatorio = new RelatorioTerrestre();
-            relatorio.setDespacho(DespachoEntity);
-        }
+        RelatorioTerrestreEntity relatorio = buscarRelatorioTerrestreUseCase.executar(dto.despachoId())
+                .orElseGet(() -> {
+                    DespachoEntity stub = new DespachoEntity();
+                    stub.setId(dto.despachoId());
+                    RelatorioTerrestreEntity novo = new RelatorioTerrestreEntity();
+                    novo.setDespacho(stub);
+                    return novo;
+                });
         relatorio.setAcoesRealizadas(dto.acoesRealizadas());
         relatorio.setOrgaosApoio(dto.orgaosApoio());
         relatorio.setOutrosOrgaosDescricao(dto.outrosOrgaosDescricao());
@@ -155,17 +164,15 @@ public class DespachoController {
         relatorio.setResultadoOcorrencia(dto.resultadoOcorrencia());
         relatorio.setOutroResultadoDescricao(dto.outroResultadoDescricao());
 
-        // Geolocalização da área de atuação
         if (dto.areaAtuacaoLat() != null && dto.areaAtuacaoLng() != null) {
             GeometryFactory gf = new GeometryFactory(new PrecisionModel(), 4326);
             relatorio.setAreaAtuacaoGeom(gf.createPoint(new Coordinate(dto.areaAtuacaoLng(), dto.areaAtuacaoLat())));
         }
 
-        // Propriedades rurais
         if (dto.propriedades() != null) {
-            List<PropriedadeRelatorio> propriedades = new ArrayList<>();
+            List<PropriedadeRelatorioEntity> propriedades = new ArrayList<>();
             for (var p : dto.propriedades()) {
-                var prop = new PropriedadeRelatorio();
+                var prop = new PropriedadeRelatorioEntity();
                 prop.setNomePropriedade(p.nomePropriedade());
                 prop.setResponsavel(p.responsavel());
                 prop.setTelefone(p.telefone());
@@ -185,7 +192,7 @@ public class DespachoController {
             relatorio.setPropriedades(propriedades);
         }
 
-        RelatorioTerrestre salvo = relatorioTerrestreService.salvar(relatorio);
+        RelatorioTerrestreEntity salvo = salvarRelatorioTerrestreUseCase.executar(relatorio);
         log.info("Relatório terrestre salvo com sucesso para DespachoEntity ID: {}", dto.despachoId());
         return ResponseEntity.ok(toRelatorioDTO(salvo));
     }
@@ -202,8 +209,7 @@ public class DespachoController {
     @PreAuthorize("hasAnyRole('ADMIN', 'CENTRO_COMANDO_CENTRAL', 'CENTRO_COMANDO', 'COMBATENTE')")
     public ResponseEntity<RelatorioAereoDTO> finalizarAereo(@RequestBody RelatorioAereoDTO dto) {
         log.info("Recebendo relatório aéreo para DespachoEntity ID: {}", dto.despachoId());
-        RelatorioAereoDTO salvo = salvarRelatorioAereoUseCase.salvar(dto.despachoId(), dto);
-        return ResponseEntity.ok(salvo);
+        return ResponseEntity.ok(salvarRelatorioAereoUseCase.salvar(dto.despachoId(), dto));
     }
 
     @GetMapping("/{id}/relatorio-maquinario")
@@ -218,29 +224,26 @@ public class DespachoController {
     @PreAuthorize("hasAnyRole('ADMIN', 'CENTRO_COMANDO_CENTRAL', 'CENTRO_COMANDO', 'COMBATENTE')")
     public ResponseEntity<RelatorioMaquinarioDTO> finalizarMaquinario(@RequestBody RelatorioMaquinarioDTO dto) {
         log.info("Recebendo relatório maquinário para DespachoEntity ID: {}", dto.despachoId());
-        RelatorioMaquinarioDTO salvo = salvarRelatorioMaquinarioUseCase.salvar(dto.despachoId(), dto);
-        return ResponseEntity.ok(salvo);
+        return ResponseEntity.ok(salvarRelatorioMaquinarioUseCase.salvar(dto.despachoId(), dto));
     }
 
-    private DespachoDTO toDTO(DespachoEntity DespachoEntity) {
-        Double lat = DespachoEntity.getLatitude();
-        Double lng = DespachoEntity.getLongitude();
+    private DespachoDTO toDTO(Despacho d) {
         return new DespachoDTO(
-                DespachoEntity.getId(),
-                DespachoEntity.getOrdemServico() != null ? DespachoEntity.getOrdemServico().getId() : null,
-                DespachoEntity.getEscala() != null ? DespachoEntity.getEscala().getId() : null,
-                DespachoEntity.getResponsavel() != null ? DespachoEntity.getResponsavel().getId() : null,
-                DespachoEntity.getCategoria(),
-                DespachoEntity.getDescricaoTarefa(),
-                DespachoEntity.getStatus(),
-                DespachoEntity.getDataInicio(),
-                DespachoEntity.getDataFim(),
-                lat,
-                lng
+                d.getId(),
+                d.getOrdemServicoId(),
+                d.getEscalaId(),
+                d.getResponsavelId(),
+                d.getCategoria(),
+                d.getDescricaoTarefa(),
+                d.getStatus(),
+                d.getDataInicio(),
+                d.getDataFim(),
+                d.getLatitude(),
+                d.getLongitude()
         );
     }
 
-    private RelatorioTerrestreDTO toRelatorioDTO(RelatorioTerrestre r) {
+    private RelatorioTerrestreDTO toRelatorioDTO(RelatorioTerrestreEntity r) {
         Double areaLat = null, areaLng = null;
         if (r.getAreaAtuacaoGeom() != null) {
             areaLat = r.getAreaAtuacaoGeom().getCoordinate().y;
@@ -286,14 +289,4 @@ public class DespachoController {
                 r.getDataFim()
         );
     }
-
-
-
-    @GetMapping("/paged")
-    @PreAuthorize("hasAnyRole('ADMIN', 'CENTRO_COMANDO_CENTRAL', 'CENTRO_COMANDO', 'COMBATENTE')")
-    public ResponseEntity<org.springframework.data.domain.Page<DespachoDTO>> listarPaginado(
-            @org.springframework.data.web.PageableDefault(size = 10) org.springframework.data.domain.Pageable pageable) {
-        return ResponseEntity.ok(listarDespachosUseCase.listarPaginado(pageable));
-    }
 }
-

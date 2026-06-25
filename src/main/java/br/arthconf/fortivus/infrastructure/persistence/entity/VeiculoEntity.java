@@ -1,8 +1,6 @@
 package br.arthconf.fortivus.infrastructure.persistence.entity;
 
 import br.arthconf.fortivus.domain.model.CategoriaOperacao;
-import br.arthconf.fortivus.domain.CentroComando;
-
 import jakarta.persistence.*;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -44,5 +42,5 @@ public class VeiculoEntity extends BaseEntity {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "centro_comando_id")
-    private CentroComando centroComando;
+    private CentroComandoEntity centroComando;
 }
