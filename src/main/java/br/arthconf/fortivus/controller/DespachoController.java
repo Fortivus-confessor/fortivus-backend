@@ -135,7 +135,7 @@ public class DespachoController {
     }
 
     @DeleteMapping("/{id}")
-    @PreAuthorize("hasAnyRole('ADMIN', 'CENTRO_COMANDO_CENTRAL')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'CENTRO_COMANDO_CENTRAL', 'CENTRO_COMANDO')")
     public ResponseEntity<Void> deletar(@PathVariable Long id) {
         deletarDespachoUseCase.executar(id);
         return ResponseEntity.noContent().build();

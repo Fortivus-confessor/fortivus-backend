@@ -57,7 +57,7 @@ public class VeiculoController {
     }
 
     @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-    @PreAuthorize("hasAnyRole('ADMIN', 'CENTRO_COMANDO_CENTRAL')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'CENTRO_COMANDO_CENTRAL', 'CENTRO_COMANDO')")
     public ResponseEntity<Void> salvar(
             @RequestParam(value = "id", required = false) UUID id,
             @RequestParam(value = "identificador", required = false) String identificador,
@@ -115,7 +115,7 @@ public class VeiculoController {
     }
 
     @DeleteMapping("/{id}/foto")
-    @PreAuthorize("hasAnyRole('ADMIN', 'CENTRO_COMANDO_CENTRAL')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'CENTRO_COMANDO_CENTRAL', 'CENTRO_COMANDO')")
     public ResponseEntity<Void> excluirFoto(@PathVariable UUID id) {
         Veiculo v = gerenciarVeiculoUseCase.buscarPorId(id);
         if (v.getFotoUrl() != null && v.getFotoUrl().startsWith("http")) {
@@ -127,7 +127,7 @@ public class VeiculoController {
     }
 
     @DeleteMapping("/{id}")
-    @PreAuthorize("hasAnyRole('ADMIN', 'CENTRO_COMANDO_CENTRAL')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'CENTRO_COMANDO_CENTRAL', 'CENTRO_COMANDO')")
     public ResponseEntity<Void> deletar(@PathVariable UUID id) {
         Veiculo v = gerenciarVeiculoUseCase.buscarPorId(id);
         if (v.getFotoUrl() != null && v.getFotoUrl().startsWith("http")) {
