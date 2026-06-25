@@ -5,7 +5,6 @@ import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.ToString;
 import java.time.LocalDateTime;
-import br.arthconf.fortivus.domain.Escala;
 import br.arthconf.fortivus.domain.SituacaoOrdemServico;
 
 @Entity
@@ -23,7 +22,7 @@ public class OrdemServicoEntity {
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "escala_id", nullable = false)
-    private Escala escala;
+    private EscalaEntity escala;
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "relator_id", nullable = false)

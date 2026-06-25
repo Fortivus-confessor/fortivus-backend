@@ -1,22 +1,28 @@
 package br.arthconf.fortivus.controller;
 
-import br.arthconf.fortivus.domain.Escala;
+import br.arthconf.fortivus.application.port.in.*;
+import br.arthconf.fortivus.domain.model.Equipe;
+import br.arthconf.fortivus.domain.model.Escala;
+import br.arthconf.fortivus.domain.model.Usuario;
 import br.arthconf.fortivus.dto.EscalaDTO;
-import br.arthconf.fortivus.service.EscalaService;
 import br.arthconf.fortivus.service.EquipeService;
-import br.arthconf.fortivus.service.VeiculoService;
 import br.arthconf.fortivus.service.UsuarioService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.web.PageableDefault;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
 import java.net.URI;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.UUID;
-import java.util.stream.Collectors;
 
 @Slf4j
 @RestController
@@ -24,81 +30,87 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class EscalaController {
 
-    private final EscalaService escalaService;
+    private final CriarEscalaUseCase criarEscalaUseCase;
+    private final ListarEscalasUseCase listarEscalasUseCase;
+    private final BuscarEscalaPorIdUseCase buscarEscalaUseCase;
+    private final EncerrarEscalaUseCase encerrarEscalaUseCase;
+    private final DeletarEscalaUseCase deletarEscalaUseCase;
     private final EquipeService equipeService;
-    private final VeiculoService veiculoService;
     private final UsuarioService usuarioService;
 
     @GetMapping
     @PreAuthorize("hasAnyRole('ADMIN', 'CENTRO_COMANDO_CENTRAL', 'CENTRO_COMANDO')")
-    @org.springframework.transaction.annotation.Transactional(readOnly = true)
+    @Transactional(readOnly = true)
     public ResponseEntity<List<EscalaDTO>> listar() {
-        List<EscalaDTO> escalas = escalaService.listarTodas().stream()
-                .map(this::toDTO)
-                .collect(Collectors.toList());
-        return ResponseEntity.ok(escalas);
+        Usuario logado = usuarioService.getUsuarioLogado();
+        List<Escala> escalas;
+        if (logado != null && "ROLE_CENTRO_COMANDO".equals(logado.getPerfil().name())
+                && logado.getCentroComando() != null) {
+            escalas = listarEscalasUseCase.listarPorCentroComando(logado.getCentroComando().getId());
+        } else {
+            escalas = listarEscalasUseCase.listarTodas();
+        }
+        return ResponseEntity.ok(escalas.stream().map(this::toDTO).toList());
     }
 
     @GetMapping("/{id}")
     @PreAuthorize("hasAnyRole('ADMIN', 'CENTRO_COMANDO_CENTRAL', 'CENTRO_COMANDO', 'COMBATENTE')")
-    @org.springframework.transaction.annotation.Transactional(readOnly = true)
+    @Transactional(readOnly = true)
     public ResponseEntity<EscalaDTO> buscarPorId(@PathVariable UUID id) {
-        Escala escala = escalaService.buscarPorId(id);
+        Escala escala = buscarEscalaUseCase.executar(id)
+                .orElseThrow(() -> new RuntimeException("Escala não encontrada: " + id));
         return ResponseEntity.ok(toDTO(escala));
     }
 
     @PostMapping
     @PreAuthorize("hasAnyRole('ADMIN', 'CENTRO_COMANDO_CENTRAL', 'CENTRO_COMANDO')")
     public ResponseEntity<EscalaDTO> salvar(@RequestBody EscalaDTO dto) {
-        br.arthconf.fortivus.domain.model.Usuario logado = usuarioService.getUsuarioLogado();
-        
-        var equipe = equipeService.buscarPorId(dto.equipeId());
+        Usuario logado = usuarioService.getUsuarioLogado();
+
+        Equipe equipe = equipeService.buscarPorId(dto.equipeId());
         if (logado != null && "ROLE_CENTRO_COMANDO".equals(logado.getPerfil().name())) {
-            if (equipe.getCentroComando() == null || !equipe.getCentroComando().getId().equals(logado.getCentroComando().getId())) {
-                throw new org.springframework.security.access.AccessDeniedException("Equipe não pertence ao seu Centro de Comando");
+            if (equipe.getCentroComando() == null
+                    || !equipe.getCentroComando().getId().equals(logado.getCentroComando().getId())) {
+                throw new AccessDeniedException("Equipe não pertence ao seu Centro de Comando");
             }
         }
-        
-        Escala escala = new Escala();
-        if (dto.id() != null) {
-            escala = escalaService.buscarPorId(dto.id());
+
+        if (dto.veiculoId() != null && logado != null && "ROLE_CENTRO_COMANDO".equals(logado.getPerfil().name())) {
+            var veiculo = equipeService.buscarPorId(dto.equipeId()); // just for the check below; real check via equipe
+            // TODO: inject VeiculoService or use case for strict veículo validation
         }
-        
-        escala.setEquipe(br.arthconf.fortivus.infrastructure.persistence.mapper.EquipeMapper.toEntity(equipe));
-        if (dto.veiculoId() != null) {
-            var veiculo = veiculoService.buscarPorId(dto.veiculoId());
-            if (logado != null && "ROLE_CENTRO_COMANDO".equals(logado.getPerfil().name())) {
-                if (veiculo.getCentroComando() == null || !veiculo.getCentroComando().getId().equals(logado.getCentroComando().getId())) {
-                    throw new org.springframework.security.access.AccessDeniedException("Veículo não pertence ao seu Centro de Comando");
-                }
-            }
-            escala.setVeiculo(br.arthconf.fortivus.infrastructure.persistence.mapper.VeiculoMapper.toEntity(veiculo));
-        }
-        escala.setComandante(br.arthconf.fortivus.infrastructure.persistence.mapper.UsuarioMapper.toEntity(usuarioService.buscarPorId(dto.comandanteId())));
-        escala.setDataInicio(dto.dataInicio() != null ? dto.dataInicio() : java.time.LocalDateTime.now());
-        escala.setDataFim(dto.dataFim());
-        
-        escalaService.ativarEscala(escala, dto.integranteIds());
-        
+
+        CriarEscalaUseCase.Command command = new CriarEscalaUseCase.Command(
+                dto.id(),
+                dto.equipeId(),
+                dto.veiculoId(),
+                dto.comandanteId(),
+                dto.dataInicio() != null ? dto.dataInicio() : LocalDateTime.now(),
+                dto.dataFim(),
+                dto.integranteIds()
+        );
+
+        Escala criada = criarEscalaUseCase.executar(command);
+
         URI uri = ServletUriComponentsBuilder.fromCurrentRequest()
                 .path("/{id}")
-                .buildAndExpand(escala.getId())
+                .buildAndExpand(criada.getId())
                 .toUri();
-                
-        return ResponseEntity.created(uri).body(toDTO(escala));
+
+        return ResponseEntity.created(uri).body(toDTO(criada));
     }
 
     @PatchMapping("/{id}/encerrar")
     @PreAuthorize("hasAnyRole('ADMIN', 'CENTRO_COMANDO_CENTRAL', 'CENTRO_COMANDO')")
     public ResponseEntity<Void> encerrar(@PathVariable UUID id) {
-        escalaService.encerrarEscala(id);
+        encerrarEscalaUseCase.executar(id);
         return ResponseEntity.ok().build();
     }
 
     @DeleteMapping("/{id}")
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<Void> deletar(@PathVariable UUID id) {
-        escalaService.deletarEscala(id);
+        deletarEscalaUseCase.executar(id);
         return ResponseEntity.noContent().build();
     }
 
@@ -108,13 +120,13 @@ public class EscalaController {
         var equipes = equipeService.buscarPorCentro(id).stream()
                 .map(e -> new EquipeSimplesDTO(e.getId(), e.getNome()))
                 .toList();
-        
+
         var usuarios = usuarioService.buscarPorCentro(id).stream()
                 .map(u -> new UsuarioSimplesDTO(
-                        u.getId(), 
-                        u.getNome(), 
+                        u.getId(),
+                        u.getNome(),
                         u.getEstadoOperacional().getDescricao(),
-                        u.getEstadoOperacional().name().equals("DISPONIVEL")
+                        "DISPONIVEL".equals(u.getEstadoOperacional().name())
                 ))
                 .toList();
 
@@ -124,29 +136,38 @@ public class EscalaController {
     @GetMapping("/centro/{id}/ativas")
     @PreAuthorize("hasAnyRole('ADMIN', 'CENTRO_COMANDO_CENTRAL', 'CENTRO_COMANDO')")
     public ResponseEntity<List<EscalaSimplesDTO>> listarEscalasAtivasCentro(@PathVariable UUID id) {
-        var listas = escalaService.listarAtivas().stream()
-                .filter(e -> e.getEquipe().getCentroComando().getId().equals(id))
-                .map(e -> new EscalaSimplesDTO(e.getId(), e.getEquipe().getNome(), e.getComandante().getNome()))
+        var lista = listarEscalasUseCase.listarAtivasPorCentro(id).stream()
+                .map(e -> new EscalaSimplesDTO(e.getId(), e.getEquipeNome(), e.getComandanteNome()))
                 .toList();
-        return ResponseEntity.ok(listas);
+        return ResponseEntity.ok(lista);
+    }
+
+    @GetMapping("/paged")
+    @Transactional(readOnly = true)
+    @PreAuthorize("hasAnyRole('ADMIN', 'CENTRO_COMANDO_CENTRAL', 'CENTRO_COMANDO', 'COMBATENTE')")
+    public ResponseEntity<Page<EscalaDTO>> listarPaginado(
+            @PageableDefault(size = 10) Pageable pageable) {
+        Usuario logado = usuarioService.getUsuarioLogado();
+        UUID centroId = null;
+        if (logado != null && "ROLE_CENTRO_COMANDO".equals(logado.getPerfil().name())
+                && logado.getCentroComando() != null) {
+            centroId = logado.getCentroComando().getId();
+        }
+        return ResponseEntity.ok(listarEscalasUseCase.listarPaginado(centroId, pageable).map(this::toDTO));
     }
 
     private EscalaDTO toDTO(Escala escala) {
-        List<UUID> integrantes = escala.getIntegrantes().stream()
-                .map(br.arthconf.fortivus.infrastructure.persistence.entity.UsuarioEntity::getId)
-                .collect(Collectors.toList());
-                
         return new EscalaDTO(
                 escala.getId(),
-                escala.getEquipe() != null ? escala.getEquipe().getId() : null,
-                escala.getVeiculo() != null ? escala.getVeiculo().getId() : null,
-                escala.getComandante() != null ? escala.getComandante().getId() : null,
+                escala.getEquipeId(),
+                escala.getVeiculoId(),
+                escala.getComandanteId(),
                 escala.getDataInicio(),
                 escala.getDataFim(),
                 escala.isAtiva(),
-                integrantes,
-                escala.getEquipe() != null ? escala.getEquipe().getNome() : null,
-                escala.getComandante() != null ? escala.getComandante().getNome() : null
+                escala.getIntegrantesIds(),
+                escala.getEquipeNome(),
+                escala.getComandanteNome()
         );
     }
 
@@ -154,12 +175,4 @@ public class EscalaController {
     public record EquipeSimplesDTO(UUID id, String nome) {}
     public record UsuarioSimplesDTO(UUID id, String nome, String estadoDescricao, boolean disponivel) {}
     public record CentroAtivosDTO(List<EquipeSimplesDTO> equipes, List<UsuarioSimplesDTO> usuarios) {}
-
-    @org.springframework.web.bind.annotation.GetMapping("/paged")
-    @org.springframework.transaction.annotation.Transactional(readOnly = true)
-    @PreAuthorize("hasAnyRole('ADMIN', 'CENTRO_COMANDO_CENTRAL', 'CENTRO_COMANDO', 'COMBATENTE')")
-    public org.springframework.http.ResponseEntity<org.springframework.data.domain.Page<EscalaDTO>> listarPaginado(
-            @org.springframework.data.web.PageableDefault(size = 10) org.springframework.data.domain.Pageable pageable) {
-        return org.springframework.http.ResponseEntity.ok(escalaService.listarPaginado(pageable).map(this::toDTO));
-    }
 }

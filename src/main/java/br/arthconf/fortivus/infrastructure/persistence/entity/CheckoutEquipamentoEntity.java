@@ -1,5 +1,6 @@
-package br.arthconf.fortivus.domain;
+package br.arthconf.fortivus.infrastructure.persistence.entity;
 
+import br.arthconf.fortivus.domain.BaseEntity;
 import jakarta.persistence.*;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -12,19 +13,19 @@ import java.time.LocalDateTime;
 @Data
 @EqualsAndHashCode(callSuper = true, exclude = {"escala", "equipamento", "responsavelEntrega", "responsavelRecebimento"})
 @ToString(exclude = {"escala", "equipamento", "responsavelEntrega", "responsavelRecebimento"})
-public class CheckoutEquipamento extends BaseEntity {
+public class CheckoutEquipamentoEntity extends BaseEntity {
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "escala_id", nullable = false)
-    private Escala escala;
+    private EscalaEntity escala;
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "equipamento_id", nullable = false)
-    private Equipamento equipamento;
+    private EquipamentoEntity equipamento;
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "responsavel_entrega_id", nullable = false)
-    private br.arthconf.fortivus.infrastructure.persistence.entity.UsuarioEntity responsavelEntrega;
+    private UsuarioEntity responsavelEntrega;
 
     @Column(name = "data_emprestimo", nullable = false)
     private LocalDateTime dataEmprestimo = LocalDateTime.now();
@@ -34,5 +35,5 @@ public class CheckoutEquipamento extends BaseEntity {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "responsavel_recebimento_id")
-    private br.arthconf.fortivus.infrastructure.persistence.entity.UsuarioEntity responsavelRecebimento;
+    private UsuarioEntity responsavelRecebimento;
 }

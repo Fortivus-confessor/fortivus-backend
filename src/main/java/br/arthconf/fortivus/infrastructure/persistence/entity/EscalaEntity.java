@@ -1,5 +1,6 @@
-package br.arthconf.fortivus.domain;
+package br.arthconf.fortivus.infrastructure.persistence.entity;
 
+import br.arthconf.fortivus.domain.BaseEntity;
 import jakarta.persistence.*;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -14,19 +15,19 @@ import java.util.List;
 @Data
 @EqualsAndHashCode(callSuper = true, exclude = {"equipe", "veiculo", "comandante", "integrantes", "checkouts"})
 @ToString(exclude = {"equipe", "veiculo", "comandante", "integrantes", "checkouts"})
-public class Escala extends BaseEntity {
+public class EscalaEntity extends BaseEntity {
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "equipe_id", nullable = false)
-    private br.arthconf.fortivus.infrastructure.persistence.entity.EquipeEntity equipe;
+    private EquipeEntity equipe;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "veiculo_id")
-    private br.arthconf.fortivus.infrastructure.persistence.entity.VeiculoEntity veiculo;
+    private VeiculoEntity veiculo;
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "comandante_id", nullable = false)
-    private br.arthconf.fortivus.infrastructure.persistence.entity.UsuarioEntity comandante;
+    private UsuarioEntity comandante;
 
     @Column(name = "data_inicio", nullable = false)
     private LocalDateTime dataInicio;
@@ -42,8 +43,8 @@ public class Escala extends BaseEntity {
             joinColumns = @JoinColumn(name = "escala_id"),
             inverseJoinColumns = @JoinColumn(name = "usuario_id")
     )
-    private List<br.arthconf.fortivus.infrastructure.persistence.entity.UsuarioEntity> integrantes = new ArrayList<>();
+    private List<UsuarioEntity> integrantes = new ArrayList<>();
 
     @OneToMany(mappedBy = "escala", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<CheckoutEquipamento> checkouts = new ArrayList<>();
+    private List<CheckoutEquipamentoEntity> checkouts = new ArrayList<>();
 }

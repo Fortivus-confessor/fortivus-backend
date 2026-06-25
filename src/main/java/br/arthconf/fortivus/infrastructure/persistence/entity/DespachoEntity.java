@@ -25,7 +25,7 @@ public class DespachoEntity {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "escala_id")
-    private br.arthconf.fortivus.domain.Escala escala;
+    private EscalaEntity escala;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "responsavel_id")

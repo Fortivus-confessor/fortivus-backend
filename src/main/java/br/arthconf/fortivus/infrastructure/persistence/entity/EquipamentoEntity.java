@@ -1,5 +1,7 @@
-package br.arthconf.fortivus.domain;
+package br.arthconf.fortivus.infrastructure.persistence.entity;
 
+import br.arthconf.fortivus.domain.BaseEntity;
+import br.arthconf.fortivus.domain.EstadoEquipamento;
 import jakarta.persistence.*;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -10,7 +12,7 @@ import lombok.ToString;
 @Data
 @EqualsAndHashCode(callSuper = true, exclude = {"equipe"})
 @ToString(exclude = {"equipe"})
-public class Equipamento extends BaseEntity {
+public class EquipamentoEntity extends BaseEntity {
 
     @Column(nullable = false)
     private String nome;
@@ -24,5 +26,5 @@ public class Equipamento extends BaseEntity {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "equipe_id")
-    private br.arthconf.fortivus.infrastructure.persistence.entity.EquipeEntity equipe;
+    private EquipeEntity equipe;
 }
