@@ -82,6 +82,7 @@ public class RelatorioTerrestrePersistenceAdapter implements RelatorioTerrestreR
         var despachoEntity = persistente.getDespacho();
         despachoEntity.setStatus(SituacaoDespacho.CONCLUIDO);
         despachoEntity.setDataFim(persistente.getDataFim());
+        despachoRepository.save(despachoEntity);
 
         inicializarColecoes(persistente);
         return persistente;

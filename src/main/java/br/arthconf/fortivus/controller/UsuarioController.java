@@ -4,7 +4,6 @@ import br.arthconf.fortivus.application.port.in.BuscarCentroComandoPorIdUseCase;
 import br.arthconf.fortivus.application.port.in.GerenciarEquipeUseCase;
 import br.arthconf.fortivus.application.port.in.GerenciarUsuarioUseCase;
 import br.arthconf.fortivus.application.port.in.ListarUsuariosUseCase;
-import br.arthconf.fortivus.application.port.in.ObterUsuarioLogadoUseCase;
 import br.arthconf.fortivus.domain.model.Usuario;
 import br.arthconf.fortivus.dto.UsuarioDTO;
 import br.arthconf.fortivus.service.FileStorageService;
@@ -31,7 +30,6 @@ public class UsuarioController {
 
     private final ListarUsuariosUseCase listarUsuariosUseCase;
     private final GerenciarUsuarioUseCase gerenciarUsuarioUseCase;
-    private final ObterUsuarioLogadoUseCase obterUsuarioLogadoUseCase;
     private final GerenciarEquipeUseCase gerenciarEquipeUseCase;
     private final BuscarCentroComandoPorIdUseCase buscarCentroUseCase;
     private final FileStorageService storageService;

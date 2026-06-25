@@ -30,6 +30,8 @@ public class DespachoPersistenceAdapter implements DespachoRepositoryPort {
     private final EscalaRepository escalaRepository;
     private final SpringDataUsuarioRepository usuarioRepository;
     private final RelatorioTerrestreRepository relatorioTerrestreRepository;
+    private final br.arthconf.fortivus.adapters.out.persistence.RelatorioMaquinarioRepository relatorioMaquinarioRepository;
+    private final br.arthconf.fortivus.adapters.out.persistence.RelatorioAereoRepository relatorioAereoRepository;
 
     @Override
     @Transactional
@@ -83,6 +85,12 @@ public class DespachoPersistenceAdapter implements DespachoRepositoryPort {
     public void deletar(Long id) {
         if (relatorioTerrestreRepository.existsById(id)) {
             relatorioTerrestreRepository.deleteById(id);
+        }
+        if (relatorioMaquinarioRepository.existsById(id)) {
+            relatorioMaquinarioRepository.deleteById(id);
+        }
+        if (relatorioAereoRepository.existsById(id)) {
+            relatorioAereoRepository.deleteById(id);
         }
         despachoRepository.deleteById(id);
     }
