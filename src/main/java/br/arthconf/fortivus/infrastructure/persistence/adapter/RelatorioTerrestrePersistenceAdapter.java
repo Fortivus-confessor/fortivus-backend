@@ -1,77 +1,59 @@
-package br.arthconf.fortivus.service;
+package br.arthconf.fortivus.infrastructure.persistence.adapter;
 
-import br.arthconf.fortivus.infrastructure.persistence.entity.DespachoEntity;
-
+import br.arthconf.fortivus.application.port.out.RelatorioTerrestreRepositoryPort;
 import br.arthconf.fortivus.domain.AnexoRelatorio;
 import br.arthconf.fortivus.domain.PropriedadeRelatorio;
 import br.arthconf.fortivus.domain.RelatorioTerrestre;
-import br.arthconf.fortivus.domain.SituacaoDespacho;
+import br.arthconf.fortivus.infrastructure.persistence.entity.DespachoEntity;
+import br.arthconf.fortivus.repository.DespachoRepository;
 import br.arthconf.fortivus.repository.RelatorioTerrestreRepository;
 import lombok.RequiredArgsConstructor;
-import org.springframework.stereotype.Service;
+import org.hibernate.Hibernate;
+import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
+import java.util.Optional;
 
-@Service
+@Component
 @RequiredArgsConstructor
-public class RelatorioTerrestreService {
-    
+public class RelatorioTerrestrePersistenceAdapter implements RelatorioTerrestreRepositoryPort {
+
     private final RelatorioTerrestreRepository repository;
-    private final br.arthconf.fortivus.repository.DespachoRepository despachoRepository;
+    private final DespachoRepository despachoRepository;
 
+    @Override
     @Transactional(readOnly = true)
-    public RelatorioTerrestre buscarPorDespachoId(Long despachoId) {
-        RelatorioTerrestre relatorio = repository.findById(despachoId).orElse(null);
-        if (relatorio != null) {
-            inicializarColecoes(relatorio);
-        }
-        return relatorio;
+    public Optional<RelatorioTerrestre> buscarPorDespachoId(Long despachoId) {
+        Optional<RelatorioTerrestre> opt = repository.findByDespachoId(despachoId);
+        opt.ifPresent(this::inicializarColecoes);
+        return opt;
     }
 
-    private void inicializarColecoes(RelatorioTerrestre relatorio) {
-        org.hibernate.Hibernate.initialize(relatorio.getAcoesRealizadas());
-        org.hibernate.Hibernate.initialize(relatorio.getOrgaosApoio());
-        org.hibernate.Hibernate.initialize(relatorio.getOrigensAgua());
-        org.hibernate.Hibernate.initialize(relatorio.getTiposReforcoNecessarios());
-        org.hibernate.Hibernate.initialize(relatorio.getAnexos());
-        org.hibernate.Hibernate.initialize(relatorio.getPropriedades());
-        // Inicializa o DespachoEntity para serialização
-        if (relatorio.getDespacho() != null) {
-            org.hibernate.Hibernate.initialize(relatorio.getDespacho());
-        }
-    }
-
+    @Override
     @Transactional
     public RelatorioTerrestre salvar(RelatorioTerrestre relatorio) {
         Long id = relatorio.getDespacho().getId();
-        
-        // Garante que o DespachoEntity está atrelado à sessão do Hibernate (Managed)
+
         DespachoEntity despachoGerenciado = despachoRepository.findByIdFetched(id).orElse(null);
         relatorio.setDespacho(despachoGerenciado);
-        
-        // Busca a instância gerenciada para atualização cirúrgica
+
         RelatorioTerrestre persistente = repository.findById(id).orElse(null);
-        
+
         if (persistente == null) {
-            // NOVO RELATÓRIO
             relatorio.setId(id);
             relatorio.setDataInicio(relatorio.getDespacho().getDataInicio());
             if (relatorio.getDataFim() == null) {
                 relatorio.setDataFim(LocalDateTime.now());
             }
-            
-            // Vincula coleções
             if (relatorio.getPropriedades() != null) {
                 relatorio.getPropriedades().forEach(p -> p.setRelatorio(relatorio));
             }
             if (relatorio.getAnexos() != null) {
                 relatorio.getAnexos().forEach(a -> a.setRelatorio(relatorio));
             }
-            
             persistente = repository.save(relatorio);
         } else {
-            // EDIÇÃO / MERGE MANUAL
             persistente.setAcoesRealizadas(relatorio.getAcoesRealizadas());
             persistente.setOrgaosApoio(relatorio.getOrgaosApoio());
             persistente.setOutrosOrgaosDescricao(relatorio.getOutrosOrgaosDescricao());
@@ -90,26 +72,29 @@ public class RelatorioTerrestreService {
             persistente.setResultadoOcorrencia(relatorio.getResultadoOcorrencia());
             persistente.setOutroResultadoDescricao(relatorio.getOutroResultadoDescricao());
             persistente.setDataFim(LocalDateTime.now());
-
-            // Sincroniza Propriedades (Mantendo IDs existentes onde possível)
             updatePropriedades(persistente, relatorio.getPropriedades());
-
-            // Sincroniza Anexos
             updateAnexos(persistente, relatorio.getAnexos());
-            
             persistente = repository.save(persistente);
         }
-        
-        // Atualiza o DespachoEntity vinculado
-        var despachoEntity = persistente.getDespacho();
-        despachoEntity.setStatus(SituacaoDespacho.CONCLUIDO);
-        despachoEntity.setDataFim(persistente.getDataFim());
-        // despachoService.salvar(despachoEntity); // Save implícito pelo @Transactional
 
-        // Inicializa todas as coleções antes de retornar (evita LazyInitializationException na serialização JSON)
+        var despachoEntity = persistente.getDespacho();
+        despachoEntity.setStatus(br.arthconf.fortivus.domain.SituacaoDespacho.CONCLUIDO);
+        despachoEntity.setDataFim(persistente.getDataFim());
+
         inicializarColecoes(persistente);
-        
         return persistente;
+    }
+
+    private void inicializarColecoes(RelatorioTerrestre relatorio) {
+        Hibernate.initialize(relatorio.getAcoesRealizadas());
+        Hibernate.initialize(relatorio.getOrgaosApoio());
+        Hibernate.initialize(relatorio.getOrigensAgua());
+        Hibernate.initialize(relatorio.getTiposReforcoNecessarios());
+        Hibernate.initialize(relatorio.getAnexos());
+        Hibernate.initialize(relatorio.getPropriedades());
+        if (relatorio.getDespacho() != null) {
+            Hibernate.initialize(relatorio.getDespacho());
+        }
     }
 
     private void updatePropriedades(RelatorioTerrestre destino, java.util.List<PropriedadeRelatorio> novos) {
@@ -132,5 +117,3 @@ public class RelatorioTerrestreService {
         }
     }
 }
-
-

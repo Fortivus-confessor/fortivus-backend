@@ -16,10 +16,11 @@ import br.arthconf.fortivus.application.port.in.BuscarRelatorioAereoUseCase;
 import br.arthconf.fortivus.application.port.in.SalvarRelatorioAereoUseCase;
 import br.arthconf.fortivus.application.port.in.BuscarRelatorioMaquinarioUseCase;
 import br.arthconf.fortivus.application.port.in.SalvarRelatorioMaquinarioUseCase;
+import br.arthconf.fortivus.application.port.in.BuscarRelatorioTerrestreUseCase;
+import br.arthconf.fortivus.application.port.in.SalvarRelatorioTerrestreUseCase;
 import br.arthconf.fortivus.domain.model.Despacho;
 import br.arthconf.fortivus.infrastructure.persistence.entity.DespachoEntity;
 import br.arthconf.fortivus.repository.DespachoRepository;
-import br.arthconf.fortivus.service.RelatorioTerrestreService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.locationtech.jts.geom.Coordinate;
@@ -49,9 +50,9 @@ public class DespachoController {
     private final ListarDespachosUseCase listarDespachosUseCase;
     private final BuscarDespachoPorIdUseCase buscarDespachoPorIdUseCase;
     private final DeletarDespachoUseCase deletarDespachoUseCase;
-    // despachoRepository mantido apenas para finalizarTerrestre (módulo Relatorio ainda não refatorado)
     private final DespachoRepository despachoRepository;
-    private final RelatorioTerrestreService relatorioTerrestreService;
+    private final BuscarRelatorioTerrestreUseCase buscarRelatorioTerrestreUseCase;
+    private final SalvarRelatorioTerrestreUseCase salvarRelatorioTerrestreUseCase;
     private final BuscarRelatorioAereoUseCase buscarRelatorioAereoUseCase;
     private final SalvarRelatorioAereoUseCase salvarRelatorioAereoUseCase;
     private final BuscarRelatorioMaquinarioUseCase buscarRelatorioMaquinarioUseCase;
@@ -129,11 +130,10 @@ public class DespachoController {
     @GetMapping("/{id}/relatorio-terrestre")
     @PreAuthorize("hasAnyRole('ADMIN', 'CENTRO_COMANDO_CENTRAL', 'CENTRO_COMANDO', 'COMBATENTE')")
     public ResponseEntity<RelatorioTerrestreDTO> buscarRelatorioTerrestre(@PathVariable Long id) {
-        RelatorioTerrestre relatorio = relatorioTerrestreService.buscarPorDespachoId(id);
-        if (relatorio == null) {
-            return ResponseEntity.notFound().build();
-        }
-        return ResponseEntity.ok(toRelatorioDTO(relatorio));
+        return buscarRelatorioTerrestreUseCase.executar(id)
+                .map(this::toRelatorioDTO)
+                .map(ResponseEntity::ok)
+                .orElse(ResponseEntity.notFound().build());
     }
 
     @PostMapping("/finalizar-terrestre")
@@ -143,11 +143,12 @@ public class DespachoController {
 
         DespachoEntity despachoEntity = despachoRepository.findByIdFetched(dto.despachoId()).orElse(null);
 
-        RelatorioTerrestre relatorio = relatorioTerrestreService.buscarPorDespachoId(dto.despachoId());
-        if (relatorio == null) {
-            relatorio = new RelatorioTerrestre();
-            relatorio.setDespacho(despachoEntity);
-        }
+        RelatorioTerrestre relatorio = buscarRelatorioTerrestreUseCase.executar(dto.despachoId())
+                .orElseGet(() -> {
+                    RelatorioTerrestre novo = new RelatorioTerrestre();
+                    novo.setDespacho(despachoEntity);
+                    return novo;
+                });
         relatorio.setAcoesRealizadas(dto.acoesRealizadas());
         relatorio.setOrgaosApoio(dto.orgaosApoio());
         relatorio.setOutrosOrgaosDescricao(dto.outrosOrgaosDescricao());
@@ -193,7 +194,7 @@ public class DespachoController {
             relatorio.setPropriedades(propriedades);
         }
 
-        RelatorioTerrestre salvo = relatorioTerrestreService.salvar(relatorio);
+        RelatorioTerrestre salvo = salvarRelatorioTerrestreUseCase.executar(relatorio);
         log.info("Relatório terrestre salvo com sucesso para DespachoEntity ID: {}", dto.despachoId());
         return ResponseEntity.ok(toRelatorioDTO(salvo));
     }
