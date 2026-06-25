@@ -110,11 +110,22 @@ public class UsuarioController {
 
         if (isNovoUsuario) {
             keycloakService.criarUsuario(usuarioParaSalvar.getEmail(), usuario.getSenha(), usuarioParaSalvar.getNome(), usuarioParaSalvar.getPerfil().name());
+            try {
+                gerenciarUsuarioUseCase.salvar(usuarioParaSalvar);
+            } catch (Exception e) {
+                keycloakService.deletarUsuario(usuarioParaSalvar.getEmail());
+                throw e;
+            }
         } else {
             keycloakService.atualizarUsuario(emailAntigo, usuarioParaSalvar.getEmail(), usuarioParaSalvar.getNome(), usuarioParaSalvar.getPerfil().name());
+            try {
+                gerenciarUsuarioUseCase.salvar(usuarioParaSalvar);
+            } catch (Exception e) {
+                keycloakService.atualizarUsuario(usuarioParaSalvar.getEmail(), emailAntigo, usuarioParaSalvar.getNome(), usuarioParaSalvar.getPerfil().name());
+                throw e;
+            }
         }
 
-        gerenciarUsuarioUseCase.salvar(usuarioParaSalvar);
         return ResponseEntity.ok().build();
     }
 
