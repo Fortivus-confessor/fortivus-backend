@@ -3,6 +3,7 @@ package br.arthconf.fortivus.controller;
 import br.arthconf.fortivus.domain.model.Veiculo;
 import br.arthconf.fortivus.dto.VeiculoDTO;
 import br.arthconf.fortivus.service.FileStorageService;
+import br.arthconf.fortivus.application.port.in.BuscarCentroComandoPorIdUseCase;
 import br.arthconf.fortivus.service.VeiculoService;
 import br.arthconf.fortivus.service.EquipeService;
 import lombok.RequiredArgsConstructor;
@@ -24,7 +25,7 @@ public class VeiculoController {
 
     private final VeiculoService veiculoService;
     private final EquipeService equipeService;
-    private final br.arthconf.fortivus.service.CentroComandoService centroService;
+    private final BuscarCentroComandoPorIdUseCase buscarCentroUseCase;
     private final FileStorageService storageService;
 
 
@@ -86,7 +87,7 @@ public class VeiculoController {
         }
 
         if (centroComandoId != null) {
-            veiculoParaSalvar.setCentroComando(centroService.buscarPorId(centroComandoId));
+            veiculoParaSalvar.setCentroComando(buscarCentroUseCase.executar(centroComandoId).orElseThrow(() -> new RuntimeException("Centro de Comando não encontrado")));
         } else {
             veiculoParaSalvar.setCentroComando(null);
         }

@@ -2,8 +2,8 @@ package br.arthconf.fortivus.controller;
 
 import br.arthconf.fortivus.domain.model.Equipe;
 import br.arthconf.fortivus.dto.EquipeDTO;
+import br.arthconf.fortivus.application.port.in.BuscarCentroComandoPorIdUseCase;
 import br.arthconf.fortivus.service.EquipeService;
-import br.arthconf.fortivus.service.CentroComandoService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
@@ -23,7 +23,7 @@ import java.util.stream.Collectors;
 public class EquipeController {
 
     private final EquipeService equipeService;
-    private final CentroComandoService centroService;
+    private final BuscarCentroComandoPorIdUseCase buscarCentroUseCase;
     private final br.arthconf.fortivus.service.UsuarioService usuarioService;
 
     @GetMapping
@@ -56,7 +56,7 @@ public class EquipeController {
         if (logado != null && logado.getPerfil() == br.arthconf.fortivus.domain.PerfilAcesso.ROLE_CENTRO_COMANDO && logado.getCentroComando() != null) {
             equipe.setCentroComando(logado.getCentroComando());
         } else {
-            equipe.setCentroComando(centroService.buscarPorId(dto.centroComandoId()));
+            equipe.setCentroComando(buscarCentroUseCase.executar(dto.centroComandoId()).orElseThrow(() -> new RuntimeException("Centro de Comando não encontrado")));
         }
         
         Equipe salvo = equipeService.salvar(equipe);
@@ -86,7 +86,7 @@ public class EquipeController {
         
         if (logado == null || logado.getPerfil() != br.arthconf.fortivus.domain.PerfilAcesso.ROLE_CENTRO_COMANDO) {
             if (dto.centroComandoId() != null) {
-                equipe.setCentroComando(centroService.buscarPorId(dto.centroComandoId()));
+                equipe.setCentroComando(buscarCentroUseCase.executar(dto.centroComandoId()).orElseThrow(() -> new RuntimeException("Centro de Comando não encontrado")));
             }
         }
         

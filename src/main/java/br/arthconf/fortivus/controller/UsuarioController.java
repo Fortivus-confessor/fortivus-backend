@@ -2,8 +2,8 @@ package br.arthconf.fortivus.controller;
 
 import br.arthconf.fortivus.domain.model.Usuario;
 import br.arthconf.fortivus.dto.UsuarioDTO;
+import br.arthconf.fortivus.application.port.in.BuscarCentroComandoPorIdUseCase;
 import br.arthconf.fortivus.service.UsuarioService;
-import br.arthconf.fortivus.service.CentroComandoService;
 import br.arthconf.fortivus.service.EquipeService;
 import br.arthconf.fortivus.service.FileStorageService;
 import br.arthconf.fortivus.service.KeycloakService;
@@ -25,7 +25,7 @@ import java.util.stream.Collectors;
 public class UsuarioController {
 
     private final UsuarioService usuarioService;
-    private final CentroComandoService centroService;
+    private final BuscarCentroComandoPorIdUseCase buscarCentroUseCase;
     private final EquipeService equipeService;
     private final FileStorageService storageService;
     private final KeycloakService keycloakService;
@@ -77,7 +77,7 @@ public class UsuarioController {
         }
 
         if (centroComandoId != null) {
-            usuarioParaSalvar.setCentroComando(centroService.buscarPorId(centroComandoId));
+            usuarioParaSalvar.setCentroComando(buscarCentroUseCase.executar(centroComandoId).orElseThrow(() -> new RuntimeException("Centro de Comando não encontrado")));
         } else {
             usuarioParaSalvar.setCentroComando(null);
         }
