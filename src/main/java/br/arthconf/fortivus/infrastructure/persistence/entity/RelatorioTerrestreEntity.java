@@ -1,12 +1,16 @@
-package br.arthconf.fortivus.domain;
+package br.arthconf.fortivus.infrastructure.persistence.entity;
 
+import br.arthconf.fortivus.domain.*;
 import jakarta.persistence.*;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.ToString;
 import org.locationtech.jts.geom.Geometry;
 import org.springframework.data.domain.Persistable;
+
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Set;
 
 @Entity
@@ -14,7 +18,7 @@ import java.util.Set;
 @Data
 @EqualsAndHashCode(exclude = {"despacho"})
 @ToString(exclude = {"despacho"})
-public class RelatorioTerrestre implements Persistable<Long> {
+public class RelatorioTerrestreEntity implements Persistable<Long> {
 
     @Transient
     private boolean isNew = true;
@@ -32,12 +36,12 @@ public class RelatorioTerrestre implements Persistable<Long> {
 
     @Id
     @Column(name = "id")
-    private Long id; // Compartilha o ID do Despacho (BigInt)
+    private Long id;
 
     @OneToOne(fetch = FetchType.LAZY, optional = false)
     @MapsId
     @JoinColumn(name = "id")
-    private br.arthconf.fortivus.infrastructure.persistence.entity.DespachoEntity despacho;
+    private DespachoEntity despacho;
 
     @ElementCollection(targetClass = AcaoCombate.class)
     @CollectionTable(name = "relatorio_terrestre_acoes", joinColumns = @JoinColumn(name = "relatorio_id"))
@@ -87,7 +91,7 @@ public class RelatorioTerrestre implements Persistable<Long> {
 
     @Column(name = "necessidade_reforco")
     private Boolean necessidadeReforco;
-    
+
     @ElementCollection(targetClass = TipoReforco.class)
     @CollectionTable(name = "relatorio_terrestre_reforcos", joinColumns = @JoinColumn(name = "relatorio_id"))
     @Enumerated(EnumType.STRING)
@@ -105,38 +109,14 @@ public class RelatorioTerrestre implements Persistable<Long> {
     private String outroResultadoDescricao;
 
     @OneToMany(mappedBy = "relatorio", cascade = CascadeType.ALL, orphanRemoval = true)
-    private java.util.List<PropriedadeRelatorio> propriedades = new java.util.ArrayList<>();
+    private List<PropriedadeRelatorioEntity> propriedades = new ArrayList<>();
 
     @OneToMany(mappedBy = "relatorio", cascade = CascadeType.ALL, orphanRemoval = true)
-    private java.util.List<AnexoRelatorio> anexos = new java.util.ArrayList<>();
+    private List<AnexoRelatorioEntity> anexos = new ArrayList<>();
 
     @Column(name = "data_inicio", nullable = false)
     private LocalDateTime dataInicio;
 
     @Column(name = "data_fim")
     private LocalDateTime dataFim;
-
-    public enum OrigemAgua {
-        NATURAL("Curso d’água natural"),
-        HIDRANTE("Hidrante"),
-        RESERVATORIO_FIXO("Reservatório fixo"),
-        OUTRO("Outro");
-        private final String descricao;
-        OrigemAgua(String d) { this.descricao = d; }
-        public String getDescricao() { return descricao; }
-    }
-
-    public enum EfetividadeCombate {
-        ALTA, MEDIA, BAIXA
-    }
-
-    public enum TipoReforco {
-        TERRESTRE("Mais guarnições terrestres"),
-        AEREO("Apoio aéreo"),
-        MAQUINARIO("Maquinário pesado"),
-        SCI("Implantação do SCI");
-        private final String descricao;
-        TipoReforco(String d) { this.descricao = d; }
-        public String getDescricao() { return descricao; }
-    }
 }

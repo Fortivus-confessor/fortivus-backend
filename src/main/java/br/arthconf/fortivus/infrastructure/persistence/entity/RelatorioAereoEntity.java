@@ -1,4 +1,4 @@
-package br.arthconf.fortivus.domain;
+package br.arthconf.fortivus.infrastructure.persistence.entity;
 
 import jakarta.persistence.*;
 import lombok.Data;
@@ -15,7 +15,7 @@ import java.util.List;
 @Data
 @EqualsAndHashCode(exclude = {"despacho"})
 @ToString(exclude = {"despacho"})
-public class RelatorioAereo implements Persistable<Long> {
+public class RelatorioAereoEntity implements Persistable<Long> {
 
     @Transient
     private boolean isNew = true;
@@ -38,7 +38,7 @@ public class RelatorioAereo implements Persistable<Long> {
     @OneToOne(fetch = FetchType.LAZY, optional = false)
     @MapsId
     @JoinColumn(name = "id")
-    private br.arthconf.fortivus.infrastructure.persistence.entity.DespachoEntity despacho;
+    private DespachoEntity despacho;
 
     @Column(name = "horimetro_inicial")
     private Double horimetroInicial;

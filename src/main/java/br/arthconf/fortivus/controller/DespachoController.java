@@ -1,7 +1,5 @@
 package br.arthconf.fortivus.controller;
 
-import br.arthconf.fortivus.domain.PropriedadeRelatorio;
-import br.arthconf.fortivus.domain.RelatorioTerrestre;
 import br.arthconf.fortivus.domain.SituacaoDespacho;
 import br.arthconf.fortivus.dto.DespachoDTO;
 import br.arthconf.fortivus.dto.RelatorioAereoDTO;
@@ -20,6 +18,8 @@ import br.arthconf.fortivus.application.port.in.BuscarRelatorioTerrestreUseCase;
 import br.arthconf.fortivus.application.port.in.SalvarRelatorioTerrestreUseCase;
 import br.arthconf.fortivus.domain.model.Despacho;
 import br.arthconf.fortivus.infrastructure.persistence.entity.DespachoEntity;
+import br.arthconf.fortivus.infrastructure.persistence.entity.PropriedadeRelatorioEntity;
+import br.arthconf.fortivus.infrastructure.persistence.entity.RelatorioTerrestreEntity;
 import br.arthconf.fortivus.repository.DespachoRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -143,9 +143,9 @@ public class DespachoController {
 
         DespachoEntity despachoEntity = despachoRepository.findByIdFetched(dto.despachoId()).orElse(null);
 
-        RelatorioTerrestre relatorio = buscarRelatorioTerrestreUseCase.executar(dto.despachoId())
+        RelatorioTerrestreEntity relatorio = buscarRelatorioTerrestreUseCase.executar(dto.despachoId())
                 .orElseGet(() -> {
-                    RelatorioTerrestre novo = new RelatorioTerrestre();
+                    RelatorioTerrestreEntity novo = new RelatorioTerrestreEntity();
                     novo.setDespacho(despachoEntity);
                     return novo;
                 });
@@ -172,9 +172,9 @@ public class DespachoController {
         }
 
         if (dto.propriedades() != null) {
-            List<PropriedadeRelatorio> propriedades = new ArrayList<>();
+            List<PropriedadeRelatorioEntity> propriedades = new ArrayList<>();
             for (var p : dto.propriedades()) {
-                var prop = new PropriedadeRelatorio();
+                var prop = new PropriedadeRelatorioEntity();
                 prop.setNomePropriedade(p.nomePropriedade());
                 prop.setResponsavel(p.responsavel());
                 prop.setTelefone(p.telefone());
@@ -194,7 +194,7 @@ public class DespachoController {
             relatorio.setPropriedades(propriedades);
         }
 
-        RelatorioTerrestre salvo = salvarRelatorioTerrestreUseCase.executar(relatorio);
+        RelatorioTerrestreEntity salvo = salvarRelatorioTerrestreUseCase.executar(relatorio);
         log.info("Relatório terrestre salvo com sucesso para DespachoEntity ID: {}", dto.despachoId());
         return ResponseEntity.ok(toRelatorioDTO(salvo));
     }
@@ -245,7 +245,7 @@ public class DespachoController {
         );
     }
 
-    private RelatorioTerrestreDTO toRelatorioDTO(RelatorioTerrestre r) {
+    private RelatorioTerrestreDTO toRelatorioDTO(RelatorioTerrestreEntity r) {
         Double areaLat = null, areaLng = null;
         if (r.getAreaAtuacaoGeom() != null) {
             areaLat = r.getAreaAtuacaoGeom().getCoordinate().y;

@@ -1,9 +1,10 @@
 package br.arthconf.fortivus.application.port.out;
 
-import br.arthconf.fortivus.domain.RelatorioMaquinario;
+import br.arthconf.fortivus.infrastructure.persistence.entity.RelatorioMaquinarioEntity;
+
 import java.util.Optional;
 
 public interface RelatorioMaquinarioPort {
-    RelatorioMaquinario salvar(RelatorioMaquinario relatorio);
-    Optional<RelatorioMaquinario> buscarPorDespachoId(Long despachoId);
+    RelatorioMaquinarioEntity salvar(RelatorioMaquinarioEntity relatorio);
+    Optional<RelatorioMaquinarioEntity> buscarPorDespachoId(Long despachoId);
 }

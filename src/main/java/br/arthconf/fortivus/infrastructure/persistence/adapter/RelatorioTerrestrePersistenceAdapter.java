@@ -1,10 +1,11 @@
 package br.arthconf.fortivus.infrastructure.persistence.adapter;
 
 import br.arthconf.fortivus.application.port.out.RelatorioTerrestreRepositoryPort;
-import br.arthconf.fortivus.domain.AnexoRelatorio;
-import br.arthconf.fortivus.domain.PropriedadeRelatorio;
-import br.arthconf.fortivus.domain.RelatorioTerrestre;
+import br.arthconf.fortivus.infrastructure.persistence.entity.AnexoRelatorioEntity;
 import br.arthconf.fortivus.infrastructure.persistence.entity.DespachoEntity;
+import br.arthconf.fortivus.infrastructure.persistence.entity.PropriedadeRelatorioEntity;
+import br.arthconf.fortivus.infrastructure.persistence.entity.RelatorioTerrestreEntity;
+import br.arthconf.fortivus.domain.SituacaoDespacho;
 import br.arthconf.fortivus.repository.DespachoRepository;
 import br.arthconf.fortivus.repository.RelatorioTerrestreRepository;
 import lombok.RequiredArgsConstructor;
@@ -13,6 +14,7 @@ import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.Optional;
 
 @Component
@@ -24,21 +26,21 @@ public class RelatorioTerrestrePersistenceAdapter implements RelatorioTerrestreR
 
     @Override
     @Transactional(readOnly = true)
-    public Optional<RelatorioTerrestre> buscarPorDespachoId(Long despachoId) {
-        Optional<RelatorioTerrestre> opt = repository.findByDespachoId(despachoId);
+    public Optional<RelatorioTerrestreEntity> buscarPorDespachoId(Long despachoId) {
+        Optional<RelatorioTerrestreEntity> opt = repository.findByDespachoId(despachoId);
         opt.ifPresent(this::inicializarColecoes);
         return opt;
     }
 
     @Override
     @Transactional
-    public RelatorioTerrestre salvar(RelatorioTerrestre relatorio) {
+    public RelatorioTerrestreEntity salvar(RelatorioTerrestreEntity relatorio) {
         Long id = relatorio.getDespacho().getId();
 
         DespachoEntity despachoGerenciado = despachoRepository.findByIdFetched(id).orElse(null);
         relatorio.setDespacho(despachoGerenciado);
 
-        RelatorioTerrestre persistente = repository.findById(id).orElse(null);
+        RelatorioTerrestreEntity persistente = repository.findById(id).orElse(null);
 
         if (persistente == null) {
             relatorio.setId(id);
@@ -78,14 +80,14 @@ public class RelatorioTerrestrePersistenceAdapter implements RelatorioTerrestreR
         }
 
         var despachoEntity = persistente.getDespacho();
-        despachoEntity.setStatus(br.arthconf.fortivus.domain.SituacaoDespacho.CONCLUIDO);
+        despachoEntity.setStatus(SituacaoDespacho.CONCLUIDO);
         despachoEntity.setDataFim(persistente.getDataFim());
 
         inicializarColecoes(persistente);
         return persistente;
     }
 
-    private void inicializarColecoes(RelatorioTerrestre relatorio) {
+    private void inicializarColecoes(RelatorioTerrestreEntity relatorio) {
         Hibernate.initialize(relatorio.getAcoesRealizadas());
         Hibernate.initialize(relatorio.getOrgaosApoio());
         Hibernate.initialize(relatorio.getOrigensAgua());
@@ -97,7 +99,7 @@ public class RelatorioTerrestrePersistenceAdapter implements RelatorioTerrestreR
         }
     }
 
-    private void updatePropriedades(RelatorioTerrestre destino, java.util.List<PropriedadeRelatorio> novos) {
+    private void updatePropriedades(RelatorioTerrestreEntity destino, List<PropriedadeRelatorioEntity> novos) {
         destino.getPropriedades().clear();
         if (novos != null) {
             for (var n : novos) {
@@ -107,7 +109,7 @@ public class RelatorioTerrestrePersistenceAdapter implements RelatorioTerrestreR
         }
     }
 
-    private void updateAnexos(RelatorioTerrestre destino, java.util.List<AnexoRelatorio> novos) {
+    private void updateAnexos(RelatorioTerrestreEntity destino, List<AnexoRelatorioEntity> novos) {
         destino.getAnexos().clear();
         if (novos != null) {
             for (var n : novos) {

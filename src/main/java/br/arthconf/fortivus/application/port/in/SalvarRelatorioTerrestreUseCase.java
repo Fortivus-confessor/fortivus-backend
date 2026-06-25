@@ -1,7 +1,7 @@
 package br.arthconf.fortivus.application.port.in;
 
-import br.arthconf.fortivus.domain.RelatorioTerrestre;
+import br.arthconf.fortivus.infrastructure.persistence.entity.RelatorioTerrestreEntity;
 
 public interface SalvarRelatorioTerrestreUseCase {
-    RelatorioTerrestre executar(RelatorioTerrestre relatorio);
+    RelatorioTerrestreEntity executar(RelatorioTerrestreEntity relatorio);
 }

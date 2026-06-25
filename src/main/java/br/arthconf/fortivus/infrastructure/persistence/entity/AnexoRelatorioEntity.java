@@ -1,18 +1,23 @@
-package br.arthconf.fortivus.domain;
+package br.arthconf.fortivus.infrastructure.persistence.entity;
 
+import br.arthconf.fortivus.domain.BaseEntity;
 import jakarta.persistence.*;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
+import org.hibernate.annotations.CreationTimestamp;
+import org.hibernate.annotations.UpdateTimestamp;
+
+import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "relatorio_anexos")
 @Data
 @EqualsAndHashCode(callSuper = true)
-public class AnexoRelatorio extends BaseEntity {
+public class AnexoRelatorioEntity extends BaseEntity {
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "relatorio_id", nullable = false)
-    private RelatorioTerrestre relatorio;
+    private RelatorioTerrestreEntity relatorio;
 
     @Column(name = "nome_arquivo")
     private String nomeArquivo;
@@ -25,11 +30,11 @@ public class AnexoRelatorio extends BaseEntity {
 
     private Long tamanho;
 
-    @org.hibernate.annotations.CreationTimestamp
+    @CreationTimestamp
     @Column(name = "data_criacao", nullable = false, updatable = false)
-    private java.time.LocalDateTime dataCriacao;
+    private LocalDateTime dataCriacao;
 
-    @org.hibernate.annotations.UpdateTimestamp
+    @UpdateTimestamp
     @Column(name = "data_atualizacao", nullable = false)
-    private java.time.LocalDateTime dataAtualizacao;
+    private LocalDateTime dataAtualizacao;
 }
