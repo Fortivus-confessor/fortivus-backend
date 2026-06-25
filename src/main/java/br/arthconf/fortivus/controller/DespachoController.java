@@ -20,7 +20,6 @@ import br.arthconf.fortivus.domain.model.Despacho;
 import br.arthconf.fortivus.infrastructure.persistence.entity.DespachoEntity;
 import br.arthconf.fortivus.infrastructure.persistence.entity.PropriedadeRelatorioEntity;
 import br.arthconf.fortivus.infrastructure.persistence.entity.RelatorioTerrestreEntity;
-import br.arthconf.fortivus.repository.DespachoRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.locationtech.jts.geom.Coordinate;
@@ -50,7 +49,6 @@ public class DespachoController {
     private final ListarDespachosUseCase listarDespachosUseCase;
     private final BuscarDespachoPorIdUseCase buscarDespachoPorIdUseCase;
     private final DeletarDespachoUseCase deletarDespachoUseCase;
-    private final DespachoRepository despachoRepository;
     private final BuscarRelatorioTerrestreUseCase buscarRelatorioTerrestreUseCase;
     private final SalvarRelatorioTerrestreUseCase salvarRelatorioTerrestreUseCase;
     private final BuscarRelatorioAereoUseCase buscarRelatorioAereoUseCase;
@@ -141,12 +139,12 @@ public class DespachoController {
     public ResponseEntity<RelatorioTerrestreDTO> finalizarTerrestre(@RequestBody RelatorioTerrestreDTO dto) {
         log.info("Recebendo relatório terrestre para DespachoEntity ID: {}", dto.despachoId());
 
-        DespachoEntity despachoEntity = despachoRepository.findByIdFetched(dto.despachoId()).orElse(null);
-
         RelatorioTerrestreEntity relatorio = buscarRelatorioTerrestreUseCase.executar(dto.despachoId())
                 .orElseGet(() -> {
+                    DespachoEntity stub = new DespachoEntity();
+                    stub.setId(dto.despachoId());
                     RelatorioTerrestreEntity novo = new RelatorioTerrestreEntity();
-                    novo.setDespacho(despachoEntity);
+                    novo.setDespacho(stub);
                     return novo;
                 });
         relatorio.setAcoesRealizadas(dto.acoesRealizadas());

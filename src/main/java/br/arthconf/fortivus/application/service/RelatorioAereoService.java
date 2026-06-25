@@ -3,10 +3,8 @@ package br.arthconf.fortivus.application.service;
 import br.arthconf.fortivus.application.port.in.BuscarRelatorioAereoUseCase;
 import br.arthconf.fortivus.application.port.in.SalvarRelatorioAereoUseCase;
 import br.arthconf.fortivus.application.port.out.RelatorioAereoPort;
-import br.arthconf.fortivus.infrastructure.persistence.entity.DespachoEntity;
 import br.arthconf.fortivus.infrastructure.persistence.entity.RelatorioAereoEntity;
 import br.arthconf.fortivus.dto.RelatorioAereoDTO;
-import br.arthconf.fortivus.repository.DespachoRepository;
 import lombok.RequiredArgsConstructor;
 import org.locationtech.jts.geom.Coordinate;
 import org.locationtech.jts.geom.GeometryFactory;
@@ -22,17 +20,12 @@ import java.util.Optional;
 public class RelatorioAereoService implements SalvarRelatorioAereoUseCase, BuscarRelatorioAereoUseCase {
 
     private final RelatorioAereoPort relatorioAereoPort;
-    private final DespachoRepository despachoRepository;
 
     @Override
     @Transactional
     public RelatorioAereoDTO salvar(Long despachoId, RelatorioAereoDTO dto) {
-        DespachoEntity despacho = despachoRepository.findById(despachoId)
-                .orElseThrow(() -> new RuntimeException("DespachoEntity não encontrado"));
-
         RelatorioAereoEntity relatorio = relatorioAereoPort.buscarPorDespachoId(despachoId)
                 .orElse(new RelatorioAereoEntity());
-        relatorio.setDespacho(despacho);
         relatorio.setId(despachoId);
         relatorio.setHorimetroInicial(dto.horimetroInicial());
         relatorio.setHorimetroFinal(dto.horimetroFinal());
