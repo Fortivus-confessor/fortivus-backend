@@ -36,7 +36,7 @@ public class UsuarioController {
     private final KeycloakService keycloakService;
 
     @GetMapping
-    @PreAuthorize("hasAnyRole('ADMIN', 'CENTRO_COMANDO_CENTRAL')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'CENTRO_COMANDO_CENTRAL', 'CENTRO_COMANDO')")
     public ResponseEntity<List<UsuarioDTO>> listar() {
         List<UsuarioDTO> usuarios = listarUsuariosUseCase.listarTodos().stream()
                 .map(this::toDTO)
@@ -45,7 +45,7 @@ public class UsuarioController {
     }
 
     @GetMapping("/paged")
-    @PreAuthorize("hasAnyRole('ADMIN', 'CENTRO_COMANDO_CENTRAL')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'CENTRO_COMANDO_CENTRAL', 'CENTRO_COMANDO')")
     public ResponseEntity<Page<UsuarioDTO>> listarPaginado(@PageableDefault(size = 10) Pageable pageable) {
         return ResponseEntity.ok(listarUsuariosUseCase.listarPaginado(pageable).map(this::toDTO));
     }
