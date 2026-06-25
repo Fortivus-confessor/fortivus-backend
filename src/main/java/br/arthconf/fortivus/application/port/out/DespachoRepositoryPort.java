@@ -1,4 +1,4 @@
-package br.arthconf.fortivus.application.port.output;
+package br.arthconf.fortivus.application.port.out;
 
 import br.arthconf.fortivus.domain.model.Despacho;
 import org.springframework.data.domain.Page;

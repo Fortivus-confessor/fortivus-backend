@@ -1,7 +1,7 @@
 package br.arthconf.fortivus.application.service;
 
 import br.arthconf.fortivus.application.port.in.RegistrarDevolucaoUseCase;
-import br.arthconf.fortivus.application.port.output.CheckoutEquipamentoRepositoryPort;
+import br.arthconf.fortivus.application.port.out.CheckoutEquipamentoRepositoryPort;
 import br.arthconf.fortivus.domain.model.CheckoutEquipamento;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;

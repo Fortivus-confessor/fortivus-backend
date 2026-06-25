@@ -1,20 +1,22 @@
 package br.arthconf.fortivus.controller;
 
-import br.arthconf.fortivus.domain.model.Usuario;
-import br.arthconf.fortivus.service.UsuarioService;
+import br.arthconf.fortivus.application.port.in.GerenciarUsuarioUseCase;
+import br.arthconf.fortivus.application.port.in.ObterUsuarioLogadoUseCase;
+import br.arthconf.fortivus.service.KeycloakService;
 import lombok.Data;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.*;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/api/v1/operacional/usuarios/perfil")
 @RequiredArgsConstructor
 public class PerfilController {
 
-    private final UsuarioService usuarioService;
-    private final br.arthconf.fortivus.service.KeycloakService keycloakService;
+    private final ObterUsuarioLogadoUseCase obterUsuarioLogadoUseCase;
+    private final GerenciarUsuarioUseCase gerenciarUsuarioUseCase;
+    private final KeycloakService keycloakService;
 
     @Data
     public static class PerfilUpdateDTO {
@@ -27,7 +29,7 @@ public class PerfilController {
     @PutMapping
     @PreAuthorize("isAuthenticated()")
     public ResponseEntity<Void> atualizarPerfil(@RequestBody PerfilUpdateDTO dto) {
-        Usuario logado = usuarioService.getUsuarioLogado();
+        var logado = obterUsuarioLogadoUseCase.getUsuarioLogado();
         if (logado == null) return ResponseEntity.status(401).build();
 
         String emailAntigo = logado.getEmail();
@@ -36,21 +38,20 @@ public class PerfilController {
         if (dto.getNome() != null && !dto.getNome().isBlank()) {
             logado.setNome(dto.getNome());
         }
-        
+
         boolean isEmailChanged = false;
         if (dto.getEmail() != null && !dto.getEmail().isBlank() && !dto.getEmail().equalsIgnoreCase(emailAntigo)) {
             logado.setEmail(dto.getEmail());
             isEmailChanged = true;
         }
 
-        usuarioService.salvar(logado);
+        gerenciarUsuarioUseCase.salvar(logado);
 
         if (isEmailChanged || (dto.getNome() != null && !dto.getNome().isBlank())) {
             keycloakService.atualizarUsuario(emailAntigo, logado.getEmail(), logado.getNome(), role);
         }
 
         if (dto.getNovaSenha() != null && !dto.getNovaSenha().isBlank()) {
-            // Need to update using the NEW email in case it changed
             keycloakService.atualizarSenha(logado.getEmail(), dto.getNovaSenha());
         }
 

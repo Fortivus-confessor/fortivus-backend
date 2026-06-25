@@ -1,4 +1,4 @@
-package br.arthconf.fortivus.application.port.output;
+package br.arthconf.fortivus.application.port.out;
 
 import br.arthconf.fortivus.domain.model.OrdemServico;
 import org.springframework.data.domain.Page;
@@ -22,4 +22,5 @@ public interface OrdemServicoRepositoryPort {
     Page<OrdemServico> listarPorCentroComandoPaginado(UUID centroId, Pageable pageable);
     Page<OrdemServico> listarPorCombatentePaginado(UUID usuarioId, Pageable pageable);
     List<OrdemServico> listarEmExecucaoComDespachos();
+    long count();
 }

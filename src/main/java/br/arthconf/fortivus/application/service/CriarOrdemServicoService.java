@@ -1,8 +1,8 @@
 package br.arthconf.fortivus.application.service;
 
 import br.arthconf.fortivus.application.port.in.CriarOrdemServicoUseCase;
-import br.arthconf.fortivus.application.port.output.DespachoRepositoryPort;
-import br.arthconf.fortivus.application.port.output.OrdemServicoRepositoryPort;
+import br.arthconf.fortivus.application.port.out.DespachoRepositoryPort;
+import br.arthconf.fortivus.application.port.out.OrdemServicoRepositoryPort;
 import br.arthconf.fortivus.domain.SituacaoDespacho;
 import br.arthconf.fortivus.domain.model.Despacho;
 import br.arthconf.fortivus.domain.model.OrdemServico;

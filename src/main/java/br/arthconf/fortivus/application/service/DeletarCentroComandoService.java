@@ -1,7 +1,7 @@
 package br.arthconf.fortivus.application.service;
 
 import br.arthconf.fortivus.application.port.in.DeletarCentroComandoUseCase;
-import br.arthconf.fortivus.application.port.output.CentroComandoRepositoryPort;
+import br.arthconf.fortivus.application.port.out.CentroComandoRepositoryPort;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;

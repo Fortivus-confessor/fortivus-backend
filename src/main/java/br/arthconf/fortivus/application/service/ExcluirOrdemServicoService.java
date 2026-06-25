@@ -1,7 +1,7 @@
 package br.arthconf.fortivus.application.service;
 
 import br.arthconf.fortivus.application.port.in.ExcluirOrdemServicoUseCase;
-import br.arthconf.fortivus.application.port.output.OrdemServicoRepositoryPort;
+import br.arthconf.fortivus.application.port.out.OrdemServicoRepositoryPort;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;

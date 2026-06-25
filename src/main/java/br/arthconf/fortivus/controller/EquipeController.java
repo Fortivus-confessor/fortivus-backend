@@ -1,11 +1,17 @@
 package br.arthconf.fortivus.controller;
 
+import br.arthconf.fortivus.application.port.in.BuscarCentroComandoPorIdUseCase;
+import br.arthconf.fortivus.application.port.in.GerenciarEquipeUseCase;
+import br.arthconf.fortivus.application.port.in.ListarEquipesUseCase;
+import br.arthconf.fortivus.application.port.in.ObterUsuarioLogadoUseCase;
+import br.arthconf.fortivus.domain.PerfilAcesso;
 import br.arthconf.fortivus.domain.model.Equipe;
 import br.arthconf.fortivus.dto.EquipeDTO;
-import br.arthconf.fortivus.application.port.in.BuscarCentroComandoPorIdUseCase;
-import br.arthconf.fortivus.service.EquipeService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.web.PageableDefault;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
@@ -22,23 +28,30 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class EquipeController {
 
-    private final EquipeService equipeService;
+    private final ListarEquipesUseCase listarEquipesUseCase;
+    private final GerenciarEquipeUseCase gerenciarEquipeUseCase;
+    private final ObterUsuarioLogadoUseCase obterUsuarioLogadoUseCase;
     private final BuscarCentroComandoPorIdUseCase buscarCentroUseCase;
-    private final br.arthconf.fortivus.service.UsuarioService usuarioService;
 
     @GetMapping
     @PreAuthorize("hasAnyRole('ADMIN', 'CENTRO_COMANDO_CENTRAL', 'CENTRO_COMANDO')")
     public ResponseEntity<List<EquipeDTO>> listar() {
-        List<EquipeDTO> lista = equipeService.listarTodas().stream()
+        List<EquipeDTO> lista = listarEquipesUseCase.listarTodas().stream()
                 .map(this::toDTO)
                 .collect(Collectors.toList());
         return ResponseEntity.ok(lista);
     }
 
+    @GetMapping("/paged")
+    @PreAuthorize("hasAnyRole('ADMIN', 'CENTRO_COMANDO_CENTRAL', 'CENTRO_COMANDO')")
+    public ResponseEntity<Page<EquipeDTO>> listarPaginado(@PageableDefault(size = 10) Pageable pageable) {
+        return ResponseEntity.ok(listarEquipesUseCase.listarPaginado(pageable).map(this::toDTO));
+    }
+
     @GetMapping("/{id}")
     @PreAuthorize("hasAnyRole('ADMIN', 'CENTRO_COMANDO_CENTRAL', 'CENTRO_COMANDO')")
     public ResponseEntity<EquipeDTO> buscarPorId(@PathVariable UUID id) {
-        Equipe equipe = equipeService.buscarPorId(id);
+        Equipe equipe = gerenciarEquipeUseCase.buscarPorId(id);
         return ResponseEntity.ok(toDTO(equipe));
     }
 
@@ -51,46 +64,44 @@ public class EquipeController {
         }
         equipe.setNome(dto.nome());
         equipe.setCategoria(dto.categoria());
-        
-        br.arthconf.fortivus.domain.model.Usuario logado = usuarioService.getUsuarioLogado();
-        if (logado != null && logado.getPerfil() == br.arthconf.fortivus.domain.PerfilAcesso.ROLE_CENTRO_COMANDO && logado.getCentroComando() != null) {
+
+        var logado = obterUsuarioLogadoUseCase.getUsuarioLogado();
+        if (logado != null && logado.getPerfil() == PerfilAcesso.ROLE_CENTRO_COMANDO && logado.getCentroComando() != null) {
             equipe.setCentroComando(logado.getCentroComando());
         } else {
-            equipe.setCentroComando(buscarCentroUseCase.executar(dto.centroComandoId()).orElseThrow(() -> new RuntimeException("Centro de Comando não encontrado")));
+            equipe.setCentroComando(buscarCentroUseCase.executar(dto.centroComandoId())
+                    .orElseThrow(() -> new RuntimeException("Centro de Comando não encontrado")));
         }
-        
-        Equipe salvo = equipeService.salvar(equipe);
-        
+
+        Equipe salvo = gerenciarEquipeUseCase.salvar(equipe);
         URI uri = ServletUriComponentsBuilder.fromCurrentRequest()
-                .path("/{id}")
-                .buildAndExpand(salvo.getId())
-                .toUri();
-                
+                .path("/{id}").buildAndExpand(salvo.getId()).toUri();
         return ResponseEntity.created(uri).body(toDTO(salvo));
     }
 
     @PutMapping("/{id}")
     @PreAuthorize("hasAnyRole('ADMIN', 'CENTRO_COMANDO_CENTRAL', 'CENTRO_COMANDO')")
     public ResponseEntity<EquipeDTO> atualizar(@PathVariable UUID id, @RequestBody EquipeDTO dto) {
-        Equipe equipe = equipeService.buscarPorId(id);
-        
-        br.arthconf.fortivus.domain.model.Usuario logado = usuarioService.getUsuarioLogado();
-        if (logado != null && logado.getPerfil() == br.arthconf.fortivus.domain.PerfilAcesso.ROLE_CENTRO_COMANDO && logado.getCentroComando() != null) {
+        Equipe equipe = gerenciarEquipeUseCase.buscarPorId(id);
+
+        var logado = obterUsuarioLogadoUseCase.getUsuarioLogado();
+        if (logado != null && logado.getPerfil() == PerfilAcesso.ROLE_CENTRO_COMANDO && logado.getCentroComando() != null) {
             if (equipe.getCentroComando() == null || !equipe.getCentroComando().getId().equals(logado.getCentroComando().getId())) {
                 return ResponseEntity.status(403).build();
             }
         }
-        
+
         equipe.setNome(dto.nome());
         equipe.setCategoria(dto.categoria());
-        
-        if (logado == null || logado.getPerfil() != br.arthconf.fortivus.domain.PerfilAcesso.ROLE_CENTRO_COMANDO) {
+
+        if (logado == null || logado.getPerfil() != PerfilAcesso.ROLE_CENTRO_COMANDO) {
             if (dto.centroComandoId() != null) {
-                equipe.setCentroComando(buscarCentroUseCase.executar(dto.centroComandoId()).orElseThrow(() -> new RuntimeException("Centro de Comando não encontrado")));
+                equipe.setCentroComando(buscarCentroUseCase.executar(dto.centroComandoId())
+                        .orElseThrow(() -> new RuntimeException("Centro de Comando não encontrado")));
             }
         }
-        
-        Equipe atualizado = equipeService.salvar(equipe);
+
+        Equipe atualizado = gerenciarEquipeUseCase.salvar(equipe);
         return ResponseEntity.ok(toDTO(atualizado));
     }
 
@@ -101,12 +112,5 @@ public class EquipeController {
                 equipe.getCategoria(),
                 equipe.getCentroComando() != null ? equipe.getCentroComando().getId() : null
         );
-    }
-
-    @org.springframework.web.bind.annotation.GetMapping("/paged")
-    @PreAuthorize("hasAnyRole('ADMIN', 'CENTRO_COMANDO_CENTRAL', 'CENTRO_COMANDO')")
-    public org.springframework.http.ResponseEntity<org.springframework.data.domain.Page<EquipeDTO>> listarPaginado(
-            @org.springframework.data.web.PageableDefault(size = 10) org.springframework.data.domain.Pageable pageable) {
-        return org.springframework.http.ResponseEntity.ok(equipeService.listarPaginado(pageable).map(this::toDTO));
     }
 }

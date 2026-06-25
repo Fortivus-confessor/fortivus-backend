@@ -1,9 +1,9 @@
 package br.arthconf.fortivus.application.service;
 
 import br.arthconf.fortivus.application.port.in.ListarDespachosUseCase;
-import br.arthconf.fortivus.application.port.output.DespachoRepositoryPort;
+import br.arthconf.fortivus.application.port.out.DespachoRepositoryPort;
 import br.arthconf.fortivus.domain.model.Despacho;
-import br.arthconf.fortivus.service.UsuarioService;
+import br.arthconf.fortivus.application.port.in.ObterUsuarioLogadoUseCase;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -17,12 +17,12 @@ import java.util.List;
 public class ListarDespachosService implements ListarDespachosUseCase {
 
     private final DespachoRepositoryPort despachoPort;
-    private final UsuarioService usuarioService;
+    private final ObterUsuarioLogadoUseCase obterUsuarioLogadoUseCase;
 
     @Override
     @Transactional(readOnly = true)
     public List<Despacho> listarTodos() {
-        br.arthconf.fortivus.domain.model.Usuario logado = usuarioService.getUsuarioLogado();
+        br.arthconf.fortivus.domain.model.Usuario logado = obterUsuarioLogadoUseCase.getUsuarioLogado();
         if (logado != null) {
             String role = logado.getPerfil().name();
             if ("ROLE_CENTRO_COMANDO".equals(role)) {
@@ -37,7 +37,7 @@ public class ListarDespachosService implements ListarDespachosUseCase {
     @Override
     @Transactional(readOnly = true)
     public Page<Despacho> listarPaginado(Pageable pageable) {
-        br.arthconf.fortivus.domain.model.Usuario logado = usuarioService.getUsuarioLogado();
+        br.arthconf.fortivus.domain.model.Usuario logado = obterUsuarioLogadoUseCase.getUsuarioLogado();
         if (logado != null) {
             String role = logado.getPerfil().name();
             if ("ROLE_CENTRO_COMANDO".equals(role)) {

@@ -1,4 +1,4 @@
-package br.arthconf.fortivus.application.port.output;
+package br.arthconf.fortivus.application.port.out;
 
 import br.arthconf.fortivus.domain.model.Escala;
 import br.arthconf.fortivus.infrastructure.persistence.entity.EscalaEntity;
@@ -18,6 +18,5 @@ public interface EscalaRepositoryPort {
     List<Escala> listarPorCentroComando(UUID centroId);
     Page<Escala> listarPaginado(Pageable pageable);
     Page<Escala> listarPorCentroComandoPaginado(UUID centroId, Pageable pageable);
-    // Acesso a entidade para liberar integrantes com estado JPA
     EscalaEntity buscarEntidadePorId(UUID id);
 }

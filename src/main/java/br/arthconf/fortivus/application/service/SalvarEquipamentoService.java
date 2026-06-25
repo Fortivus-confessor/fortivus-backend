@@ -1,7 +1,7 @@
 package br.arthconf.fortivus.application.service;
 
 import br.arthconf.fortivus.application.port.in.SalvarEquipamentoUseCase;
-import br.arthconf.fortivus.application.port.output.EquipamentoRepositoryPort;
+import br.arthconf.fortivus.application.port.out.EquipamentoRepositoryPort;
 import br.arthconf.fortivus.domain.EstadoEquipamento;
 import br.arthconf.fortivus.domain.model.Equipamento;
 import lombok.RequiredArgsConstructor;

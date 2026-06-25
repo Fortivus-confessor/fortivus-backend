@@ -1,62 +1,72 @@
-package br.arthconf.fortivus.service;
+package br.arthconf.fortivus.application.service;
 
-import br.arthconf.fortivus.domain.model.Equipe;
+import br.arthconf.fortivus.application.port.in.GerenciarEquipeUseCase;
+import br.arthconf.fortivus.application.port.in.ListarEquipesUseCase;
+import br.arthconf.fortivus.application.port.in.ObterUsuarioLogadoUseCase;
 import br.arthconf.fortivus.application.port.out.EquipePort;
+import br.arthconf.fortivus.domain.PerfilAcesso;
+import br.arthconf.fortivus.domain.model.Equipe;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
-import java.util.ArrayList;
 
 @Service
 @RequiredArgsConstructor
-public class EquipeService {
+public class EquipeApplicationService implements ListarEquipesUseCase, GerenciarEquipeUseCase {
 
     private final EquipePort equipePort;
-    private final br.arthconf.fortivus.service.UsuarioService usuarioService;
+    private final ObterUsuarioLogadoUseCase obterUsuarioLogadoUseCase;
 
+    @Override
     @Transactional(readOnly = true)
     public List<Equipe> listarTodas() {
-        br.arthconf.fortivus.domain.model.Usuario usuario = usuarioService.getUsuarioLogado();
-        if (usuario != null && usuario.getPerfil() == br.arthconf.fortivus.domain.PerfilAcesso.ROLE_CENTRO_COMANDO && usuario.getCentroComando() != null) {
+        var usuario = obterUsuarioLogadoUseCase.getUsuarioLogado();
+        if (usuario != null && usuario.getPerfil() == PerfilAcesso.ROLE_CENTRO_COMANDO
+                && usuario.getCentroComando() != null) {
             return buscarPorCentro(usuario.getCentroComando().getId());
         }
-        
-        // Busca com JOIN FETCH já definido no Repository
         List<Equipe> lista = equipePort.findAllComCentro();
-        // Converte para ArrayList pura para garantir que o Thymeleaf 
-        // não tente disparar Lazy Loading fora da transação.
         return lista != null ? new ArrayList<>(lista) : new ArrayList<>();
     }
 
+    @Override
     @Transactional(readOnly = true)
     public List<Equipe> buscarPorCentro(UUID centroId) {
         var lista = equipePort.findByCentroComandoId(centroId);
         return lista != null ? new ArrayList<>(lista) : new ArrayList<>();
     }
 
+    @Override
     @Transactional
     public Equipe salvar(Equipe equipe) {
         return equipePort.save(equipe);
     }
 
+    @Override
     @Transactional(readOnly = true)
     public Equipe buscarPorId(UUID id) {
         return equipePort.findById(id)
                 .orElseThrow(() -> new RuntimeException("Equipe não encontrada"));
     }
 
+    @Override
     @Transactional
     public void deletar(UUID id) {
         equipePort.deleteById(id);
     }
 
-    @org.springframework.transaction.annotation.Transactional(readOnly = true)
-    public org.springframework.data.domain.Page<Equipe> listarPaginado(org.springframework.data.domain.Pageable pageable) {
-        br.arthconf.fortivus.domain.model.Usuario usuario = usuarioService.getUsuarioLogado();
-        if (usuario != null && usuario.getPerfil() == br.arthconf.fortivus.domain.PerfilAcesso.ROLE_CENTRO_COMANDO && usuario.getCentroComando() != null) {
+    @Override
+    @Transactional(readOnly = true)
+    public Page<Equipe> listarPaginado(Pageable pageable) {
+        var usuario = obterUsuarioLogadoUseCase.getUsuarioLogado();
+        if (usuario != null && usuario.getPerfil() == PerfilAcesso.ROLE_CENTRO_COMANDO
+                && usuario.getCentroComando() != null) {
             return equipePort.findByCentroComandoId(usuario.getCentroComando().getId(), pageable);
         }
         return equipePort.findAll(pageable);

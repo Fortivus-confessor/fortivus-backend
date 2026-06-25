@@ -1,6 +1,6 @@
 package br.arthconf.fortivus.infrastructure.persistence.adapter;
 
-import br.arthconf.fortivus.application.port.output.CentroComandoRepositoryPort;
+import br.arthconf.fortivus.application.port.out.CentroComandoRepositoryPort;
 import br.arthconf.fortivus.domain.model.CentroComando;
 import br.arthconf.fortivus.infrastructure.persistence.entity.CentroComandoEntity;
 import br.arthconf.fortivus.infrastructure.persistence.mapper.CentroComandoMapper;

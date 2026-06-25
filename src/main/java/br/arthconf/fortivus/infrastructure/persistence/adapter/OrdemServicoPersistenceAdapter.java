@@ -1,6 +1,6 @@
 package br.arthconf.fortivus.infrastructure.persistence.adapter;
 
-import br.arthconf.fortivus.application.port.output.OrdemServicoRepositoryPort;
+import br.arthconf.fortivus.application.port.out.OrdemServicoRepositoryPort;
 import br.arthconf.fortivus.domain.model.OrdemServico;
 import br.arthconf.fortivus.infrastructure.persistence.entity.OrdemServicoEntity;
 import br.arthconf.fortivus.infrastructure.persistence.mapper.OrdemServicoMapper;
@@ -125,5 +125,10 @@ public class OrdemServicoPersistenceAdapter implements OrdemServicoRepositoryPor
         return repository.findAllEmExecucaoComDespachos().stream()
                 .map(mapper::toDomainComDespachos)
                 .toList();
+    }
+
+    @Override
+    public long count() {
+        return repository.count();
     }
 }

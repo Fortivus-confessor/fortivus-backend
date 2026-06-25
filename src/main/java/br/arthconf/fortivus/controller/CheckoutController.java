@@ -3,9 +3,9 @@ package br.arthconf.fortivus.controller;
 import br.arthconf.fortivus.application.port.in.ListarCheckoutsPorEscalaUseCase;
 import br.arthconf.fortivus.application.port.in.RegistrarDevolucaoUseCase;
 import br.arthconf.fortivus.application.port.in.RegistrarEmprestimoUseCase;
+import br.arthconf.fortivus.application.port.out.UsuarioPort;
 import br.arthconf.fortivus.domain.model.CheckoutEquipamento;
 import br.arthconf.fortivus.dto.CheckoutEquipamentoDTO;
-import br.arthconf.fortivus.infrastructure.persistence.repository.SpringDataUsuarioRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -22,7 +22,7 @@ public class CheckoutController {
     private final ListarCheckoutsPorEscalaUseCase listarCheckoutsUseCase;
     private final RegistrarEmprestimoUseCase registrarEmprestimoUseCase;
     private final RegistrarDevolucaoUseCase registrarDevolucaoUseCase;
-    private final SpringDataUsuarioRepository usuarioRepository;
+    private final UsuarioPort usuarioPort;
 
     @GetMapping("/{escalaId}")
     @PreAuthorize("hasAnyRole('ADMIN', 'CENTRO_COMANDO_CENTRAL', 'CENTRO_COMANDO', 'COMBATENTE')")
@@ -37,7 +37,7 @@ public class CheckoutController {
     public ResponseEntity<Void> emprestar(@PathVariable UUID escalaId,
                                           @RequestParam UUID equipamentoId,
                                           @RequestParam String emailResponsavel) {
-        UUID responsavelId = usuarioRepository.findByEmailIgnoreCase(emailResponsavel)
+        UUID responsavelId = usuarioPort.findByEmailIgnoreCase(emailResponsavel)
                 .map(u -> u.getId())
                 .orElseThrow(() -> new RuntimeException("Responsável não encontrado: " + emailResponsavel));
 
@@ -50,7 +50,7 @@ public class CheckoutController {
     public ResponseEntity<Void> devolver(@PathVariable UUID escalaId,
                                          @PathVariable UUID checkoutId,
                                          @RequestParam String emailResponsavel) {
-        UUID responsavelId = usuarioRepository.findByEmailIgnoreCase(emailResponsavel)
+        UUID responsavelId = usuarioPort.findByEmailIgnoreCase(emailResponsavel)
                 .map(u -> u.getId())
                 .orElseThrow(() -> new RuntimeException("Responsável não encontrado: " + emailResponsavel));
 

@@ -1,18 +1,23 @@
 package br.arthconf.fortivus.controller;
 
+import br.arthconf.fortivus.application.port.in.BuscarCentroComandoPorIdUseCase;
+import br.arthconf.fortivus.application.port.in.GerenciarEquipeUseCase;
+import br.arthconf.fortivus.application.port.in.GerenciarUsuarioUseCase;
+import br.arthconf.fortivus.application.port.in.ListarUsuariosUseCase;
+import br.arthconf.fortivus.application.port.in.ObterUsuarioLogadoUseCase;
 import br.arthconf.fortivus.domain.model.Usuario;
 import br.arthconf.fortivus.dto.UsuarioDTO;
-import br.arthconf.fortivus.application.port.in.BuscarCentroComandoPorIdUseCase;
-import br.arthconf.fortivus.service.UsuarioService;
-import br.arthconf.fortivus.service.EquipeService;
 import br.arthconf.fortivus.service.FileStorageService;
 import br.arthconf.fortivus.service.KeycloakService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.web.PageableDefault;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
-import org.springframework.http.MediaType;
 
 import java.io.IOException;
 import java.util.List;
@@ -24,25 +29,33 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class UsuarioController {
 
-    private final UsuarioService usuarioService;
+    private final ListarUsuariosUseCase listarUsuariosUseCase;
+    private final GerenciarUsuarioUseCase gerenciarUsuarioUseCase;
+    private final ObterUsuarioLogadoUseCase obterUsuarioLogadoUseCase;
+    private final GerenciarEquipeUseCase gerenciarEquipeUseCase;
     private final BuscarCentroComandoPorIdUseCase buscarCentroUseCase;
-    private final EquipeService equipeService;
     private final FileStorageService storageService;
     private final KeycloakService keycloakService;
 
     @GetMapping
     @PreAuthorize("hasAnyRole('ADMIN', 'CENTRO_COMANDO_CENTRAL')")
     public ResponseEntity<List<UsuarioDTO>> listar() {
-        List<UsuarioDTO> usuarios = usuarioService.listarTodos().stream()
+        List<UsuarioDTO> usuarios = listarUsuariosUseCase.listarTodos().stream()
                 .map(this::toDTO)
                 .collect(Collectors.toList());
         return ResponseEntity.ok(usuarios);
     }
 
+    @GetMapping("/paged")
+    @PreAuthorize("hasAnyRole('ADMIN', 'CENTRO_COMANDO_CENTRAL')")
+    public ResponseEntity<Page<UsuarioDTO>> listarPaginado(@PageableDefault(size = 10) Pageable pageable) {
+        return ResponseEntity.ok(listarUsuariosUseCase.listarPaginado(pageable).map(this::toDTO));
+    }
+
     @GetMapping("/{id}")
     @PreAuthorize("hasAnyRole('ADMIN', 'CENTRO_COMANDO_CENTRAL', 'CENTRO_COMANDO')")
     public ResponseEntity<UsuarioDTO> buscarPorId(@PathVariable UUID id) {
-        Usuario usuario = usuarioService.buscarPorId(id);
+        Usuario usuario = gerenciarUsuarioUseCase.buscarPorId(id);
         return ResponseEntity.ok(toDTO(usuario));
     }
 
@@ -53,13 +66,13 @@ public class UsuarioController {
             @RequestParam(value = "centroComandoId", required = false) UUID centroComandoId,
             @RequestParam(value = "equipeId", required = false) UUID equipeId,
             @RequestParam(value = "fotoArquivo", required = false) MultipartFile fotoArquivo) throws IOException {
-        
+
         Usuario usuarioParaSalvar;
         boolean isNovoUsuario = (usuario.getId() == null);
         String emailAntigo = null;
-        
+
         if (!isNovoUsuario) {
-            usuarioParaSalvar = usuarioService.buscarPorId(usuario.getId());
+            usuarioParaSalvar = gerenciarUsuarioUseCase.buscarPorId(usuario.getId());
             emailAntigo = usuarioParaSalvar.getEmail();
             usuarioParaSalvar.setNome(usuario.getNome());
             usuarioParaSalvar.setPrimeiroNome(usuario.getPrimeiroNome());
@@ -77,13 +90,14 @@ public class UsuarioController {
         }
 
         if (centroComandoId != null) {
-            usuarioParaSalvar.setCentroComando(buscarCentroUseCase.executar(centroComandoId).orElseThrow(() -> new RuntimeException("Centro de Comando não encontrado")));
+            usuarioParaSalvar.setCentroComando(buscarCentroUseCase.executar(centroComandoId)
+                    .orElseThrow(() -> new RuntimeException("Centro de Comando não encontrado")));
         } else {
             usuarioParaSalvar.setCentroComando(null);
         }
-        
+
         if (equipeId != null) {
-            usuarioParaSalvar.setEquipe(equipeService.buscarPorId(equipeId));
+            usuarioParaSalvar.setEquipe(gerenciarEquipeUseCase.buscarPorId(equipeId));
         } else {
             usuarioParaSalvar.setEquipe(null);
         }
@@ -95,38 +109,37 @@ public class UsuarioController {
             String url = storageService.upload(fotoArquivo, "usuarios");
             usuarioParaSalvar.setFotoUrl(url);
         }
-        
+
         if (isNovoUsuario) {
             keycloakService.criarUsuario(usuarioParaSalvar.getEmail(), usuario.getSenha(), usuarioParaSalvar.getNome(), usuarioParaSalvar.getPerfil().name());
         } else {
             keycloakService.atualizarUsuario(emailAntigo, usuarioParaSalvar.getEmail(), usuarioParaSalvar.getNome(), usuarioParaSalvar.getPerfil().name());
         }
 
-        usuarioService.salvar(usuarioParaSalvar);
-
+        gerenciarUsuarioUseCase.salvar(usuarioParaSalvar);
         return ResponseEntity.ok().build();
     }
 
     @DeleteMapping("/{id}")
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<Void> deletar(@PathVariable UUID id) {
-        Usuario u = usuarioService.buscarPorId(id);
+        Usuario u = gerenciarUsuarioUseCase.buscarPorId(id);
         if (u.getFotoUrl() != null && u.getFotoUrl().startsWith("http")) {
             storageService.delete(u.getFotoUrl());
         }
         keycloakService.deletarUsuario(u.getEmail());
-        usuarioService.deletar(id);
+        gerenciarUsuarioUseCase.deletar(id);
         return ResponseEntity.noContent().build();
     }
 
     @DeleteMapping("/{id}/foto")
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<Void> excluirFoto(@PathVariable UUID id) {
-        Usuario usuario = usuarioService.buscarPorId(id);
+        Usuario usuario = gerenciarUsuarioUseCase.buscarPorId(id);
         if (usuario.getFotoUrl() != null && usuario.getFotoUrl().startsWith("http")) {
             storageService.delete(usuario.getFotoUrl());
             usuario.setFotoUrl(null);
-            usuarioService.salvar(usuario);
+            gerenciarUsuarioUseCase.salvar(usuario);
         }
         return ResponseEntity.noContent().build();
     }
@@ -148,14 +161,7 @@ public class UsuarioController {
                 usuario.getEstadoOperacional(),
                 usuario.getCentroComando() != null ? usuario.getCentroComando().getId() : null,
                 usuario.getEquipe() != null ? usuario.getEquipe().getId() : null,
-                null // senha vazia no retorno
+                null
         );
-    }
-
-    @org.springframework.web.bind.annotation.GetMapping("/paged")
-    @PreAuthorize("hasAnyRole('ADMIN', 'CENTRO_COMANDO_CENTRAL')")
-    public org.springframework.http.ResponseEntity<org.springframework.data.domain.Page<UsuarioDTO>> listarPaginado(
-            @org.springframework.data.web.PageableDefault(size = 10) org.springframework.data.domain.Pageable pageable) {
-        return org.springframework.http.ResponseEntity.ok(usuarioService.listarPaginado(pageable).map(this::toDTO));
     }
 }

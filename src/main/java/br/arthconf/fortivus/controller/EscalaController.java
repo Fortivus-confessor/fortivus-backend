@@ -5,8 +5,6 @@ import br.arthconf.fortivus.domain.model.Equipe;
 import br.arthconf.fortivus.domain.model.Escala;
 import br.arthconf.fortivus.domain.model.Usuario;
 import br.arthconf.fortivus.dto.EscalaDTO;
-import br.arthconf.fortivus.service.EquipeService;
-import br.arthconf.fortivus.service.UsuarioService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
@@ -35,14 +33,16 @@ public class EscalaController {
     private final BuscarEscalaPorIdUseCase buscarEscalaUseCase;
     private final EncerrarEscalaUseCase encerrarEscalaUseCase;
     private final DeletarEscalaUseCase deletarEscalaUseCase;
-    private final EquipeService equipeService;
-    private final UsuarioService usuarioService;
+    private final ObterUsuarioLogadoUseCase obterUsuarioLogadoUseCase;
+    private final ListarUsuariosUseCase listarUsuariosUseCase;
+    private final GerenciarEquipeUseCase gerenciarEquipeUseCase;
+    private final ListarEquipesUseCase listarEquipesUseCase;
 
     @GetMapping
     @PreAuthorize("hasAnyRole('ADMIN', 'CENTRO_COMANDO_CENTRAL', 'CENTRO_COMANDO')")
     @Transactional(readOnly = true)
     public ResponseEntity<List<EscalaDTO>> listar() {
-        Usuario logado = usuarioService.getUsuarioLogado();
+        Usuario logado = obterUsuarioLogadoUseCase.getUsuarioLogado();
         List<Escala> escalas;
         if (logado != null && "ROLE_CENTRO_COMANDO".equals(logado.getPerfil().name())
                 && logado.getCentroComando() != null) {
@@ -65,19 +65,14 @@ public class EscalaController {
     @PostMapping
     @PreAuthorize("hasAnyRole('ADMIN', 'CENTRO_COMANDO_CENTRAL', 'CENTRO_COMANDO')")
     public ResponseEntity<EscalaDTO> salvar(@RequestBody EscalaDTO dto) {
-        Usuario logado = usuarioService.getUsuarioLogado();
+        Usuario logado = obterUsuarioLogadoUseCase.getUsuarioLogado();
 
-        Equipe equipe = equipeService.buscarPorId(dto.equipeId());
+        Equipe equipe = gerenciarEquipeUseCase.buscarPorId(dto.equipeId());
         if (logado != null && "ROLE_CENTRO_COMANDO".equals(logado.getPerfil().name())) {
             if (equipe.getCentroComando() == null
                     || !equipe.getCentroComando().getId().equals(logado.getCentroComando().getId())) {
                 throw new AccessDeniedException("Equipe não pertence ao seu Centro de Comando");
             }
-        }
-
-        if (dto.veiculoId() != null && logado != null && "ROLE_CENTRO_COMANDO".equals(logado.getPerfil().name())) {
-            var veiculo = equipeService.buscarPorId(dto.equipeId()); // just for the check below; real check via equipe
-            // TODO: inject VeiculoService or use case for strict veículo validation
         }
 
         CriarEscalaUseCase.Command command = new CriarEscalaUseCase.Command(
@@ -91,12 +86,8 @@ public class EscalaController {
         );
 
         Escala criada = criarEscalaUseCase.executar(command);
-
         URI uri = ServletUriComponentsBuilder.fromCurrentRequest()
-                .path("/{id}")
-                .buildAndExpand(criada.getId())
-                .toUri();
-
+                .path("/{id}").buildAndExpand(criada.getId()).toUri();
         return ResponseEntity.created(uri).body(toDTO(criada));
     }
 
@@ -117,11 +108,11 @@ public class EscalaController {
     @GetMapping("/centro/{id}/ativos")
     @PreAuthorize("hasAnyRole('ADMIN', 'CENTRO_COMANDO_CENTRAL', 'CENTRO_COMANDO')")
     public ResponseEntity<CentroAtivosDTO> listarAtivosCentro(@PathVariable UUID id) {
-        var equipes = equipeService.buscarPorCentro(id).stream()
+        var equipes = listarEquipesUseCase.buscarPorCentro(id).stream()
                 .map(e -> new EquipeSimplesDTO(e.getId(), e.getNome()))
                 .toList();
 
-        var usuarios = usuarioService.buscarPorCentro(id).stream()
+        var usuarios = listarUsuariosUseCase.buscarPorCentro(id).stream()
                 .map(u -> new UsuarioSimplesDTO(
                         u.getId(),
                         u.getNome(),
@@ -145,9 +136,8 @@ public class EscalaController {
     @GetMapping("/paged")
     @Transactional(readOnly = true)
     @PreAuthorize("hasAnyRole('ADMIN', 'CENTRO_COMANDO_CENTRAL', 'CENTRO_COMANDO', 'COMBATENTE')")
-    public ResponseEntity<Page<EscalaDTO>> listarPaginado(
-            @PageableDefault(size = 10) Pageable pageable) {
-        Usuario logado = usuarioService.getUsuarioLogado();
+    public ResponseEntity<Page<EscalaDTO>> listarPaginado(@PageableDefault(size = 10) Pageable pageable) {
+        Usuario logado = obterUsuarioLogadoUseCase.getUsuarioLogado();
         UUID centroId = null;
         if (logado != null && "ROLE_CENTRO_COMANDO".equals(logado.getPerfil().name())
                 && logado.getCentroComando() != null) {

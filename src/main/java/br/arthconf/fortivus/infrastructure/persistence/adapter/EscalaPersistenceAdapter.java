@@ -1,6 +1,6 @@
 package br.arthconf.fortivus.infrastructure.persistence.adapter;
 
-import br.arthconf.fortivus.application.port.output.EscalaRepositoryPort;
+import br.arthconf.fortivus.application.port.out.EscalaRepositoryPort;
 import br.arthconf.fortivus.domain.model.Escala;
 import br.arthconf.fortivus.infrastructure.persistence.entity.EscalaEntity;
 import br.arthconf.fortivus.infrastructure.persistence.entity.UsuarioEntity;

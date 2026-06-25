@@ -1,7 +1,7 @@
 package br.arthconf.fortivus.application.service;
 
 import br.arthconf.fortivus.application.port.in.BuscarEscalaPorIdUseCase;
-import br.arthconf.fortivus.application.port.output.EscalaRepositoryPort;
+import br.arthconf.fortivus.application.port.out.EscalaRepositoryPort;
 import br.arthconf.fortivus.domain.model.Escala;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;

@@ -1,6 +1,6 @@
 package br.arthconf.fortivus.infrastructure.persistence.adapter;
 
-import br.arthconf.fortivus.application.port.output.CheckoutEquipamentoRepositoryPort;
+import br.arthconf.fortivus.application.port.out.CheckoutEquipamentoRepositoryPort;
 import br.arthconf.fortivus.domain.model.CheckoutEquipamento;
 import br.arthconf.fortivus.infrastructure.persistence.entity.CheckoutEquipamentoEntity;
 import br.arthconf.fortivus.infrastructure.persistence.mapper.CheckoutEquipamentoMapper;

@@ -1,6 +1,6 @@
 package br.arthconf.fortivus.infrastructure.persistence.adapter;
 
-import br.arthconf.fortivus.application.port.output.DespachoRepositoryPort;
+import br.arthconf.fortivus.application.port.out.DespachoRepositoryPort;
 import br.arthconf.fortivus.domain.model.Despacho;
 import br.arthconf.fortivus.infrastructure.persistence.entity.DespachoEntity;
 import br.arthconf.fortivus.infrastructure.persistence.entity.OrdemServicoEntity;
