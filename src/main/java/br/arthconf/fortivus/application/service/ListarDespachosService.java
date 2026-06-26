@@ -2,6 +2,7 @@ package br.arthconf.fortivus.application.service;
 
 import br.arthconf.fortivus.application.port.in.ListarDespachosUseCase;
 import br.arthconf.fortivus.application.port.out.DespachoRepositoryPort;
+import br.arthconf.fortivus.domain.SituacaoDespacho;
 import br.arthconf.fortivus.domain.model.Despacho;
 import br.arthconf.fortivus.application.port.in.ObterUsuarioLogadoUseCase;
 import lombok.RequiredArgsConstructor;
@@ -11,6 +12,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
@@ -47,5 +49,11 @@ public class ListarDespachosService implements ListarDespachosUseCase {
             }
         }
         return despachoPort.listarPaginado(pageable);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Page<Despacho> listarMeusPaginado(UUID responsavelId, List<SituacaoDespacho> statuses, Pageable pageable) {
+        return despachoPort.listarMeusPaginado(responsavelId, statuses, pageable);
     }
 }

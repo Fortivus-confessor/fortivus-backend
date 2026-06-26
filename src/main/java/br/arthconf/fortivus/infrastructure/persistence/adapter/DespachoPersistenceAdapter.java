@@ -135,4 +135,13 @@ public class DespachoPersistenceAdapter implements DespachoRepositoryPort {
     public boolean pertenceAoDespacho(Long despachoId, UUID usuarioId) {
         return despachoRepository.pertenceAoDespacho(despachoId, usuarioId);
     }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Page<Despacho> listarMeusPaginado(UUID responsavelId, List<br.arthconf.fortivus.domain.SituacaoDespacho> statuses, Pageable pageable) {
+        if (statuses == null || statuses.isEmpty()) {
+            return despachoRepository.findByResponsavelId(responsavelId, pageable).map(mapper::toDomain);
+        }
+        return despachoRepository.findByResponsavelIdAndStatusIn(responsavelId, statuses, pageable).map(mapper::toDomain);
+    }
 }

@@ -8,6 +8,8 @@ import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
+import br.arthconf.fortivus.domain.SituacaoDespacho;
+
 public interface DespachoRepositoryPort {
     Despacho salvar(Despacho despacho);
     Optional<Despacho> buscarPorId(Long id);
@@ -19,4 +21,6 @@ public interface DespachoRepositoryPort {
     Page<Despacho> listarPorCentroComandoPaginado(UUID centroId, Pageable pageable);
     Page<Despacho> listarPorCombatentePaginado(UUID usuarioId, Pageable pageable);
     boolean pertenceAoDespacho(Long despachoId, UUID usuarioId);
+
+    Page<Despacho> listarMeusPaginado(UUID responsavelId, List<SituacaoDespacho> statuses, Pageable pageable);
 }

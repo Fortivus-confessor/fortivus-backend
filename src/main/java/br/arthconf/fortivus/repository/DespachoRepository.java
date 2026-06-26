@@ -35,5 +35,15 @@ public interface DespachoRepository extends JpaRepository<DespachoEntity, Long> 
 
     @org.springframework.data.jpa.repository.Query("SELECT CASE WHEN COUNT(d) > 0 THEN TRUE ELSE FALSE END FROM DespachoEntity d LEFT JOIN d.escala esc LEFT JOIN esc.comandante c LEFT JOIN esc.integrantes i WHERE d.id = :despachoId AND (c.id = :usuarioId OR i.id = :usuarioId)")
     boolean pertenceAoDespacho(@org.springframework.data.repository.query.Param("despachoId") Long despachoId, @org.springframework.data.repository.query.Param("usuarioId") java.util.UUID usuarioId);
+
+    // Mobile: filtra por d.responsavel.id (campo direto no despacho, ≠ membros da escala)
+    org.springframework.data.domain.Page<DespachoEntity> findByResponsavelId(
+            java.util.UUID responsavelId,
+            org.springframework.data.domain.Pageable pageable);
+
+    org.springframework.data.domain.Page<DespachoEntity> findByResponsavelIdAndStatusIn(
+            java.util.UUID responsavelId,
+            java.util.List<br.arthconf.fortivus.domain.SituacaoDespacho> statuses,
+            org.springframework.data.domain.Pageable pageable);
 }
 
