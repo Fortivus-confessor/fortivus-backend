@@ -23,3 +23,7 @@
 *.jar
 *.war
 *.ear
+
+### Claude / Editor rules ###
+.clauderules.md
+*.clauderules.md

@@ -3,16 +3,12 @@ package br.arthconf.fortivus.application.service;
 import br.arthconf.fortivus.application.port.in.BuscarRelatorioMaquinarioUseCase;
 import br.arthconf.fortivus.application.port.in.SalvarRelatorioMaquinarioUseCase;
 import br.arthconf.fortivus.application.port.out.RelatorioMaquinarioPort;
-import br.arthconf.fortivus.infrastructure.persistence.entity.RelatorioMaquinarioEntity;
+import br.arthconf.fortivus.domain.model.RelatorioMaquinario;
 import br.arthconf.fortivus.dto.RelatorioMaquinarioDTO;
 import lombok.RequiredArgsConstructor;
-import org.locationtech.jts.geom.Coordinate;
-import org.locationtech.jts.geom.GeometryFactory;
-import org.locationtech.jts.geom.PrecisionModel;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.time.LocalDateTime;
 import java.util.Optional;
 
 @Service
@@ -24,44 +20,29 @@ public class RelatorioMaquinarioService implements SalvarRelatorioMaquinarioUseC
     @Override
     @Transactional
     public RelatorioMaquinarioDTO salvar(Long despachoId, RelatorioMaquinarioDTO dto) {
-        RelatorioMaquinarioEntity relatorio = relatorioMaquinarioPort.buscarPorDespachoId(despachoId)
-                .orElseGet(() -> {
-                    br.arthconf.fortivus.infrastructure.persistence.entity.DespachoEntity stub = new br.arthconf.fortivus.infrastructure.persistence.entity.DespachoEntity();
-                    stub.setId(despachoId);
-                    RelatorioMaquinarioEntity novo = new RelatorioMaquinarioEntity();
-                    novo.setDespacho(stub);
-                    return novo;
-                });
-        relatorio.setId(despachoId);
-        relatorio.setHorimetroInicial(dto.horimetroInicial());
-        relatorio.setHorimetroFinal(dto.horimetroFinal());
-        relatorio.setTempoLiquido(dto.tempoLiquido());
-        relatorio.setHoraInicioOperacao(dto.horaInicioOperacao());
-        relatorio.setHoraFimOperacao(dto.horaFimOperacao());
-        relatorio.setTiposEmprego(dto.tiposEmprego());
-        relatorio.setComprimentoAceiros(dto.comprimentoAceiros());
-        relatorio.setDescricaoOutroEmprego(dto.descricaoOutroEmprego());
-        relatorio.setEfetividadeCombate(dto.efetividadeCombate());
-        relatorio.setNecessidadeReforco(dto.necessidadeReforco());
-        relatorio.setTiposReforcoNecessarios(dto.tiposReforcoNecessarios());
-        relatorio.setHistoricoDescritivo(dto.historicoDescritivo());
-        relatorio.setResultadoOcorrencia(dto.resultadoOcorrencia());
-        relatorio.setOutroResultadoDescricao(dto.outroResultadoDescricao());
+        RelatorioMaquinario domain = RelatorioMaquinario.builder()
+                .despachoId(despachoId)
+                .horimetroInicial(dto.horimetroInicial())
+                .horimetroFinal(dto.horimetroFinal())
+                .tempoLiquido(dto.tempoLiquido())
+                .horaInicioOperacao(dto.horaInicioOperacao())
+                .horaFimOperacao(dto.horaFimOperacao())
+                .tiposEmprego(dto.tiposEmprego())
+                .comprimentoAceiros(dto.comprimentoAceiros())
+                .descricaoOutroEmprego(dto.descricaoOutroEmprego())
+                .areaAtuacaoLat(dto.areaAtuacaoLat())
+                .areaAtuacaoLng(dto.areaAtuacaoLng())
+                .efetividadeCombate(dto.efetividadeCombate())
+                .necessidadeReforco(dto.necessidadeReforco())
+                .tiposReforcoNecessarios(dto.tiposReforcoNecessarios())
+                .historicoDescritivo(dto.historicoDescritivo())
+                .resultadoOcorrencia(dto.resultadoOcorrencia())
+                .outroResultadoDescricao(dto.outroResultadoDescricao())
+                .dataInicio(dto.dataInicio())
+                .dataFim(dto.dataFim())
+                .build();
 
-        if (dto.dataInicio() != null) {
-            relatorio.setDataInicio(dto.dataInicio());
-        } else if (relatorio.getDataInicio() == null) {
-            relatorio.setDataInicio(LocalDateTime.now());
-        }
-        relatorio.setDataFim(dto.dataFim() != null ? dto.dataFim() : LocalDateTime.now());
-
-        if (dto.areaAtuacaoLat() != null && dto.areaAtuacaoLng() != null) {
-            GeometryFactory gf = new GeometryFactory(new PrecisionModel(), 4326);
-            relatorio.setAreaAtuacaoGeom(gf.createPoint(new Coordinate(dto.areaAtuacaoLng(), dto.areaAtuacaoLat())));
-        }
-
-        RelatorioMaquinarioEntity salvo = relatorioMaquinarioPort.salvar(relatorio);
-        return toDTO(salvo);
+        return toDTO(relatorioMaquinarioPort.salvar(domain));
     }
 
     @Override
@@ -70,32 +51,27 @@ public class RelatorioMaquinarioService implements SalvarRelatorioMaquinarioUseC
         return relatorioMaquinarioPort.buscarPorDespachoId(despachoId).map(this::toDTO);
     }
 
-    private RelatorioMaquinarioDTO toDTO(RelatorioMaquinarioEntity rel) {
-        Double lat = null, lng = null;
-        if (rel.getAreaAtuacaoGeom() != null) {
-            lat = rel.getAreaAtuacaoGeom().getCoordinate().y;
-            lng = rel.getAreaAtuacaoGeom().getCoordinate().x;
-        }
+    private RelatorioMaquinarioDTO toDTO(RelatorioMaquinario rel) {
         return new RelatorioMaquinarioDTO(
-            rel.getId(),
-            rel.getHorimetroInicial(),
-            rel.getHorimetroFinal(),
-            rel.getTempoLiquido(),
-            rel.getHoraInicioOperacao(),
-            rel.getHoraFimOperacao(),
-            rel.getTiposEmprego() != null ? new java.util.ArrayList<>(rel.getTiposEmprego()) : null,
-            rel.getComprimentoAceiros(),
-            rel.getDescricaoOutroEmprego(),
-            lat,
-            lng,
-            rel.getEfetividadeCombate(),
-            rel.getNecessidadeReforco(),
-            rel.getTiposReforcoNecessarios() != null ? new java.util.ArrayList<>(rel.getTiposReforcoNecessarios()) : null,
-            rel.getHistoricoDescritivo(),
-            rel.getResultadoOcorrencia(),
-            rel.getOutroResultadoDescricao(),
-            rel.getDataInicio(),
-            rel.getDataFim()
+                rel.getDespachoId(),
+                rel.getHorimetroInicial(),
+                rel.getHorimetroFinal(),
+                rel.getTempoLiquido(),
+                rel.getHoraInicioOperacao(),
+                rel.getHoraFimOperacao(),
+                rel.getTiposEmprego(),
+                rel.getComprimentoAceiros(),
+                rel.getDescricaoOutroEmprego(),
+                rel.getAreaAtuacaoLat(),
+                rel.getAreaAtuacaoLng(),
+                rel.getEfetividadeCombate(),
+                rel.getNecessidadeReforco(),
+                rel.getTiposReforcoNecessarios(),
+                rel.getHistoricoDescritivo(),
+                rel.getResultadoOcorrencia(),
+                rel.getOutroResultadoDescricao(),
+                rel.getDataInicio(),
+                rel.getDataFim()
         );
     }
 }

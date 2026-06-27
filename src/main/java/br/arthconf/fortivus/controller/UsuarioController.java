@@ -6,8 +6,8 @@ import br.arthconf.fortivus.application.port.in.GerenciarUsuarioUseCase;
 import br.arthconf.fortivus.application.port.in.ListarUsuariosUseCase;
 import br.arthconf.fortivus.domain.model.Usuario;
 import br.arthconf.fortivus.dto.UsuarioDTO;
-import br.arthconf.fortivus.service.FileStorageService;
-import br.arthconf.fortivus.service.KeycloakService;
+import br.arthconf.fortivus.application.port.out.FileStoragePort;
+import br.arthconf.fortivus.application.port.out.IdentityManagementPort;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -32,8 +32,8 @@ public class UsuarioController {
     private final GerenciarUsuarioUseCase gerenciarUsuarioUseCase;
     private final GerenciarEquipeUseCase gerenciarEquipeUseCase;
     private final BuscarCentroComandoPorIdUseCase buscarCentroUseCase;
-    private final FileStorageService storageService;
-    private final KeycloakService keycloakService;
+    private final FileStoragePort storageService;
+    private final IdentityManagementPort keycloakService;
 
     @GetMapping
     @PreAuthorize("hasAnyRole('ADMIN', 'CENTRO_COMANDO_CENTRAL', 'CENTRO_COMANDO')")

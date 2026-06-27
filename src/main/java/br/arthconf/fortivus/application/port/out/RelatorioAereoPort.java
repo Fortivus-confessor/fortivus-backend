@@ -1,10 +1,10 @@
 package br.arthconf.fortivus.application.port.out;
 
-import br.arthconf.fortivus.infrastructure.persistence.entity.RelatorioAereoEntity;
+import br.arthconf.fortivus.domain.model.RelatorioAereo;
 
 import java.util.Optional;
 
 public interface RelatorioAereoPort {
-    RelatorioAereoEntity salvar(RelatorioAereoEntity relatorio);
-    Optional<RelatorioAereoEntity> buscarPorDespachoId(Long despachoId);
+    RelatorioAereo salvar(RelatorioAereo relatorio);
+    Optional<RelatorioAereo> buscarPorDespachoId(Long despachoId);
 }

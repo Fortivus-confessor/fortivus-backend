@@ -2,7 +2,7 @@ package br.arthconf.fortivus.application.service;
 
 import br.arthconf.fortivus.application.port.in.SalvarRelatorioTerrestreUseCase;
 import br.arthconf.fortivus.application.port.out.RelatorioTerrestreRepositoryPort;
-import br.arthconf.fortivus.infrastructure.persistence.entity.RelatorioTerrestreEntity;
+import br.arthconf.fortivus.domain.model.RelatorioTerrestre;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -15,7 +15,7 @@ public class SalvarRelatorioTerrestreService implements SalvarRelatorioTerrestre
 
     @Override
     @Transactional
-    public RelatorioTerrestreEntity executar(RelatorioTerrestreEntity relatorio) {
+    public RelatorioTerrestre executar(RelatorioTerrestre relatorio) {
         return repositoryPort.salvar(relatorio);
     }
 }

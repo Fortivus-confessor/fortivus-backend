@@ -18,14 +18,10 @@ import br.arthconf.fortivus.application.port.in.SalvarRelatorioMaquinarioUseCase
 import br.arthconf.fortivus.application.port.in.BuscarRelatorioTerrestreUseCase;
 import br.arthconf.fortivus.application.port.in.SalvarRelatorioTerrestreUseCase;
 import br.arthconf.fortivus.domain.model.Despacho;
-import br.arthconf.fortivus.infrastructure.persistence.entity.DespachoEntity;
-import br.arthconf.fortivus.infrastructure.persistence.entity.PropriedadeRelatorioEntity;
-import br.arthconf.fortivus.infrastructure.persistence.entity.RelatorioTerrestreEntity;
+import br.arthconf.fortivus.domain.model.PropriedadeRelatorio;
+import br.arthconf.fortivus.domain.model.RelatorioTerrestre;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.locationtech.jts.geom.Coordinate;
-import org.locationtech.jts.geom.GeometryFactory;
-import org.locationtech.jts.geom.PrecisionModel;
 import org.springframework.data.domain.Page;
 import org.springframework.data.web.PageableDefault;
 import org.springframework.data.domain.Pageable;
@@ -122,7 +118,7 @@ public class DespachoController {
                 .dataInicio(dto.dataInicio())
                 .dataFim(dto.dataFim())
                 .build();
-                
+
         Despacho salvo = atualizarDespachoUseCase.executar(id, despacho);
         return ResponseEntity.ok(toDTO(salvo));
     }
@@ -153,63 +149,56 @@ public class DespachoController {
     @PostMapping("/finalizar-terrestre")
     @PreAuthorize("hasAnyRole('ADMIN', 'CENTRO_COMANDO_CENTRAL', 'CENTRO_COMANDO', 'COMBATENTE')")
     public ResponseEntity<RelatorioTerrestreDTO> finalizarTerrestre(@RequestBody RelatorioTerrestreDTO dto) {
-        log.info("Recebendo relatório terrestre para DespachoEntity ID: {}", dto.despachoId());
+        log.info("Recebendo relatório terrestre para Despacho ID: {}", dto.despachoId());
 
-        RelatorioTerrestreEntity relatorio = buscarRelatorioTerrestreUseCase.executar(dto.despachoId())
-                .orElseGet(() -> {
-                    DespachoEntity stub = new DespachoEntity();
-                    stub.setId(dto.despachoId());
-                    RelatorioTerrestreEntity novo = new RelatorioTerrestreEntity();
-                    novo.setDespacho(stub);
-                    return novo;
-                });
-        relatorio.setAcoesRealizadas(dto.acoesRealizadas());
-        relatorio.setOrgaosApoio(dto.orgaosApoio());
-        relatorio.setOutrosOrgaosDescricao(dto.outrosOrgaosDescricao());
-        relatorio.setHouveUsoAgua(dto.houveUsoAgua());
-        relatorio.setVolumeAguaLitros(dto.volumeAguaLitros());
-        relatorio.setOrigensAgua(dto.origensAgua());
-        relatorio.setOutraOrigemAguaDescricao(dto.outraOrigemAguaDescricao());
-        relatorio.setHouveApoioPropriedades(dto.houveApoioPropriedades());
-        relatorio.setHouveRecusaPropriedades(dto.houveRecusaPropriedades());
-        relatorio.setPossivelOrigemIncendio(dto.possivelOrigemIncendio());
-        relatorio.setEfetividadeCombate(dto.efetividadeCombate());
-        relatorio.setNecessidadeReforco(dto.necessidadeReforco());
-        relatorio.setTiposReforcoNecessarios(dto.tiposReforcoNecessarios());
-        relatorio.setHistoricoDescritivo(dto.historicoDescritivo());
-        relatorio.setResultadoOcorrencia(dto.resultadoOcorrencia());
-        relatorio.setOutroResultadoDescricao(dto.outroResultadoDescricao());
-
-        if (dto.areaAtuacaoLat() != null && dto.areaAtuacaoLng() != null) {
-            GeometryFactory gf = new GeometryFactory(new PrecisionModel(), 4326);
-            relatorio.setAreaAtuacaoGeom(gf.createPoint(new Coordinate(dto.areaAtuacaoLng(), dto.areaAtuacaoLat())));
-        }
-
+        List<PropriedadeRelatorio> propriedades = null;
         if (dto.propriedades() != null) {
-            List<PropriedadeRelatorioEntity> propriedades = new ArrayList<>();
+            propriedades = new ArrayList<>();
             for (var p : dto.propriedades()) {
-                var prop = new PropriedadeRelatorioEntity();
-                prop.setNomePropriedade(p.nomePropriedade());
-                prop.setResponsavel(p.responsavel());
-                prop.setTelefone(p.telefone());
-                prop.setTipoRegistro(p.tipoRegistro());
-                prop.setTipoApoio(p.tipoApoio());
-                prop.setQuantidadeApoio(p.quantidadeApoio());
-                prop.setDescricaoApoioOutro(p.descricaoApoioOutro());
-                prop.setMotivoRecusa(p.motivoRecusa());
-                prop.setDescricaoRecusaOutro(p.descricaoRecusaOutro());
-                if (p.localizacaoLat() != null && p.localizacaoLng() != null) {
-                    GeometryFactory gf = new GeometryFactory(new PrecisionModel(), 4326);
-                    prop.setLocalizacaoGeom(gf.createPoint(new Coordinate(p.localizacaoLng(), p.localizacaoLat())));
-                }
-                prop.setRelatorio(relatorio);
-                propriedades.add(prop);
+                propriedades.add(PropriedadeRelatorio.builder()
+                        .id(p.id())
+                        .nomePropriedade(p.nomePropriedade())
+                        .responsavel(p.responsavel())
+                        .telefone(p.telefone())
+                        .localizacaoLat(p.localizacaoLat())
+                        .localizacaoLng(p.localizacaoLng())
+                        .tipoRegistro(p.tipoRegistro())
+                        .tipoApoio(p.tipoApoio())
+                        .quantidadeApoio(p.quantidadeApoio())
+                        .descricaoApoioOutro(p.descricaoApoioOutro())
+                        .motivoRecusa(p.motivoRecusa())
+                        .descricaoRecusaOutro(p.descricaoRecusaOutro())
+                        .build());
             }
-            relatorio.setPropriedades(propriedades);
         }
 
-        RelatorioTerrestreEntity salvo = salvarRelatorioTerrestreUseCase.executar(relatorio);
-        log.info("Relatório terrestre salvo com sucesso para DespachoEntity ID: {}", dto.despachoId());
+        RelatorioTerrestre domain = RelatorioTerrestre.builder()
+                .despachoId(dto.despachoId())
+                .acoesRealizadas(dto.acoesRealizadas())
+                .orgaosApoio(dto.orgaosApoio())
+                .outrosOrgaosDescricao(dto.outrosOrgaosDescricao())
+                .areaAtuacaoLat(dto.areaAtuacaoLat())
+                .areaAtuacaoLng(dto.areaAtuacaoLng())
+                .houveUsoAgua(dto.houveUsoAgua())
+                .volumeAguaLitros(dto.volumeAguaLitros())
+                .origensAgua(dto.origensAgua())
+                .outraOrigemAguaDescricao(dto.outraOrigemAguaDescricao())
+                .houveApoioPropriedades(dto.houveApoioPropriedades())
+                .houveRecusaPropriedades(dto.houveRecusaPropriedades())
+                .possivelOrigemIncendio(dto.possivelOrigemIncendio())
+                .efetividadeCombate(dto.efetividadeCombate())
+                .necessidadeReforco(dto.necessidadeReforco())
+                .tiposReforcoNecessarios(dto.tiposReforcoNecessarios())
+                .historicoDescritivo(dto.historicoDescritivo())
+                .resultadoOcorrencia(dto.resultadoOcorrencia())
+                .outroResultadoDescricao(dto.outroResultadoDescricao())
+                .propriedades(propriedades)
+                .dataInicio(dto.dataInicio())
+                .dataFim(dto.dataFim())
+                .build();
+
+        RelatorioTerrestre salvo = salvarRelatorioTerrestreUseCase.executar(domain);
+        log.info("Relatório terrestre salvo com sucesso para Despacho ID: {}", dto.despachoId());
         return ResponseEntity.ok(toRelatorioDTO(salvo));
     }
 
@@ -224,7 +213,7 @@ public class DespachoController {
     @PostMapping("/finalizar-aereo")
     @PreAuthorize("hasAnyRole('ADMIN', 'CENTRO_COMANDO_CENTRAL', 'CENTRO_COMANDO', 'COMBATENTE')")
     public ResponseEntity<RelatorioAereoDTO> finalizarAereo(@RequestBody RelatorioAereoDTO dto) {
-        log.info("Recebendo relatório aéreo para DespachoEntity ID: {}", dto.despachoId());
+        log.info("Recebendo relatório aéreo para Despacho ID: {}", dto.despachoId());
         RelatorioAereoDTO salvo = salvarRelatorioAereoUseCase.salvar(dto.despachoId(), dto);
         atualizarStatusDespachoUseCase.executar(dto.despachoId(), SituacaoDespacho.CONCLUIDO);
         return ResponseEntity.ok(salvo);
@@ -241,7 +230,7 @@ public class DespachoController {
     @PostMapping("/finalizar-maquinario")
     @PreAuthorize("hasAnyRole('ADMIN', 'CENTRO_COMANDO_CENTRAL', 'CENTRO_COMANDO', 'COMBATENTE')")
     public ResponseEntity<RelatorioMaquinarioDTO> finalizarMaquinario(@RequestBody RelatorioMaquinarioDTO dto) {
-        log.info("Recebendo relatório maquinário para DespachoEntity ID: {}", dto.despachoId());
+        log.info("Recebendo relatório maquinário para Despacho ID: {}", dto.despachoId());
         RelatorioMaquinarioDTO salvo = salvarRelatorioMaquinarioUseCase.salvar(dto.despachoId(), dto);
         atualizarStatusDespachoUseCase.executar(dto.despachoId(), SituacaoDespacho.CONCLUIDO);
         return ResponseEntity.ok(salvo);
@@ -263,33 +252,25 @@ public class DespachoController {
         );
     }
 
-    private RelatorioTerrestreDTO toRelatorioDTO(RelatorioTerrestreEntity r) {
-        Double areaLat = null, areaLng = null;
-        if (r.getAreaAtuacaoGeom() != null) {
-            areaLat = r.getAreaAtuacaoGeom().getCoordinate().y;
-            areaLng = r.getAreaAtuacaoGeom().getCoordinate().x;
-        }
+    private RelatorioTerrestreDTO toRelatorioDTO(RelatorioTerrestre r) {
         List<RelatorioTerrestreDTO.PropriedadeRelatorioDTO> props = new ArrayList<>();
         if (r.getPropriedades() != null) {
             for (var p : r.getPropriedades()) {
-                Double pLat = null, pLng = null;
-                if (p.getLocalizacaoGeom() != null) {
-                    pLat = p.getLocalizacaoGeom().getCoordinate().y;
-                    pLng = p.getLocalizacaoGeom().getCoordinate().x;
-                }
                 props.add(new RelatorioTerrestreDTO.PropriedadeRelatorioDTO(
                         p.getId(), p.getNomePropriedade(), p.getResponsavel(), p.getTelefone(),
-                        pLat, pLng, p.getTipoRegistro(), p.getTipoApoio(), p.getQuantidadeApoio(),
+                        p.getLocalizacaoLat(), p.getLocalizacaoLng(),
+                        p.getTipoRegistro(), p.getTipoApoio(), p.getQuantidadeApoio(),
                         p.getDescricaoApoioOutro(), p.getMotivoRecusa(), p.getDescricaoRecusaOutro()
                 ));
             }
         }
         return new RelatorioTerrestreDTO(
-                r.getDespacho().getId(),
+                r.getDespachoId(),
                 r.getAcoesRealizadas(),
                 r.getOrgaosApoio(),
                 r.getOutrosOrgaosDescricao(),
-                areaLat, areaLng,
+                r.getAreaAtuacaoLat(),
+                r.getAreaAtuacaoLng(),
                 r.getHouveUsoAgua(),
                 r.getVolumeAguaLitros(),
                 r.getOrigensAgua(),

@@ -7,7 +7,7 @@ import br.arthconf.fortivus.application.port.in.ListarVeiculosUseCase;
 import br.arthconf.fortivus.domain.model.CategoriaOperacao;
 import br.arthconf.fortivus.domain.model.Veiculo;
 import br.arthconf.fortivus.dto.VeiculoDTO;
-import br.arthconf.fortivus.service.FileStorageService;
+import br.arthconf.fortivus.application.port.out.FileStoragePort;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -32,7 +32,7 @@ public class VeiculoController {
     private final GerenciarVeiculoUseCase gerenciarVeiculoUseCase;
     private final GerenciarEquipeUseCase gerenciarEquipeUseCase;
     private final BuscarCentroComandoPorIdUseCase buscarCentroUseCase;
-    private final FileStorageService storageService;
+    private final FileStoragePort storageService;
 
     @GetMapping
     @PreAuthorize("hasAnyRole('ADMIN', 'CENTRO_COMANDO_CENTRAL', 'CENTRO_COMANDO')")

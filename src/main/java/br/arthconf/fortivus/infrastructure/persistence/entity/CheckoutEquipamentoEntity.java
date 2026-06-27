@@ -1,6 +1,6 @@
 package br.arthconf.fortivus.infrastructure.persistence.entity;
 
-import br.arthconf.fortivus.domain.BaseEntity;
+import br.arthconf.fortivus.infrastructure.persistence.entity.BaseEntity;
 import jakarta.persistence.*;
 import lombok.Data;
 import lombok.EqualsAndHashCode;

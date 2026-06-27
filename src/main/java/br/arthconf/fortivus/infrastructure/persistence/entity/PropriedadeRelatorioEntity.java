@@ -1,6 +1,6 @@
 package br.arthconf.fortivus.infrastructure.persistence.entity;
 
-import br.arthconf.fortivus.domain.BaseEntity;
+import br.arthconf.fortivus.infrastructure.persistence.entity.BaseEntity;
 import br.arthconf.fortivus.domain.MotivoRecusa;
 import br.arthconf.fortivus.domain.TipoApoio;
 import br.arthconf.fortivus.domain.TipoRegistro;

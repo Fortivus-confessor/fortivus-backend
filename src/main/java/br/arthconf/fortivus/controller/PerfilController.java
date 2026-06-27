@@ -2,7 +2,7 @@ package br.arthconf.fortivus.controller;
 
 import br.arthconf.fortivus.application.port.in.GerenciarUsuarioUseCase;
 import br.arthconf.fortivus.application.port.in.ObterUsuarioLogadoUseCase;
-import br.arthconf.fortivus.service.KeycloakService;
+import br.arthconf.fortivus.application.port.out.IdentityManagementPort;
 import lombok.Data;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -16,7 +16,7 @@ public class PerfilController {
 
     private final ObterUsuarioLogadoUseCase obterUsuarioLogadoUseCase;
     private final GerenciarUsuarioUseCase gerenciarUsuarioUseCase;
-    private final KeycloakService keycloakService;
+    private final IdentityManagementPort keycloakService;
 
     @Data
     public static class PerfilUpdateDTO {

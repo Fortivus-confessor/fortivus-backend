@@ -1,9 +1,10 @@
-package br.arthconf.fortivus.service;
+package br.arthconf.fortivus.infrastructure.storage;
 
+import br.arthconf.fortivus.application.port.out.FileStoragePort;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.stereotype.Service;
+import org.springframework.stereotype.Component;
 import org.springframework.web.multipart.MultipartFile;
 import software.amazon.awssdk.core.sync.RequestBody;
 import software.amazon.awssdk.services.s3.S3Client;
@@ -12,10 +13,10 @@ import software.amazon.awssdk.services.s3.model.PutObjectRequest;
 import java.io.IOException;
 import java.util.UUID;
 
-@Service
+@Component
 @RequiredArgsConstructor
 @Slf4j
-public class S3StorageService implements FileStorageService {
+public class S3StorageAdapter implements FileStoragePort {
 
     private final S3Client s3Client;
 
@@ -31,7 +32,6 @@ public class S3StorageService implements FileStorageService {
             s3Client.createBucket(builder -> builder.bucket(bucketName));
             log.info("Bucket '{}' verificado/criado no SeaweedFS", bucketName);
         } catch (Exception e) {
-            // Ignora se o bucket já existir ou se houver erro de permissão inicial
             log.warn("Aviso ao inicializar bucket no SeaweedFS: {}", e.getMessage());
         }
     }
@@ -47,9 +47,9 @@ public class S3StorageService implements FileStorageService {
 
         try {
             log.info("Iniciando upload para SeaweedFS: {} ({} bytes)", key, file.getSize());
-            
+
             byte[] bytes = file.getBytes();
-            
+
             PutObjectRequest putObjectRequest = PutObjectRequest.builder()
                     .bucket(bucketName)
                     .key(key)
@@ -76,9 +76,7 @@ public class S3StorageService implements FileStorageService {
         }
 
         try {
-            // Extrai a chave da URL (presumindo o formato retornado no upload)
             String key = fileUrl.replace(endpoint + "/" + bucketName + "/", "");
-            
             s3Client.deleteObject(builder -> builder.bucket(bucketName).key(key));
         } catch (Exception e) {
             log.error("Erro ao deletar arquivo no S3/SeaweedFS: {}", fileUrl, e);

@@ -2,7 +2,7 @@ package br.arthconf.fortivus.application.service;
 
 import br.arthconf.fortivus.application.port.in.BuscarRelatorioTerrestreUseCase;
 import br.arthconf.fortivus.application.port.out.RelatorioTerrestreRepositoryPort;
-import br.arthconf.fortivus.infrastructure.persistence.entity.RelatorioTerrestreEntity;
+import br.arthconf.fortivus.domain.model.RelatorioTerrestre;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -17,7 +17,7 @@ public class BuscarRelatorioTerrestreService implements BuscarRelatorioTerrestre
 
     @Override
     @Transactional(readOnly = true)
-    public Optional<RelatorioTerrestreEntity> executar(Long despachoId) {
+    public Optional<RelatorioTerrestre> executar(Long despachoId) {
         return repositoryPort.buscarPorDespachoId(despachoId);
     }
 }

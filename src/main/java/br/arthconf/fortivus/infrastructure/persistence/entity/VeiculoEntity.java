@@ -6,7 +6,7 @@ import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.ToString;
 
-import br.arthconf.fortivus.domain.BaseEntity;
+import br.arthconf.fortivus.infrastructure.persistence.entity.BaseEntity;
 
 @Entity
 @Table(name = "veiculo")

@@ -1,5 +1,6 @@
-package br.arthconf.fortivus.service;
+package br.arthconf.fortivus.infrastructure.identity;
 
+import br.arthconf.fortivus.application.port.out.IdentityManagementPort;
 import lombok.extern.slf4j.Slf4j;
 import org.keycloak.admin.client.Keycloak;
 import org.keycloak.admin.client.KeycloakBuilder;
@@ -7,49 +8,48 @@ import org.keycloak.representations.idm.CredentialRepresentation;
 import org.keycloak.representations.idm.RoleRepresentation;
 import org.keycloak.representations.idm.UserRepresentation;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.stereotype.Service;
+import org.springframework.stereotype.Component;
 
 import jakarta.ws.rs.core.Response;
 import java.util.Collections;
 import java.util.List;
 
 @Slf4j
-@Service
-public class KeycloakService {
+@Component
+public class KeycloakIdentityAdapter implements IdentityManagementPort {
 
     private final Keycloak keycloak;
+    private final String realm;
 
-    @Value("${keycloak.realm:fortivus}")
-    private String realm;
-
-    public KeycloakService(
+    public KeycloakIdentityAdapter(
             @Value("${keycloak.server-url:http://localhost:9000}") String serverUrl,
             @Value("${keycloak.realm:fortivus}") String realm,
             @Value("${keycloak.client-id:admin-cli}") String clientId,
             @Value("${keycloak.username:admin}") String username,
             @Value("${keycloak.password:admin}") String password) {
-        
+
         this.realm = realm;
         this.keycloak = KeycloakBuilder.builder()
                 .serverUrl(serverUrl)
-                .realm("master") // Master realm holds admin credentials
+                .realm("master")
                 .clientId(clientId)
                 .username(username)
                 .password(password)
                 .build();
     }
 
+    @Override
     public void criarUsuario(String email, String senha, String nome, String role) {
         UserRepresentation user = new UserRepresentation();
         user.setUsername(email);
         user.setEmail(email);
-        
+
         if (nome != null && !nome.isBlank()) {
             String[] parts = nome.trim().split(" ", 2);
             user.setFirstName(parts[0]);
             user.setLastName(parts.length > 1 ? parts[1] : "");
         }
-        
+
         user.setEnabled(true);
 
         CredentialRepresentation cred = new CredentialRepresentation();
@@ -60,7 +60,7 @@ public class KeycloakService {
         user.setCredentials(Collections.singletonList(cred));
 
         Response response = keycloak.realm(realm).users().create(user);
-        
+
         if (response.getStatus() == 201) {
             String userId = response.getLocation().getPath().replaceAll(".*/([^/]+)$", "$1");
             log.info("Usuário criado no Keycloak: {}", userId);
@@ -71,12 +71,13 @@ public class KeycloakService {
         }
     }
 
+    @Override
     public void atualizarUsuario(String emailAntigo, String novoEmail, String nome, String role) {
         List<UserRepresentation> users = keycloak.realm(realm).users().searchByEmail(emailAntigo, true);
         if (users != null && !users.isEmpty()) {
             UserRepresentation user = users.get(0);
             user.setEmail(novoEmail);
-            
+
             if (nome != null && !nome.isBlank()) {
                 String[] parts = nome.trim().split(" ", 2);
                 user.setFirstName(parts[0]);
@@ -96,6 +97,7 @@ public class KeycloakService {
         }
     }
 
+    @Override
     public void deletarUsuario(String email) {
         List<UserRepresentation> users = keycloak.realm(realm).users().searchByEmail(email, true);
         if (users != null && !users.isEmpty()) {
@@ -106,6 +108,7 @@ public class KeycloakService {
         }
     }
 
+    @Override
     public void atualizarSenha(String email, String novaSenha) {
         List<UserRepresentation> users = keycloak.realm(realm).users().searchByEmail(email, true);
         if (users != null && !users.isEmpty()) {
@@ -129,7 +132,7 @@ public class KeycloakService {
             log.error("Erro ao atribuir role {} ao usuario {}", roleName, userId, e);
         }
     }
-    
+
     private void atualizarRole(String userId, String newRoleName) {
         try {
             List<RoleRepresentation> currentRoles = keycloak.realm(realm).users().get(userId).roles().realmLevel().listAll();

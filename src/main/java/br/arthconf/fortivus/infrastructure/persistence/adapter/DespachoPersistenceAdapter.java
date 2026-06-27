@@ -6,7 +6,7 @@ import br.arthconf.fortivus.infrastructure.persistence.entity.DespachoEntity;
 import br.arthconf.fortivus.infrastructure.persistence.entity.OrdemServicoEntity;
 import br.arthconf.fortivus.infrastructure.persistence.mapper.DespachoMapper;
 import br.arthconf.fortivus.infrastructure.persistence.repository.SpringDataUsuarioRepository;
-import br.arthconf.fortivus.repository.DespachoRepository;
+import br.arthconf.fortivus.infrastructure.persistence.repository.SpringDataDespachoRepository;
 import br.arthconf.fortivus.repository.EscalaRepository;
 import br.arthconf.fortivus.repository.OrdemServicoRepository;
 import br.arthconf.fortivus.repository.RelatorioTerrestreRepository;
@@ -24,7 +24,7 @@ import java.util.UUID;
 @RequiredArgsConstructor
 public class DespachoPersistenceAdapter implements DespachoRepositoryPort {
 
-    private final DespachoRepository despachoRepository;
+    private final SpringDataDespachoRepository despachoRepository;
     private final DespachoMapper mapper;
     private final OrdemServicoRepository ordemServicoRepository;
     private final EscalaRepository escalaRepository;

@@ -1,9 +1,9 @@
 package br.arthconf.fortivus.application.port.in;
 
-import br.arthconf.fortivus.infrastructure.persistence.entity.RelatorioTerrestreEntity;
+import br.arthconf.fortivus.domain.model.RelatorioTerrestre;
 
 import java.util.Optional;
 
 public interface BuscarRelatorioTerrestreUseCase {
-    Optional<RelatorioTerrestreEntity> executar(Long despachoId);
+    Optional<RelatorioTerrestre> executar(Long despachoId);
 }

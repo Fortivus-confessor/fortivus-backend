@@ -1,12 +1,14 @@
 package br.arthconf.fortivus.infrastructure.persistence.adapter;
 
 import br.arthconf.fortivus.application.port.out.RelatorioTerrestreRepositoryPort;
+import br.arthconf.fortivus.domain.SituacaoDespacho;
+import br.arthconf.fortivus.domain.model.RelatorioTerrestre;
 import br.arthconf.fortivus.infrastructure.persistence.entity.AnexoRelatorioEntity;
 import br.arthconf.fortivus.infrastructure.persistence.entity.DespachoEntity;
 import br.arthconf.fortivus.infrastructure.persistence.entity.PropriedadeRelatorioEntity;
 import br.arthconf.fortivus.infrastructure.persistence.entity.RelatorioTerrestreEntity;
-import br.arthconf.fortivus.domain.SituacaoDespacho;
-import br.arthconf.fortivus.repository.DespachoRepository;
+import br.arthconf.fortivus.infrastructure.persistence.mapper.RelatorioTerrestreMapper;
+import br.arthconf.fortivus.infrastructure.persistence.repository.SpringDataDespachoRepository;
 import br.arthconf.fortivus.repository.RelatorioTerrestreRepository;
 import lombok.RequiredArgsConstructor;
 import org.hibernate.Hibernate;
@@ -22,20 +24,22 @@ import java.util.Optional;
 public class RelatorioTerrestrePersistenceAdapter implements RelatorioTerrestreRepositoryPort {
 
     private final RelatorioTerrestreRepository repository;
-    private final DespachoRepository despachoRepository;
+    private final SpringDataDespachoRepository despachoRepository;
 
     @Override
     @Transactional(readOnly = true)
-    public Optional<RelatorioTerrestreEntity> buscarPorDespachoId(Long despachoId) {
+    public Optional<RelatorioTerrestre> buscarPorDespachoId(Long despachoId) {
         Optional<RelatorioTerrestreEntity> opt = repository.findByDespachoId(despachoId);
         opt.ifPresent(this::inicializarColecoes);
-        return opt;
+        return opt.map(RelatorioTerrestreMapper::toDomain);
     }
 
     @Override
     @Transactional
-    public RelatorioTerrestreEntity salvar(RelatorioTerrestreEntity relatorio) {
-        Long id = relatorio.getDespacho().getId();
+    public RelatorioTerrestre salvar(RelatorioTerrestre domain) {
+        Long id = domain.getDespachoId();
+
+        RelatorioTerrestreEntity relatorio = RelatorioTerrestreMapper.toEntity(domain);
 
         DespachoEntity despachoGerenciado = despachoRepository.findByIdFetched(id).orElse(null);
         relatorio.setDespacho(despachoGerenciado);
@@ -44,7 +48,9 @@ public class RelatorioTerrestrePersistenceAdapter implements RelatorioTerrestreR
 
         if (persistente == null) {
             relatorio.setId(id);
-            relatorio.setDataInicio(relatorio.getDespacho().getDataInicio());
+            if (despachoGerenciado != null) {
+                relatorio.setDataInicio(despachoGerenciado.getDataInicio());
+            }
             if (relatorio.getDataFim() == null) {
                 relatorio.setDataFim(LocalDateTime.now());
             }
@@ -79,13 +85,14 @@ public class RelatorioTerrestrePersistenceAdapter implements RelatorioTerrestreR
             persistente = repository.save(persistente);
         }
 
-        var despachoEntity = persistente.getDespacho();
-        despachoEntity.setStatus(SituacaoDespacho.CONCLUIDO);
-        despachoEntity.setDataFim(persistente.getDataFim());
-        despachoRepository.save(despachoEntity);
+        if (despachoGerenciado != null) {
+            despachoGerenciado.setStatus(SituacaoDespacho.CONCLUIDO);
+            despachoGerenciado.setDataFim(persistente.getDataFim());
+            despachoRepository.save(despachoGerenciado);
+        }
 
         inicializarColecoes(persistente);
-        return persistente;
+        return RelatorioTerrestreMapper.toDomain(persistente);
     }
 
     private void inicializarColecoes(RelatorioTerrestreEntity relatorio) {
